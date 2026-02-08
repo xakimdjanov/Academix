@@ -8,37 +8,72 @@ const SignIn = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
   const [form, setForm] = useState({ email: "", password: "" });
 
-  const onChange = (e) => {
+  const onChange = (e) =>
     setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
-  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
+
+    const email = form.email.trim().toLowerCase();
+    const password = form.password;
+
+    if (!email || !password) {
+      toast.error("Please enter email and password.");
+      return;
+    }
+
     setLoading(true);
-
     try {
-      if (!form.email.trim() || !form.password) {
-        toast.error("Please enter email and password.");
-        return;
-      }
+      // 1) login
+      const res = await journalAdminService.login({ email, password });
 
-      const res = await journalAdminService.login({
-        email: form.email.trim(),
-        password: form.password,
-      });
-
-      const token = res?.data?.token || res?.token;
+      const token = res?.data?.token;
       if (!token) {
         toast.error("Login failed. No token received.");
         return;
       }
 
       localStorage.setItem("token", token);
+
+      // 2) login response ichidan id qidiramiz (bo'lsa darrov)
+      const user = res?.data?.user || res?.data?.admin || null;
+      let id = user?._id || user?.id || res?.data?._id || res?.data?.id;
+
+      // 3) ID yo‘q bo‘lsa: getAll() -> email bo‘yicha topamiz
+      if (!id) {
+        const allRes = await journalAdminService.getAll();
+
+        // backend formatlar:
+        const list =
+          allRes?.data?.data ||
+          allRes?.data?.users ||
+          allRes?.data?.admins ||
+          allRes?.data ||
+          [];
+
+        if (!Array.isArray(list) || list.length === 0) {
+          toast.error("Login ok, lekin admin list topilmadi (getAll bo‘sh).");
+          return;
+        }
+
+        const me = list.find(
+          (u) => (u?.email || "").trim().toLowerCase() === email
+        );
+
+        id = me?._id || me?.id;
+
+        if (!id) {
+          toast.error("Login ok, lekin email bo‘yicha id topilmadi.");
+          return;
+        }
+      }
+
+      localStorage.setItem("journal_admin_id", id);
+
       toast.success("Login successful!");
-      navigate("/dashboard");
+      navigate("/journal-dashboard");
     } catch (error) {
       const msg =
         error?.response?.data?.message ||
@@ -54,15 +89,12 @@ const SignIn = () => {
   return (
     <div className="min-h-screen bg-[#F6F8FB] flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
-        {/* Header */}
         <div className="bg-gradient-to-r from-[#1F4F8F] to-blue-600 px-6 py-7">
           <h1 className="text-2xl font-bold text-white">Sign In</h1>
           <p className="text-white/90 text-sm mt-1">Access your dashboard</p>
         </div>
 
-        {/* Form */}
         <form onSubmit={onSubmit} className="p-6 space-y-5">
-          {/* Email */}
           <div>
             <label className="block text-sm font-medium text-[#1F2937] mb-2">
               Email
@@ -80,7 +112,6 @@ const SignIn = () => {
             </div>
           </div>
 
-          {/* Password */}
           <div>
             <label className="block text-sm font-medium text-[#1F2937] mb-2">
               Password
@@ -99,17 +130,15 @@ const SignIn = () => {
                 type="button"
                 onClick={() => setShowPassword((p) => !p)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#1F2937] transition-colors"
-                aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
               </button>
             </div>
           </div>
 
-          {/* Forgot */}
           <div className="flex justify-end">
             <Link
-              to="/forgot-password"
+              to="/journal-forgot-password"
               className="text-sm text-[#1F4F8F] hover:text-blue-700 font-medium inline-flex items-center gap-1"
             >
               <FiKey className="text-sm" />
@@ -117,7 +146,6 @@ const SignIn = () => {
             </Link>
           </div>
 
-          {/* Button */}
           <button
             type="submit"
             disabled={loading}
@@ -126,7 +154,6 @@ const SignIn = () => {
             {loading ? "Signing in..." : "Sign In"}
           </button>
 
-          {/* Signup */}
           <p className="text-sm text-center text-[#6B7280]">
             Don’t have an account?{" "}
             <Link

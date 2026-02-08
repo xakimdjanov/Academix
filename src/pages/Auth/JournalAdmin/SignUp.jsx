@@ -17,7 +17,6 @@ import {
   FiXCircle,
 } from "react-icons/fi";
 
-const ROLE_OPTIONS = ["JournalAdmin", "Editor", "Reviewer", "Others"];
 const COUNTRY_OPTIONS = [
   "Uzbekistan",
   "Kazakhstan",
@@ -27,6 +26,23 @@ const COUNTRY_OPTIONS = [
   "United States",
   "Others",
 ];
+
+const inputCls =
+  "w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 py-2.5 md:py-3 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#1F4F8F] focus:border-transparent";
+
+function Field({ label, icon, input }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-[#1F2937] mb-2">
+        {label}
+      </label>
+      <div className="relative">
+        {input}
+        <div className="absolute left-3 top-1/2 -translate-y-1/2">{icon}</div>
+      </div>
+    </div>
+  );
+}
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -42,8 +58,6 @@ const SignUp = () => {
     affiliation: "",
     country: "Uzbekistan",
     country_other: "",
-    role: "JournalAdmin",
-    role_other: "",
   });
 
   const [avatarFile, setAvatarFile] = useState(null);
@@ -63,10 +77,6 @@ const SignUp = () => {
     const cleaned = value.replace(/\D/g, "").slice(0, 16);
     return cleaned.replace(/(\d{4})(?=\d)/g, "$1-");
   };
-
-  const finalRole = useMemo(() => {
-    return form.role === "Others" ? form.role_other.trim() : form.role;
-  }, [form.role, form.role_other]);
 
   const finalCountry = useMemo(() => {
     return form.country === "Others"
@@ -128,11 +138,6 @@ const SignUp = () => {
         return;
       }
 
-      if (form.role === "Others" && !form.role_other.trim()) {
-        toast.error("Please enter your role.");
-        return;
-      }
-
       if (form.country === "Others" && !form.country_other.trim()) {
         toast.error("Please enter your country.");
         return;
@@ -146,13 +151,17 @@ const SignUp = () => {
       fd.append("orcid", form.orcid.trim());
       fd.append("affiliation", form.affiliation.trim());
       fd.append("country", finalCountry);
-      fd.append("role", finalRole);
+
+      // ✅ avtomatik role
+      fd.append("role", "JournalAdmin");
+
       fd.append("avatar", avatarFile);
 
       const res = await journalAdminService.register(fd);
 
-      const token = res?.data?.token || res?.token;
-      if (token) localStorage.setItem("token", token);
+      // (ixtiyoriy) user qaytsa saqlab qo‘yamiz
+      const user = res?.data?.user || res?.user;
+      if (user) localStorage.setItem("journal_user", JSON.stringify(user));
 
       toast.success("Sign up successful!");
       navigate("/journal-signin");
@@ -171,7 +180,6 @@ const SignUp = () => {
   return (
     <div className="min-h-screen bg-[#F6F8FB] flex items-center justify-center p-4">
       <div className="w-full max-w-6xl bg-white rounded-2xl shadow-lg overflow-hidden">
-        {/* Header */}
         <div className="bg-gradient-to-r from-[#1F4F8F] to-[#3B82F6] px-6 py-6 md:px-8 md:py-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between">
             <div>
@@ -192,11 +200,8 @@ const SignUp = () => {
         </div>
 
         <div className="p-4 md:p-6 lg:p-8">
-          <form
-            onSubmit={onSubmit}
-            className="grid grid-cols-1 lg:grid-cols-12 gap-6"
-          >
-            {/* Left Column - Avatar */}
+          <form onSubmit={onSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Avatar */}
             <div className="lg:col-span-4 space-y-6">
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-6">
                 <div className="flex items-center justify-between mb-4 md:mb-6">
@@ -209,17 +214,11 @@ const SignUp = () => {
                 <div className="flex flex-col items-center">
                   <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-[#F6F8FB] to-gray-100 border-4 border-white shadow-lg overflow-hidden">
                     {avatarPreview ? (
-                      <img
-                        src={avatarPreview}
-                        alt="preview"
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={avatarPreview} alt="preview" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center">
                         <FiUser className="w-8 h-8 md:w-12 md:h-12 text-[#9CA3AF]" />
-                        <span className="text-xs text-[#6B7280] mt-1 md:mt-2">
-                          No image
-                        </span>
+                        <span className="text-xs text-[#6B7280] mt-1 md:mt-2">No image</span>
                       </div>
                     )}
 
@@ -235,12 +234,7 @@ const SignUp = () => {
                       <FiUpload className="text-lg" />
                       Upload Photo
                     </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={onAvatarChange}
-                      className="hidden"
-                    />
+                    <input type="file" accept="image/*" onChange={onAvatarChange} className="hidden" />
                   </label>
 
                   {avatarFile && (
@@ -261,16 +255,14 @@ const SignUp = () => {
                     </div>
                     <div className="flex items-center justify-between text-xs md:text-sm">
                       <span className="text-[#4B5563]">Format</span>
-                      <span className="font-medium text-[#1F2937]">
-                        JPG, PNG, WebP
-                      </span>
+                      <span className="font-medium text-[#1F2937]">JPG, PNG, WebP</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Right Column - Form */}
+            {/* Form */}
             <div className="lg:col-span-8">
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-6 lg:p-8">
                 <h3 className="text-lg md:text-xl font-bold text-[#1F2937] mb-1 md:mb-2">
@@ -280,9 +272,7 @@ const SignUp = () => {
                   Fill in your details below
                 </p>
 
-                {/* ✅ All inputs side-by-side on md+ */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                  {/* Full Name */}
                   <Field
                     label="Full Name *"
                     icon={<FiUser className="text-[#1F4F8F]" />}
@@ -297,7 +287,6 @@ const SignUp = () => {
                     }
                   />
 
-                  {/* Email */}
                   <Field
                     label="Email *"
                     icon={<FiMail className="text-[#1F4F8F]" />}
@@ -313,7 +302,6 @@ const SignUp = () => {
                     }
                   />
 
-                  {/* Password (NOT full width anymore) */}
                   <div>
                     <label className="block text-sm font-medium text-[#1F2937] mb-2">
                       Password *{" "}
@@ -335,7 +323,7 @@ const SignUp = () => {
                       </div>
                       <button
                         type="button"
-                        onClick={() => setShowPassword(!showPassword)}
+                        onClick={() => setShowPassword((p) => !p)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#1F2937] transition-colors"
                       >
                         {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
@@ -343,7 +331,6 @@ const SignUp = () => {
                     </div>
                   </div>
 
-                  {/* Phone */}
                   <Field
                     label="Phone *"
                     icon={<FiPhone className="text-[#1F4F8F]" />}
@@ -358,7 +345,6 @@ const SignUp = () => {
                     }
                   />
 
-                  {/* ORCID */}
                   <Field
                     label="ORCID *"
                     icon={<FiBriefcase className="text-[#1F4F8F]" />}
@@ -373,7 +359,6 @@ const SignUp = () => {
                     }
                   />
 
-                  {/* Affiliation */}
                   <Field
                     label="Affiliation *"
                     icon={<FiBriefcase className="text-[#1F4F8F]" />}
@@ -387,43 +372,6 @@ const SignUp = () => {
                       />
                     }
                   />
-
-                  {/* Role */}
-                  <div>
-                    <label className="block text-sm font-medium text-[#1F2937] mb-2">
-                      Role *
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="role"
-                        value={form.role}
-                        onChange={onChange}
-                        className={`${inputCls} appearance-none pr-10`}
-                      >
-                        {ROLE_OPTIONS.map((r) => (
-                          <option key={r} value={r}>
-                            {r}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                        <FiUser className="text-[#1F4F8F]" />
-                      </div>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <ChevronDown />
-                      </div>
-                    </div>
-
-                    {form.role === "Others" && (
-                      <input
-                        name="role_other"
-                        value={form.role_other}
-                        onChange={onChange}
-                        placeholder="Specify your role..."
-                        className="mt-3 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#1F4F8F] focus:border-transparent"
-                      />
-                    )}
-                  </div>
 
                   {/* Country */}
                   <div>
@@ -447,7 +395,9 @@ const SignUp = () => {
                         <FiGlobe className="text-[#1F4F8F]" />
                       </div>
                       <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <ChevronDown />
+                        <svg className="w-4 h-4 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
                       </div>
                     </div>
 
@@ -463,7 +413,6 @@ const SignUp = () => {
                   </div>
                 </div>
 
-                {/* Submit */}
                 <div className="mt-8 pt-6 border-t border-gray-200">
                   <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                     <button
@@ -503,40 +452,5 @@ const SignUp = () => {
     </div>
   );
 };
-
-const inputCls =
-  "w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 py-2.5 md:py-3 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#1F4F8F] focus:border-transparent";
-
-function Field({ label, icon, input }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-[#1F2937] mb-2">
-        {label}
-      </label>
-      <div className="relative">
-        {input}
-        <div className="absolute left-3 top-1/2 -translate-y-1/2">{icon}</div>
-      </div>
-    </div>
-  );
-}
-
-function ChevronDown() {
-  return (
-    <svg
-      className="w-4 h-4 text-[#6B7280]"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M19 9l-7 7-7-7"
-      />
-    </svg>
-  );
-}
 
 export default SignUp;

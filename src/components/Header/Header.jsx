@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { journalAdminService } from "../../services/api";
 
 const NAV_ITEMS = [
   { to: "/", label: "Home" },
@@ -8,10 +9,35 @@ const NAV_ITEMS = [
   { to: "/contact", label: "Contact" },
 ];
 
+// ✅ backend base url
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const UPLOADS_PATH = "/uploads";
+
+function getInitials(fullName = "") {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  const first = parts[0]?.[0] || "";
+  const last = parts.length > 1 ? parts[parts.length - 1]?.[0] : "";
+  return (first + last).toUpperCase();
+}
+
+function buildAvatarUrl(raw) {
+  if (!raw) return "";
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+  if (raw.startsWith("uploads/")) return `${API_BASE}/${raw}`;
+  if (raw.startsWith("/uploads/")) return `${API_BASE}${raw}`;
+  return `${API_BASE}${UPLOADS_PATH}/${raw}`;
+}
+
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
+
   const location = useLocation();
+  const navigate = useNavigate();
   const activePath = location.pathname;
+
+  const token = useMemo(() => localStorage.getItem("token"), []);
+  const adminId = useMemo(() => localStorage.getItem("journal_admin_id"), []);
 
   const closeMenu = () => setIsMenuOpen(false);
   const toggleMenu = () => setIsMenuOpen((p) => !p);
@@ -39,15 +65,56 @@ const Header = () => {
 
   const isActive = (to) => activePath === to;
 
+  // ✅ Login bo‘lsa: getById bilan userni olish
+  useEffect(() => {
+    const load = async () => {
+      if (!token || !adminId) return;
+      try {
+        const res = await journalAdminService.getById(adminId);
+        const u =
+          res?.data?.data ||
+          res?.data?.user ||
+          res?.data?.admin ||
+          res?.data ||
+          null;
+        setUser(u);
+      } catch {
+        setUser(null);
+      }
+    };
+    load();
+  }, [token, adminId]);
+
+  const fullName =
+    user?.full_name ||
+    user?.fullName ||
+    user?.name ||
+    `${user?.firstName || ""} ${user?.lastName || ""}`.trim();
+
+  const initials = getInitials(fullName) || "JA";
+
+  const avatarRaw =
+    user?.avatar_url || user?.avatarUrl || user?.avatar || user?.photo || "";
+
+  const avatarUrl = buildAvatarUrl(avatarRaw);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("journal_admin_id");
+    sessionStorage.clear();
+    setUser(null);
+    navigate("/journal-signin");
+    window.location.reload()
+  };
+
+  const isLoggedIn = !!token && !!adminId;
+
   return (
     <header className="bg-[#002147] text-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
-          <Link
-            to="/"
-            className="flex items-center gap-2 font-bold tracking-tight"
-          >
+          <Link to="/" className="flex items-center gap-2 font-bold tracking-tight">
             <span className="text-lg sm:text-xl md:text-2xl">Academix</span>
             <span className="text-blue-400 text-xl md:text-2xl">•</span>
           </Link>
@@ -74,31 +141,90 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* Desktop Buttons */}
+          {/* Desktop Right */}
           <div className="hidden md:flex items-center gap-3 lg:gap-4">
-            <Link
-              to="/journal-signup"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 lg:px-5 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-xl active:scale-95"
-            >
-              Create a Journal
-            </Link>
+            {!isLoggedIn ? (
+              <>
+                <Link
+                  to="/journal-signup"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 lg:px-5 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-xl active:scale-95"
+                >
+                  Create a Journal
+                </Link>
 
-            <Link
-              to="/articles-signup"
-              className="border border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white px-4 py-2.5 lg:px-5 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-xl active:scale-95"
-            >
-              Create an Article
-            </Link>
+                <Link
+                  to="/articles-signup"
+                  className="border border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white px-4 py-2.5 lg:px-5 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-xl active:scale-95"
+                >
+                  Create an Article
+                </Link>
+              </>
+            ) : (
+              <div className="flex items-center gap-3">
+                {/* profile */}
+                <Link
+                  to="/journal-dashboard"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition"
+                  title={fullName || "Journal Admin"}
+                >
+                  <div className="w-9 h-9 rounded-lg bg-white/10 overflow-hidden flex items-center justify-center font-bold">
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt="avatar"
+                        className="w-full h-full object-cover"
+                        onError={(e) => (e.currentTarget.style.display = "none")}
+                      />
+                    ) : (
+                      <span className="text-sm">{initials}</span>
+                    )}
+                  </div>
+                  <div className="leading-tight">
+                    <div className="text-sm font-semibold">Journal Admin</div>
+                    <div className="text-xs text-white/70 max-w-[160px] truncate">
+                      {fullName || initials}
+                    </div>
+                  </div>
+                </Link>
+
+                <button
+                  onClick={handleLogout}
+                  className="bg-white/10 hover:bg-white/15 px-4 py-2.5 rounded-lg text-sm font-semibold transition"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Mobile Right Side */}
           <div className="md:hidden flex items-center gap-2">
-            <Link
-              to="/journal-signup"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-all active:scale-95"
-            >
-              Create
-            </Link>
+            {!isLoggedIn ? (
+              <Link
+                to="/journal-signup"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-all active:scale-95"
+              >
+                Create
+              </Link>
+            ) : (
+              <Link
+                to="/journal-dashboard"
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/10"
+              >
+                <div className="w-8 h-8 rounded-lg bg-white/10 overflow-hidden flex items-center justify-center font-bold">
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt="avatar"
+                      className="w-full h-full object-cover"
+                      onError={(e) => (e.currentTarget.style.display = "none")}
+                    />
+                  ) : (
+                    <span className="text-xs">{initials}</span>
+                  )}
+                </div>
+              </Link>
+            )}
 
             <button
               type="button"
@@ -163,6 +289,30 @@ const Header = () => {
           </div>
 
           <div className="p-4">
+            {/* Logged in box */}
+            {isLoggedIn && (
+              <div className="mb-4 p-3 rounded-xl bg-white/10 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-white/10 overflow-hidden flex items-center justify-center font-bold">
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt="avatar"
+                      className="w-full h-full object-cover"
+                      onError={(e) => (e.currentTarget.style.display = "none")}
+                    />
+                  ) : (
+                    <span>{initials}</span>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold">Journal Admin</div>
+                  <div className="text-xs text-white/70 truncate">
+                    {fullName || initials}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Nav Links */}
             <div className="space-y-2">
               {NAV_ITEMS.map((item) => (
@@ -186,21 +336,44 @@ const Header = () => {
 
             {/* Actions */}
             <div className="mt-6 pt-5 border-t border-white/10 space-y-3">
-              <Link
-                to="/journal-signup"
-                onClick={closeMenu}
-                className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-semibold transition shadow-md active:scale-[0.99]"
-              >
-                Create a Journal
-              </Link>
+              {!isLoggedIn ? (
+                <>
+                  <Link
+                    to="/journal-signup"
+                    onClick={closeMenu}
+                    className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-semibold transition shadow-md active:scale-[0.99]"
+                  >
+                    Create a Journal
+                  </Link>
 
-              <Link
-                to="/articles-signup"
-                onClick={closeMenu}
-                className="block w-full text-center border border-blue-400 text-blue-300 hover:bg-blue-400 hover:text-white px-4 py-3 rounded-xl font-semibold transition shadow-md active:scale-[0.99]"
-              >
-                Create an Article
-              </Link>
+                  <Link
+                    to="/articles-signup"
+                    onClick={closeMenu}
+                    className="block w-full text-center border border-blue-400 text-blue-300 hover:bg-blue-400 hover:text-white px-4 py-3 rounded-xl font-semibold transition shadow-md active:scale-[0.99]"
+                  >
+                    Create an Article
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/journal-dashboard"
+                    onClick={closeMenu}
+                    className="block w-full text-center bg-white/10 hover:bg-white/15 text-white px-4 py-3 rounded-xl font-semibold transition"
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => {
+                      closeMenu();
+                      handleLogout();
+                    }}
+                    className="block w-full text-center bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl font-semibold transition"
+                  >
+                    Logout
+                  </button>
+                </>
+              )}
 
               <p className="pt-4 text-center text-xs text-gray-300">
                 © {new Date().getFullYear()} Academix. All rights reserved.

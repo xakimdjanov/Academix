@@ -34,7 +34,7 @@ const ForgotPass = () => {
       sessionStorage.setItem("reset_token", resetToken);
 
       toast.success("Redirecting...");
-      navigate("/reset-password");
+      navigate("/journal-reset-password");
     } catch (error) {
       const msg =
         error?.response?.data?.message ||

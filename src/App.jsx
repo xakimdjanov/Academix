@@ -21,6 +21,12 @@ import ResetPassword from "./pages/JournalAdmin/ForgotPass/ResetPassword";
 // Dashboard
 import Dashboard from "./components/JournalAdmin/Dashboard/Dashboard";
 import DashboardLayout from "./components/Layouts/DashboardLayout";
+import JournalArticles from "./components/JournalAdmin/JournalArticles/JournalArticles";
+import JournalDecisions from "./components/JournalAdmin/JournalDecisions/JournalDecisions";
+import JournalEditors from "./components/JournalAdmin/JournalEditors/JournalEditors";
+import JournalPayments from "./components/JournalAdmin/JournalPayments/JournalPayments";
+import JournalReports from "./components/JournalAdmin/JournalReports/JournalReports";
+import JournalSettings from "./components/JournalAdmin/JournalSettings/JournalSettings";
 
 const App = () => {
   return (
@@ -48,12 +54,18 @@ const App = () => {
           <Route path="/journal-signup" element={<JournalAdminSignUp />} />
           <Route path="/articles-signin" element={<ArticlesSignIn />} />
           <Route path="/articles-signup" element={<ArticlesSignUp />} />
-          <Route path="/forgot-password" element={<ForgotPass />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/journal-forgot-password" element={<ForgotPass />} />
+          <Route path="/journal-reset-password" element={<ResetPassword />} />
         </Route>
         
         <Route element={<DashboardLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/journal-dashboard" element={<Dashboard />} />
+          <Route path="/journal-articles" element={<JournalArticles />} />
+          <Route path="/journal-decisions" element={<JournalDecisions />} />
+          <Route path="/journal-editors" element={<JournalEditors />} />
+          <Route path="/journal-payments" element={<JournalPayments />} />
+          <Route path="/journal-reports" element={<JournalReports />} />
+          <Route path="/journal-settings" element={<JournalSettings />} />
         </Route>
       </Routes>
     </div>
