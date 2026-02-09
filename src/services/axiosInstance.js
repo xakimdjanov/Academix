@@ -1,24 +1,31 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE_URL = 'https://academixbackend-production.up.railway.app'; // O'zgartirishingiz mumkin
+const API_BASE_URL = "https://academixbackend-production.up.railway.app";
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { "Content-Type": "application/json" },
 });
 
-// So'rov yuborishdan oldin tokenni tekshirish va biriktirish
+// ✅ Request: token qo‘shish
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    const token = localStorage.getItem("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+// ✅ Response: 401 bo‘lsa tokenni o‘chirish (ixtiyoriy, lekin foydali)
+axiosInstance.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    if (error?.response?.status === 401) {
+      localStorage.removeItem("token");
+    }
+    return Promise.reject(error);
+  }
 );
 
 export default axiosInstance;

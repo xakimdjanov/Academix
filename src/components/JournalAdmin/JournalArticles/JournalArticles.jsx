@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { articleService } from "../../../services/api";
-import { FiEye, FiEdit2, FiTrash2 } from "react-icons/fi";
+import { FiEye, FiEdit2 } from "react-icons/fi";
 
 const STATUSES = [
   "Submitted",
@@ -12,10 +12,7 @@ const STATUSES = [
 ];
 
 function getStatus(article) {
-  // ✅ 1) backend status bo‘lsa
   if (article?.status) return article.status;
-
-  // ✅ 2) fallback (sizning model bo‘yicha)
   if (article?.apc_paid === true) return "Accepted";
   return "Under Review";
 }
@@ -29,7 +26,6 @@ function getAuthor(article) {
 }
 
 function getAssignedEditor(article) {
-  // backenddan shu field kelishi kerak:
   return (
     article?.assigned_editor_name ||
     article?.assignedEditorName ||
@@ -47,7 +43,14 @@ const JournalArticles = () => {
     const load = async () => {
       try {
         const res = await articleService.getAll();
-        const list = res?.data?.data || res?.data || [];
+
+        const list =
+          res?.data?.data ||
+          res?.data?.articles ||
+          res?.data?.result ||
+          res?.data ||
+          [];
+
         setArticles(Array.isArray(list) ? list : []);
       } catch (e) {
         toast.error("Articles load failed");
@@ -61,21 +64,6 @@ const JournalArticles = () => {
   const filtered = useMemo(() => {
     return articles.filter((a) => getStatus(a) === filter);
   }, [articles, filter]);
-
-  const onDelete = async (article) => {
-    const id = getId(article);
-    if (!id) return toast.error("ID topilmadi");
-
-    if (!confirm("Delete this article?")) return;
-
-    try {
-      await articleService.delete(id);
-      toast.success("Deleted");
-      setArticles((prev) => prev.filter((x) => getId(x) !== id));
-    } catch {
-      toast.error("Delete failed");
-    }
-  };
 
   if (loading) return <div className="p-6">Loading...</div>;
 
@@ -135,7 +123,7 @@ const JournalArticles = () => {
                 <th className="py-3 px-5">Author</th>
                 <th className="py-3 px-5">Status</th>
                 <th className="py-3 px-5">Assigned editor</th>
-                <th className="py-3 px-5 w-[220px]">Action</th>
+                <th className="py-3 px-5 w-[180px]">Action</th>
               </tr>
             </thead>
 
@@ -171,14 +159,6 @@ const JournalArticles = () => {
                           <FiEdit2 />
                           Edit
                         </button>
-
-                        <button
-                          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
-                          onClick={() => onDelete(a)}
-                        >
-                          <FiTrash2 />
-                          Delete
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -212,7 +192,7 @@ function StatusPill({ status }) {
       ? "bg-orange-100 text-orange-700"
       : status === "Under Review"
       ? "bg-yellow-100 text-yellow-700"
-      : "bg-blue-100 text-blue-700"; // Submitted
+      : "bg-blue-100 text-blue-700";
 
   return (
     <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${cls}`}>
@@ -220,4 +200,3 @@ function StatusPill({ status }) {
     </span>
   );
 }
-  
