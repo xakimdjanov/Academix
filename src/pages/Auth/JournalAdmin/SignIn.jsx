@@ -29,23 +29,24 @@ const SignIn = () => {
       // 1) login
       const res = await journalAdminService.login({ email, password });
 
-      const token = res?.data?.token;
+      const token =
+        res?.data?.token || res?.data?.accessToken || res?.data?.access_token;
+
       if (!token) {
+        console.log("LOGIN RESPONSE:", res?.data);
         toast.error("Login failed. No token received.");
         return;
       }
 
       localStorage.setItem("token", token);
 
-      // 2) login response ichidan id qidiramiz (bo'lsa darrov)
-      const user = res?.data?.user || res?.data?.admin || null;
+      // 2) login response ichidan id qidiramiz
+      const user = res?.data?.user || res?.data?.admin || res?.data?.data || null;
       let id = user?._id || user?.id || res?.data?._id || res?.data?.id;
 
-      // 3) ID yo‘q bo‘lsa: getAll() -> email bo‘yicha topamiz
+      // 3) ID bo‘lmasa: getAll() -> email bo‘yicha topamiz
       if (!id) {
         const allRes = await journalAdminService.getAll();
-
-        // backend formatlar:
         const list =
           allRes?.data?.data ||
           allRes?.data?.users ||
@@ -53,24 +54,20 @@ const SignIn = () => {
           allRes?.data ||
           [];
 
-        if (!Array.isArray(list) || list.length === 0) {
-          toast.error("Login ok, lekin admin list topilmadi (getAll bo‘sh).");
-          return;
-        }
-
-        const me = list.find(
-          (u) => (u?.email || "").trim().toLowerCase() === email
-        );
+        const me = Array.isArray(list)
+          ? list.find((u) => (u?.email || "").trim().toLowerCase() === email)
+          : null;
 
         id = me?._id || me?.id;
-
-        if (!id) {
-          toast.error("Login ok, lekin email bo‘yicha id topilmadi.");
-          return;
-        }
       }
 
-      localStorage.setItem("journal_admin_id", id);
+      if (!id) {
+        toast.error("Login ok, lekin admin ID topilmadi.");
+        return;
+      }
+
+      // ✅ admin id saqlab qo'yamiz
+      localStorage.setItem("journal_admin_id", String(id));
 
       toast.success("Login successful!");
       navigate("/journal-dashboard");

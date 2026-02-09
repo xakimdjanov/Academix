@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import { articleService } from "../../../services/api";
 import { FiFileText, FiClock, FiCheckCircle, FiDollarSign } from "react-icons/fi";
 
@@ -8,31 +9,53 @@ const Dashboard = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await articleService.getAll();
-        const data = res?.data?.data || res?.data || [];
-        setArticles(data);
-      } catch (err) {
-        console.error("Error loading articles", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadArticles = async () => {
+    try {
+      setLoading(true);
+      const res = await articleService.getAll();
 
-    load();
+      // ✅ backend formatlari turlicha bo'lishi mumkin
+      const raw =
+        res?.data?.data ||
+        res?.data?.articles ||
+        res?.data?.result ||
+        res?.data ||
+        [];
+
+      const list = Array.isArray(raw) ? raw : [];
+
+      // ✅ optional: newest first (agar backend old->new bo'lsa)
+      // Agar backend allaqachon newest-first yuborsa, bu baribir ishlaydi.
+      const normalized = [...list].reverse();
+
+      setArticles(normalized);
+    } catch (err) {
+      console.error("Error loading articles", err);
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Maqolalarni yuklashda xatolik!";
+      toast.error(msg);
+      setArticles([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadArticles();
   }, []);
 
   const total = articles.length;
 
   const published = useMemo(
-    () => articles.filter((a) => a.apc_paid === true).length,
+    () => articles.filter((a) => a?.apc_paid === true).length,
     [articles]
   );
 
   const underReview = useMemo(
-    () => articles.filter((a) => a.apc_paid === false).length,
+    () => articles.filter((a) => a?.apc_paid !== true).length,
     [articles]
   );
 
@@ -62,35 +85,38 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {/* Stats Grid (mobile-first) */}
+      {/* Refresh Button */}
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={loadArticles}
+          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 active:scale-[0.99]"
+        >
+          Refresh
+        </button>
+      </div>
+
+      {/* Stats Grid */}
       <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         <StatCard
           title="Total Submissions"
           value={total}
           icon={<FiFileText />}
-          bg="bg-blue-500/10"
-          text="text-blue-600"
         />
         <StatCard
           title="Under Review"
           value={underReview}
           icon={<FiClock />}
-          bg="bg-yellow-500/10"
-          text="text-yellow-600"
         />
         <StatCard
           title="Published"
           value={published}
           icon={<FiCheckCircle />}
-          bg="bg-green-500/10"
-          text="text-green-600"
         />
         <StatCard
           title="Revenue (APC)"
           value={`$${revenueFormatted}`}
           icon={<FiDollarSign />}
-          bg="bg-purple-500/10"
-          text="text-purple-600"
         />
       </div>
 
@@ -107,30 +133,37 @@ const Dashboard = () => {
 
         {/* ✅ Mobile: Card List */}
         <div className="space-y-3 sm:hidden">
-          {recent.map((a) => (
-            <div
-              key={a.id}
-              className="rounded-xl border border-gray-100 p-3 hover:bg-gray-50 transition"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <p className="font-semibold text-gray-800 leading-snug break-words line-clamp-2">
-                  {a.title}
-                </p>
-                <StatusPill paid={a.apc_paid} />
-              </div>
+          {recent.map((a, idx) => {
+            const key = a?.id ?? a?._id ?? `${a?.title || "article"}-${idx}`;
+            return (
+              <div
+                key={String(key)}
+                className="rounded-xl border border-gray-100 p-3 hover:bg-gray-50 transition"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-semibold text-gray-800 leading-snug break-words line-clamp-2">
+                    {a?.title || "Untitled"}
+                  </p>
+                  <StatusPill paid={a?.apc_paid === true} />
+                </div>
 
-              <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-gray-600">
-                <div>
-                  <p className="text-[11px] text-gray-400">Author</p>
-                  <p className="break-words line-clamp-1">{a.authors}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[11px] text-gray-400">Language</p>
-                  <p className="break-words line-clamp-1">{a.language}</p>
+                <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-gray-600">
+                  <div>
+                    <p className="text-[11px] text-gray-400">Author</p>
+                    <p className="break-words line-clamp-1">
+                      {a?.authors || a?.author || "—"}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] text-gray-400">Language</p>
+                    <p className="break-words line-clamp-1">
+                      {a?.language || "—"}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {articles.length === 0 && (
             <p className="text-gray-400 mt-2">No submissions yet.</p>
@@ -149,26 +182,29 @@ const Dashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {recent.map((a) => (
-                <tr key={a.id} className="border-b hover:bg-gray-50">
-                  <td className="py-3 pr-4 max-w-[420px]">
-                    <span className="font-medium text-gray-800 break-words line-clamp-1">
-                      {a.title}
-                    </span>
-                  </td>
-                  <td className="py-3 pr-4">
-                    <span className="text-gray-700 break-words line-clamp-1">
-                      {a.authors}
-                    </span>
-                  </td>
-                  <td className="py-3 pr-4">
-                    <span className="text-gray-700">{a.language}</span>
-                  </td>
-                  <td className="py-3">
-                    <StatusText paid={a.apc_paid} />
-                  </td>
-                </tr>
-              ))}
+              {recent.map((a, idx) => {
+                const key = a?.id ?? a?._id ?? `${a?.title || "article"}-${idx}`;
+                return (
+                  <tr key={String(key)} className="border-b hover:bg-gray-50">
+                    <td className="py-3 pr-4 max-w-[420px]">
+                      <span className="font-medium text-gray-800 break-words line-clamp-1">
+                        {a?.title || "Untitled"}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-4">
+                      <span className="text-gray-700 break-words line-clamp-1">
+                        {a?.authors || a?.author || "—"}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-4">
+                      <span className="text-gray-700">{a?.language || "—"}</span>
+                    </td>
+                    <td className="py-3">
+                      <StatusText paid={a?.apc_paid === true} />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
@@ -187,23 +223,33 @@ export default Dashboard;
 /* Reusable Stat Card Component  */
 /* ============================= */
 
-const StatCard = ({ title, value, icon, bg, text }) => {
+const StatCard = ({ title, value, icon }) => {
+  // title bo‘yicha ranglarni avtomatik beramiz
+  const style = getStatStyle(title);
+
   return (
     <div className="bg-white rounded-2xl shadow p-4 sm:p-5 flex items-center justify-between hover:shadow-lg transition">
       <div className="min-w-0">
         <p className="text-xs sm:text-sm text-gray-500">{title}</p>
-        <h3 className="text-xl sm:text-2xl font-bold mt-1 truncate">
-          {value}
-        </h3>
+        <h3 className="text-xl sm:text-2xl font-bold mt-1 truncate">{value}</h3>
       </div>
       <div
-        className={`w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-xl ${bg} ${text} text-lg sm:text-xl shrink-0`}
+        className={`w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-xl ${style.bg} ${style.text} text-lg sm:text-xl shrink-0`}
       >
         {icon}
       </div>
     </div>
   );
 };
+
+function getStatStyle(title) {
+  const t = String(title || "").toLowerCase();
+  if (t.includes("total")) return { bg: "bg-blue-500/10", text: "text-blue-600" };
+  if (t.includes("review")) return { bg: "bg-yellow-500/10", text: "text-yellow-600" };
+  if (t.includes("published")) return { bg: "bg-green-500/10", text: "text-green-600" };
+  if (t.includes("revenue") || t.includes("apc")) return { bg: "bg-purple-500/10", text: "text-purple-600" };
+  return { bg: "bg-gray-500/10", text: "text-gray-600" };
+}
 
 const StatusText = ({ paid }) => {
   return paid ? (

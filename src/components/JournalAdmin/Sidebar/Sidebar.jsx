@@ -4,11 +4,13 @@ import {
   FiHome, FiSettings, FiFileText, FiUsers,
   FiCheckCircle, FiCreditCard, FiBarChart2,
   FiLogOut, FiMenu, FiX, FiChevronLeft, FiChevronRight,
+  FiPlusCircle,
 } from "react-icons/fi";
 import { journalAdminService } from "../../../services/api";
 
 const menuItems = [
   { path: "/journal-dashboard", label: "Dashboard", icon: FiHome },
+  { path: "/addjournal", label: "Add Journals", icon: FiPlusCircle },
   { path: "/journal-settings", label: "Settings", icon: FiSettings },
   { path: "/journal-articles", label: "Articles", icon: FiFileText },
   { path: "/journal-editors", label: "Editors", icon: FiUsers },
