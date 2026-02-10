@@ -4,13 +4,13 @@ import {
   FiHome, FiSettings, FiFileText, FiUsers,
   FiCheckCircle, FiCreditCard, FiBarChart2,
   FiLogOut, FiMenu, FiX, FiChevronLeft, FiChevronRight,
-  FiPlusCircle,
+  FiPlusCircle, FiAlertTriangle,
 } from "react-icons/fi";
 import { journalAdminService } from "../../../services/api";
 
 const menuItems = [
   { path: "/journal-dashboard", label: "Dashboard", icon: FiHome },
-  { path: "/addjournal", label: "Add Journals", icon: FiPlusCircle },
+  { path: "/journal-list", label: "Add Journals", icon: FiPlusCircle },
   { path: "/journal-settings", label: "Settings", icon: FiSettings },
   { path: "/journal-articles", label: "Articles", icon: FiFileText },
   { path: "/journal-editors", label: "Editors", icon: FiUsers },
@@ -27,6 +27,9 @@ const Sidebar = () => {
   const [user, setUser] = useState(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  
+  // Modal uchun state
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const adminId = useMemo(() => localStorage.getItem("journal_admin_id"), []);
 
@@ -42,7 +45,7 @@ const Sidebar = () => {
     load();
   }, [adminId]);
 
-  const handleLogout = () => {
+  const confirmLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("journal_admin_id");
     navigate("/journal-signin");
@@ -108,7 +111,6 @@ const Sidebar = () => {
             <div className={`flex flex-col ${isCollapsed && !isMobileOpen ? 'items-center' : 'items-start'} gap-3`}>
               
               <div className="flex items-center w-full justify-between">
-                {/* Avatar Group */}
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={`shrink-0 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 overflow-hidden flex items-center justify-center font-bold border border-white/20 shadow-lg transition-all duration-300 ${
                     isCollapsed && !isMobileOpen ? 'w-12 h-12' : 'w-11 h-11'
@@ -125,7 +127,6 @@ const Sidebar = () => {
                     )}
                   </div>
 
-                  {/* Name Info (Only when expanded) */}
                   {(!isCollapsed || isMobileOpen) && (
                     <div className="flex-1 min-w-0">
                       <p className="text-[14px] font-bold truncate text-white">Journal Admin</p>
@@ -134,7 +135,6 @@ const Sidebar = () => {
                   )}
                 </div>
 
-                {/* Desktop Collapse Toggle (Inside Header) */}
                 {!isCollapsed && (
                   <button 
                     onClick={() => setIsCollapsed(true)} 
@@ -145,7 +145,6 @@ const Sidebar = () => {
                 )}
               </div>
 
-              {/* Show Expand button below avatar when collapsed */}
               {isCollapsed && !isMobileOpen && (
                 <button 
                   onClick={() => setIsCollapsed(false)}
@@ -178,7 +177,6 @@ const Sidebar = () => {
                     <span className="text-[14px] font-medium tracking-wide">{item.label}</span>
                   )}
                   
-                  {/* Tooltip for collapsed mode */}
                   {isCollapsed && !isMobileOpen && (
                     <div className="absolute left-full ml-4 scale-0 group-hover:scale-100 transition-all origin-left bg-gray-900 text-white text-[11px] px-3 py-1.5 rounded-lg shadow-2xl z-50 whitespace-nowrap pointer-events-none">
                       {item.label}
@@ -192,7 +190,7 @@ const Sidebar = () => {
           {/* Logout Section */}
           <div className="p-4 border-t border-white/5 shrink-0">
             <button
-              onClick={handleLogout}
+              onClick={() => setIsLogoutModalOpen(true)}
               className={`w-full flex items-center p-3 rounded-xl bg-red-500/5 hover:bg-red-500/15 text-red-400/80 hover:text-red-400 transition-all duration-200 ${
                 isCollapsed && !isMobileOpen ? "justify-center" : "gap-3"
               }`}
@@ -203,6 +201,48 @@ const Sidebar = () => {
           </div>
         </div>
       </aside>
+
+      {/* --- LOGOUT CONFIRMATION MODAL --- */}
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          {/* Modal Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/40 backdrop-blur-md animate-in fade-in duration-200"
+            onClick={() => setIsLogoutModalOpen(false)}
+          />
+          
+          {/* Modal Content */}
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                <FiAlertTriangle className="text-red-500" size={32} />
+              </div>
+              
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Sign out
+              </h3>
+              <p className="text-gray-500 mb-6">
+                Are you sure you want to leave the profile?
+              </p>
+
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setIsLogoutModalOpen(false)}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmLogout}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors shadow-lg shadow-red-200"
+                >
+                  Yes, log out
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
