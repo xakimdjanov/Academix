@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { articleService } from "../../../services/api";
+import { articleService, journalService } from "../../../services/api";
 import { FiFileText, FiClock, FiCheckCircle, FiDollarSign } from "react-icons/fi";
 
 const APC_PRICE = 150;
@@ -9,12 +9,35 @@ const Dashboard = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const myAdminId = useMemo(() => localStorage.getItem("journal_admin_id"), []);
+
   const loadArticles = async () => {
     try {
       setLoading(true);
-      const res = await articleService.getAll();
 
-      // ✅ backend formatlari turlicha bo'lishi mumkin
+      if (!myAdminId) {
+        toast.error("journal_admin_id topilmadi. Qayta login qiling.");
+        setArticles([]);
+        return;
+      }
+
+      // 1) admin yaratgan journals
+      const jr = await journalService.getAll();
+      const jRaw = jr?.data?.data || jr?.data?.journals || jr?.data || [];
+      const jList = Array.isArray(jRaw) ? jRaw : [];
+
+      const myJournalIds = jList
+        .filter((j) => String(j?.journal_admin_id) === String(myAdminId))
+        .map((j) => String(j?.id ?? j?._id ?? j?.journal_id))
+        .filter(Boolean);
+
+      if (myJournalIds.length === 0) {
+        setArticles([]);
+        return;
+      }
+
+      // 2) hamma articles -> faqat shu journal_id lar
+      const res = await articleService.getAll();
       const raw =
         res?.data?.data ||
         res?.data?.articles ||
@@ -23,12 +46,10 @@ const Dashboard = () => {
         [];
 
       const list = Array.isArray(raw) ? raw : [];
+      const mine = list.filter((a) => myJournalIds.includes(String(a?.journal_id)));
 
-      // ✅ optional: newest first (agar backend old->new bo'lsa)
-      // Agar backend allaqachon newest-first yuborsa, bu baribir ishlaydi.
-      const normalized = [...list].reverse();
-
-      setArticles(normalized);
+      // newest first
+      setArticles([...mine].reverse());
     } catch (err) {
       console.error("Error loading articles", err);
       const msg =
@@ -45,6 +66,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     loadArticles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const total = articles.length;
@@ -71,7 +93,7 @@ const Dashboard = () => {
 
   const recent = useMemo(() => articles.slice(0, 5), [articles]);
 
-  if (loading) return <div className="p-4 sm:p-6">Loading dashboard...</div>;
+  if (loading) return <DashboardLoading />;
 
   return (
     <div className="space-y-5 sm:space-y-6 p-4 sm:p-0">
@@ -81,7 +103,7 @@ const Dashboard = () => {
           Journal Dashboard
         </h1>
         <p className="text-xs sm:text-sm text-gray-500">
-          Overview of journal performance
+          Only articles for journals you created
         </p>
       </div>
 
@@ -98,21 +120,9 @@ const Dashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-        <StatCard
-          title="Total Submissions"
-          value={total}
-          icon={<FiFileText />}
-        />
-        <StatCard
-          title="Under Review"
-          value={underReview}
-          icon={<FiClock />}
-        />
-        <StatCard
-          title="Published"
-          value={published}
-          icon={<FiCheckCircle />}
-        />
+        <StatCard title="Total Submissions" value={total} icon={<FiFileText />} />
+        <StatCard title="Under Review" value={underReview} icon={<FiClock />} />
+        <StatCard title="Published" value={published} icon={<FiCheckCircle />} />
         <StatCard
           title="Revenue (APC)"
           value={`$${revenueFormatted}`}
@@ -131,7 +141,7 @@ const Dashboard = () => {
           </span>
         </div>
 
-        {/* ✅ Mobile: Card List */}
+        {/* Mobile: Card List */}
         <div className="space-y-3 sm:hidden">
           {recent.map((a, idx) => {
             const key = a?.id ?? a?._id ?? `${a?.title || "article"}-${idx}`;
@@ -170,7 +180,7 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* ✅ Desktop/Tablet: Table */}
+        {/* Desktop/Tablet: Table */}
         <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="text-left text-gray-500 border-b">
@@ -220,11 +230,106 @@ const Dashboard = () => {
 export default Dashboard;
 
 /* ============================= */
+/* Loading / Skeleton UI         */
+/* ============================= */
+
+const DashboardLoading = () => {
+  return (
+    <div className="space-y-5 sm:space-y-6 p-4 sm:p-0">
+      {/* Title skeleton */}
+      <div className="space-y-2">
+        <div className="h-6 w-52 rounded-lg bg-gray-200 animate-pulse" />
+        <div className="h-4 w-64 rounded-lg bg-gray-100 animate-pulse" />
+      </div>
+
+      {/* Refresh button skeleton */}
+      <div className="flex justify-end">
+        <div className="h-9 w-24 rounded-xl bg-gray-100 border border-gray-200 animate-pulse" />
+      </div>
+
+      {/* Stats skeleton */}
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        <StatCardSkeleton />
+        <StatCardSkeleton />
+        <StatCardSkeleton />
+        <StatCardSkeleton />
+      </div>
+
+      {/* Recent submissions skeleton */}
+      <div className="bg-white rounded-2xl shadow p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="h-5 w-44 rounded-lg bg-gray-200 animate-pulse" />
+          <div className="h-4 w-28 rounded-lg bg-gray-100 animate-pulse" />
+        </div>
+
+        {/* Mobile list skeleton */}
+        <div className="space-y-3 sm:hidden">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="rounded-xl border border-gray-100 p-3 bg-white"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="h-4 w-48 rounded bg-gray-200 animate-pulse" />
+                <div className="h-5 w-20 rounded-full bg-gray-100 animate-pulse" />
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div>
+                  <div className="h-3 w-16 rounded bg-gray-100 animate-pulse" />
+                  <div className="mt-1 h-4 w-28 rounded bg-gray-200 animate-pulse" />
+                </div>
+                <div className="text-right">
+                  <div className="ml-auto h-3 w-16 rounded bg-gray-100 animate-pulse" />
+                  <div className="mt-1 ml-auto h-4 w-20 rounded bg-gray-200 animate-pulse" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop table skeleton */}
+        <div className="hidden sm:block overflow-x-auto">
+          <div className="w-full">
+            <div className="h-9 w-full rounded-xl bg-gray-100 mb-2 animate-pulse" />
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="h-12 w-full rounded-xl bg-gray-50 mb-2 animate-pulse"
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Center spinner */}
+        <div className="mt-5 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-full border-4 border-gray-200 border-t-gray-500 animate-spin" />
+        </div>
+
+        <p className="mt-3 text-center text-sm text-gray-400">
+          Loading dashboard...
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const StatCardSkeleton = () => {
+  return (
+    <div className="bg-white rounded-2xl shadow p-4 sm:p-5 flex items-center justify-between">
+      <div className="min-w-0 w-full">
+        <div className="h-3 w-28 rounded bg-gray-100 animate-pulse" />
+        <div className="mt-2 h-7 w-16 rounded bg-gray-200 animate-pulse" />
+      </div>
+      <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gray-100 animate-pulse shrink-0" />
+    </div>
+  );
+};
+
+/* ============================= */
 /* Reusable Stat Card Component  */
 /* ============================= */
 
 const StatCard = ({ title, value, icon }) => {
-  // title bo‘yicha ranglarni avtomatik beramiz
   const style = getStatStyle(title);
 
   return (
@@ -247,7 +352,8 @@ function getStatStyle(title) {
   if (t.includes("total")) return { bg: "bg-blue-500/10", text: "text-blue-600" };
   if (t.includes("review")) return { bg: "bg-yellow-500/10", text: "text-yellow-600" };
   if (t.includes("published")) return { bg: "bg-green-500/10", text: "text-green-600" };
-  if (t.includes("revenue") || t.includes("apc")) return { bg: "bg-purple-500/10", text: "text-purple-600" };
+  if (t.includes("revenue") || t.includes("apc"))
+    return { bg: "bg-purple-500/10", text: "text-purple-600" };
   return { bg: "bg-gray-500/10", text: "text-gray-600" };
 }
 
