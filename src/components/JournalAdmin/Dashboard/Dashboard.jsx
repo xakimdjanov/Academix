@@ -1,15 +1,66 @@
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import { articleService, journalService } from "../../../services/api";
-import { FiFileText, FiClock, FiCheckCircle, FiDollarSign } from "react-icons/fi";
+import {
+  FiFileText,
+  FiClock,
+  FiCheckCircle,
+  FiDollarSign,
+  FiEye,
+} from "react-icons/fi";
 
 const APC_PRICE = 150;
+const DETAILS_BASE_PATH = "/articledetails";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const myAdminId = useMemo(() => localStorage.getItem("journal_admin_id"), []);
+
+  const parseList = (res) => {
+    const raw =
+      res?.data?.data ??
+      res?.data?.articles ??
+      res?.data?.journals ??
+      res?.data?.result ??
+      res?.data ??
+      [];
+    return Array.isArray(raw) ? raw : [];
+  };
+
+  const getId = (x) => x?.id ?? x?._id ?? x?.article_id ?? x?.journal_id;
+
+  const getTime = (a) => {
+    const t =
+      a?.created_at ||
+      a?.createdAt ||
+      a?.updated_at ||
+      a?.updatedAt ||
+      a?.submitted_at ||
+      a?.submittedAt;
+    const ms = t ? new Date(t).getTime() : 0;
+    return Number.isFinite(ms) ? ms : 0;
+  };
+
+  const normalizeStatus = (s) => {
+    const v = String(s || "").trim().toLowerCase();
+    if (v === "submitted") return "Submitted";
+    if (v === "under review" || v === "under_review" || v === "review") return "Under Review";
+    if (v === "needs revision" || v === "needs_revision" || v === "revision") return "Needs Revision";
+    if (v === "accepted" || v === "approve" || v === "approved") return "Accepted";
+    if (v === "rejected" || v === "reject") return "Rejected";
+    return s ? String(s) : "Submitted";
+  };
+
+  const goDetails = (article) => {
+    const id = getId(article);
+    if (!id) return toast.error("Article ID topilmadi");
+    navigate(`${DETAILS_BASE_PATH}/${id}`);
+  };
 
   const loadArticles = async () => {
     try {
@@ -21,14 +72,13 @@ const Dashboard = () => {
         return;
       }
 
-      // 1) admin yaratgan journals
+      // 1) Admin yaratgan journals
       const jr = await journalService.getAll();
-      const jRaw = jr?.data?.data || jr?.data?.journals || jr?.data || [];
-      const jList = Array.isArray(jRaw) ? jRaw : [];
+      const journals = parseList(jr);
 
-      const myJournalIds = jList
+      const myJournalIds = journals
         .filter((j) => String(j?.journal_admin_id) === String(myAdminId))
-        .map((j) => String(j?.id ?? j?._id ?? j?.journal_id))
+        .map((j) => String(getId(j)))
         .filter(Boolean);
 
       if (myJournalIds.length === 0) {
@@ -36,20 +86,21 @@ const Dashboard = () => {
         return;
       }
 
-      // 2) hamma articles -> faqat shu journal_id lar
-      const res = await articleService.getAll();
-      const raw =
-        res?.data?.data ||
-        res?.data?.articles ||
-        res?.data?.result ||
-        res?.data ||
-        [];
+      // 2) Articlelar -> faqat shu journal_id lar
+      const ar = await articleService.getAll();
+      const list = parseList(ar);
 
-      const list = Array.isArray(raw) ? raw : [];
-      const mine = list.filter((a) => myJournalIds.includes(String(a?.journal_id)));
+      const mine = list
+        .filter((a) => myJournalIds.includes(String(a?.journal_id)))
+        .map((a) => ({ ...a, status: normalizeStatus(a?.status) }));
 
-      // newest first
-      setArticles([...mine].reverse());
+      // newest first (by time if exists; fallback reverse)
+      const withAnyDate = mine.some((a) => getTime(a) > 0);
+      const newestFirst = withAnyDate
+        ? [...mine].sort((x, y) => getTime(y) - getTime(x))
+        : [...mine].reverse();
+
+      setArticles(newestFirst);
     } catch (err) {
       console.error("Error loading articles", err);
       const msg =
@@ -69,19 +120,36 @@ const Dashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ====== Stats (STATUS based) ======
   const total = articles.length;
 
-  const published = useMemo(
-    () => articles.filter((a) => a?.apc_paid === true).length,
+  const submitted = useMemo(
+    () => articles.filter((a) => normalizeStatus(a?.status) === "Submitted").length,
     [articles]
   );
 
   const underReview = useMemo(
-    () => articles.filter((a) => a?.apc_paid !== true).length,
+    () => articles.filter((a) => normalizeStatus(a?.status) === "Under Review").length,
     [articles]
   );
 
-  const revenue = useMemo(() => published * APC_PRICE, [published]);
+  const needsRevision = useMemo(
+    () => articles.filter((a) => normalizeStatus(a?.status) === "Needs Revision").length,
+    [articles]
+  );
+
+  const accepted = useMemo(
+    () => articles.filter((a) => normalizeStatus(a?.status) === "Accepted").length,
+    [articles]
+  );
+
+  const rejected = useMemo(
+    () => articles.filter((a) => normalizeStatus(a?.status) === "Rejected").length,
+    [articles]
+  );
+
+  // Revenue default: Accepted * APC_PRICE
+  const revenue = useMemo(() => accepted * APC_PRICE, [accepted]);
 
   const revenueFormatted = useMemo(() => {
     try {
@@ -122,20 +190,21 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         <StatCard title="Total Submissions" value={total} icon={<FiFileText />} />
         <StatCard title="Under Review" value={underReview} icon={<FiClock />} />
-        <StatCard title="Published" value={published} icon={<FiCheckCircle />} />
-        <StatCard
-          title="Revenue (APC)"
-          value={`$${revenueFormatted}`}
-          icon={<FiDollarSign />}
-        />
+        <StatCard title="Accepted" value={accepted} icon={<FiCheckCircle />} />
+        <StatCard title="Revenue (APC)" value={`$${revenueFormatted}`} icon={<FiDollarSign />} />
+      </div>
+
+      {/* Extra status pills (optional) */}
+      <div className="flex flex-wrap gap-2">
+        <MiniPill label="Submitted" value={submitted} tone="blue" />
+        <MiniPill label="Needs Revision" value={needsRevision} tone="amber" />
+        <MiniPill label="Rejected" value={rejected} tone="rose" />
       </div>
 
       {/* Recent Articles */}
       <div className="bg-white rounded-2xl shadow p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3 mb-4">
-          <h2 className="text-base sm:text-lg font-semibold">
-            Recent Submissions
-          </h2>
+          <h2 className="text-base sm:text-lg font-semibold">Recent Submissions</h2>
           <span className="text-xs text-gray-500">
             Showing {Math.min(5, articles.length)} of {articles.length}
           </span>
@@ -144,40 +213,55 @@ const Dashboard = () => {
         {/* Mobile: Card List */}
         <div className="space-y-3 sm:hidden">
           {recent.map((a, idx) => {
-            const key = a?.id ?? a?._id ?? `${a?.title || "article"}-${idx}`;
+            const key = getId(a) ?? `${a?.title || "article"}-${idx}`;
+            const status = normalizeStatus(a?.status);
+
             return (
               <div
                 key={String(key)}
-                className="rounded-xl border border-gray-100 p-3 hover:bg-gray-50 transition"
+                onClick={() => goDetails(a)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") goDetails(a);
+                }}
+                className="rounded-xl border border-gray-100 p-3 hover:bg-gray-50 transition cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-3">
                   <p className="font-semibold text-gray-800 leading-snug break-words line-clamp-2">
                     {a?.title || "Untitled"}
                   </p>
-                  <StatusPill paid={a?.apc_paid === true} />
+                  <StatusPill status={status} />
                 </div>
 
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-gray-600">
                   <div>
                     <p className="text-[11px] text-gray-400">Author</p>
-                    <p className="break-words line-clamp-1">
-                      {a?.authors || a?.author || "—"}
-                    </p>
+                    <p className="break-words line-clamp-1">{a?.authors || a?.author || "—"}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[11px] text-gray-400">Language</p>
-                    <p className="break-words line-clamp-1">
-                      {a?.language || "—"}
-                    </p>
+                    <p className="break-words line-clamp-1">{a?.language || "—"}</p>
                   </div>
+                </div>
+
+                <div className="mt-3 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      goDetails(a);
+                    }}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-[#002147] hover:text-white transition"
+                  >
+                    <FiEye /> View
+                  </button>
                 </div>
               </div>
             );
           })}
 
-          {articles.length === 0 && (
-            <p className="text-gray-400 mt-2">No submissions yet.</p>
-          )}
+          {articles.length === 0 && <p className="text-gray-400 mt-2">No submissions yet.</p>}
         </div>
 
         {/* Desktop/Tablet: Table */}
@@ -188,29 +272,55 @@ const Dashboard = () => {
                 <th className="py-2 pr-4">Title</th>
                 <th className="py-2 pr-4">Author</th>
                 <th className="py-2 pr-4">Language</th>
-                <th className="py-2">Status</th>
+                <th className="py-2 pr-4">Status</th>
+                <th className="py-2 text-right">View</th>
               </tr>
             </thead>
+
             <tbody>
               {recent.map((a, idx) => {
-                const key = a?.id ?? a?._id ?? `${a?.title || "article"}-${idx}`;
+                const key = getId(a) ?? `${a?.title || "article"}-${idx}`;
+                const status = normalizeStatus(a?.status);
+
                 return (
                   <tr key={String(key)} className="border-b hover:bg-gray-50">
                     <td className="py-3 pr-4 max-w-[420px]">
-                      <span className="font-medium text-gray-800 break-words line-clamp-1">
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => goDetails(a)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") goDetails(a);
+                        }}
+                        className="font-medium text-gray-800 break-words line-clamp-1 cursor-pointer hover:underline"
+                      >
                         {a?.title || "Untitled"}
                       </span>
                     </td>
+
                     <td className="py-3 pr-4">
                       <span className="text-gray-700 break-words line-clamp-1">
                         {a?.authors || a?.author || "—"}
                       </span>
                     </td>
+
                     <td className="py-3 pr-4">
                       <span className="text-gray-700">{a?.language || "—"}</span>
                     </td>
-                    <td className="py-3">
-                      <StatusText paid={a?.apc_paid === true} />
+
+                    <td className="py-3 pr-4">
+                      <StatusText status={status} />
+                    </td>
+
+                    <td className="py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => goDetails(a)}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-[#002147] hover:text-white transition"
+                        title="View Details"
+                      >
+                        <FiEye /> View
+                      </button>
                     </td>
                   </tr>
                 );
@@ -218,9 +328,7 @@ const Dashboard = () => {
             </tbody>
           </table>
 
-          {articles.length === 0 && (
-            <p className="text-gray-400 mt-4">No submissions yet.</p>
-          )}
+          {articles.length === 0 && <p className="text-gray-400 mt-4">No submissions yet.</p>}
         </div>
       </div>
     </div>
@@ -236,18 +344,15 @@ export default Dashboard;
 const DashboardLoading = () => {
   return (
     <div className="space-y-5 sm:space-y-6 p-4 sm:p-0">
-      {/* Title skeleton */}
       <div className="space-y-2">
         <div className="h-6 w-52 rounded-lg bg-gray-200 animate-pulse" />
         <div className="h-4 w-64 rounded-lg bg-gray-100 animate-pulse" />
       </div>
 
-      {/* Refresh button skeleton */}
       <div className="flex justify-end">
         <div className="h-9 w-24 rounded-xl bg-gray-100 border border-gray-200 animate-pulse" />
       </div>
 
-      {/* Stats skeleton */}
       <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         <StatCardSkeleton />
         <StatCardSkeleton />
@@ -255,20 +360,15 @@ const DashboardLoading = () => {
         <StatCardSkeleton />
       </div>
 
-      {/* Recent submissions skeleton */}
       <div className="bg-white rounded-2xl shadow p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3 mb-4">
           <div className="h-5 w-44 rounded-lg bg-gray-200 animate-pulse" />
           <div className="h-4 w-28 rounded-lg bg-gray-100 animate-pulse" />
         </div>
 
-        {/* Mobile list skeleton */}
         <div className="space-y-3 sm:hidden">
           {[...Array(3)].map((_, i) => (
-            <div
-              key={i}
-              className="rounded-xl border border-gray-100 p-3 bg-white"
-            >
+            <div key={i} className="rounded-xl border border-gray-100 p-3 bg-white">
               <div className="flex items-start justify-between gap-3">
                 <div className="h-4 w-48 rounded bg-gray-200 animate-pulse" />
                 <div className="h-5 w-20 rounded-full bg-gray-100 animate-pulse" />
@@ -287,27 +387,20 @@ const DashboardLoading = () => {
           ))}
         </div>
 
-        {/* Desktop table skeleton */}
         <div className="hidden sm:block overflow-x-auto">
           <div className="w-full">
             <div className="h-9 w-full rounded-xl bg-gray-100 mb-2 animate-pulse" />
             {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className="h-12 w-full rounded-xl bg-gray-50 mb-2 animate-pulse"
-              />
+              <div key={i} className="h-12 w-full rounded-xl bg-gray-50 mb-2 animate-pulse" />
             ))}
           </div>
         </div>
 
-        {/* Center spinner */}
         <div className="mt-5 flex items-center justify-center">
           <div className="h-10 w-10 rounded-full border-4 border-gray-200 border-t-gray-500 animate-spin" />
         </div>
 
-        <p className="mt-3 text-center text-sm text-gray-400">
-          Loading dashboard...
-        </p>
+        <p className="mt-3 text-center text-sm text-gray-400">Loading dashboard...</p>
       </div>
     </div>
   );
@@ -351,28 +444,64 @@ function getStatStyle(title) {
   const t = String(title || "").toLowerCase();
   if (t.includes("total")) return { bg: "bg-blue-500/10", text: "text-blue-600" };
   if (t.includes("review")) return { bg: "bg-yellow-500/10", text: "text-yellow-600" };
-  if (t.includes("published")) return { bg: "bg-green-500/10", text: "text-green-600" };
+  if (t.includes("accepted")) return { bg: "bg-green-500/10", text: "text-green-600" };
   if (t.includes("revenue") || t.includes("apc"))
     return { bg: "bg-purple-500/10", text: "text-purple-600" };
   return { bg: "bg-gray-500/10", text: "text-gray-600" };
 }
 
-const StatusText = ({ paid }) => {
-  return paid ? (
-    <span className="text-green-600 font-medium">Published</span>
-  ) : (
-    <span className="text-yellow-600 font-medium">Under Review</span>
+/* ============================= */
+/* Status UI                      */
+/* ============================= */
+
+const StatusText = ({ status }) => {
+  const s = String(status || "");
+  const cls =
+    s === "Accepted"
+      ? "text-green-600"
+      : s === "Rejected"
+      ? "text-rose-600"
+      : s === "Needs Revision"
+      ? "text-amber-600"
+      : s === "Under Review"
+      ? "text-yellow-600"
+      : "text-blue-600";
+  return <span className={`${cls} font-medium`}>{s || "Submitted"}</span>;
+};
+
+const StatusPill = ({ status }) => {
+  const s = String(status || "Submitted");
+  const cls =
+    s === "Accepted"
+      ? "bg-green-500/10 text-green-700"
+      : s === "Rejected"
+      ? "bg-rose-500/10 text-rose-700"
+      : s === "Needs Revision"
+      ? "bg-amber-500/10 text-amber-700"
+      : s === "Under Review"
+      ? "bg-yellow-500/10 text-yellow-700"
+      : "bg-blue-500/10 text-blue-700";
+
+  return (
+    <span className={`px-2 py-1 rounded-full text-[11px] font-semibold ${cls}`}>
+      {s}
+    </span>
   );
 };
 
-const StatusPill = ({ paid }) => {
-  return paid ? (
-    <span className="px-2 py-1 rounded-full text-[11px] font-semibold bg-green-500/10 text-green-700">
-      Published
-    </span>
-  ) : (
-    <span className="px-2 py-1 rounded-full text-[11px] font-semibold bg-yellow-500/10 text-yellow-700">
-      Under Review
-    </span>
+const MiniPill = ({ label, value, tone }) => {
+  const cls =
+    tone === "blue"
+      ? "bg-blue-500/10 text-blue-700"
+      : tone === "amber"
+      ? "bg-amber-500/10 text-amber-700"
+      : tone === "rose"
+      ? "bg-rose-500/10 text-rose-700"
+      : "bg-gray-500/10 text-gray-700";
+
+  return (
+    <div className={`px-3 py-2 rounded-2xl text-xs font-bold ${cls}`}>
+      {label}: <span className="font-black">{value}</span>
+    </div>
   );
 };

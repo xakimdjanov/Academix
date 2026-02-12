@@ -13,9 +13,9 @@ const menuItems = [
   { path: "/journal-list", label: "Add Journals", icon: FiPlusCircle },
   { path: "/journal-settings", label: "Settings", icon: FiSettings },
   { path: "/journal-articles", label: "Articles", icon: FiFileText },
-  { path: "/journal-editors", label: "Editors", icon: FiUsers },
-  { path: "/journal-decisions", label: "Decisions", icon: FiCheckCircle },
-  { path: "/journal-payments", label: "Payments", icon: FiCreditCard },
+  { path: "/journal-editors", label: "Assign Editors", icon: FiUsers },
+  // { path: "/journal-decisions", label: "Decisions", icon: FiCheckCircle },
+  // { path: "/journal-payments", label: "Payments", icon: FiCreditCard },
   { path: "/journal-reports", label: "Reports", icon: FiBarChart2 },
 ];
 

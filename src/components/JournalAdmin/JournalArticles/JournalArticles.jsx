@@ -1,31 +1,19 @@
+// JournalArticles.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { articleService, journalService, userService } from "../../../services/api";
-import {
-  FiEye,
-  FiEdit2,
-  FiX,
-  FiSave,
-  FiRefreshCw,
-  FiFileText,
-  FiUser,
-  FiInfo,
-  FiLayers,
-} from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
+import { articleService, journalService } from "../../../services/api";
+import { FiEye, FiEdit2, FiRefreshCw, FiFileText, FiInfo, FiLayers } from "react-icons/fi";
 
 const STATUSES = ["Submitted", "Under Review", "Needs Revision", "Accepted", "Rejected"];
 
 const JournalArticles = () => {
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(true);
   const [journals, setJournals] = useState([]);
   const [articles, setArticles] = useState([]);
   const [filter, setFilter] = useState("Submitted");
-
-  // View modal
-  const [viewOpen, setViewOpen] = useState(false);
-  const [viewArticle, setViewArticle] = useState(null);
-  const [viewUser, setViewUser] = useState(null);
-  const [viewUserLoading, setViewUserLoading] = useState(false);
 
   // Edit modal
   const [editOpen, setEditOpen] = useState(false);
@@ -92,24 +80,6 @@ const JournalArticles = () => {
     loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const openView = async (article) => {
-    setViewArticle(article);
-    setViewUser(null);
-    setViewOpen(true);
-
-    if (!article?.user_id) return;
-
-    try {
-      setViewUserLoading(true);
-      const res = await userService.getById(article.user_id);
-      setViewUser(res?.data?.data || res?.data?.user || res?.data || null);
-    } catch {
-      toast.error("User information not found");
-    } finally {
-      setViewUserLoading(false);
-    }
-  };
 
   const openEdit = (article) => {
     setEditArticle(article);
@@ -252,7 +222,7 @@ const JournalArticles = () => {
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => openView(a)}
+                    onClick={() => navigate(`/admin/articles/${getId(a)}`)}
                     className="p-2.5 rounded-2xl bg-slate-100 text-slate-600 hover:bg-[#002147] hover:text-white transition-all"
                     title="View"
                   >
@@ -330,7 +300,7 @@ const JournalArticles = () => {
                     <td className="py-5 px-8">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => openView(a)}
+                          onClick={() => navigate(`/articledetails/${getId(a)}`)}
                           className="p-2.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-[#002147] hover:text-white transition-all shadow-sm"
                           title="View Details"
                         >
@@ -361,51 +331,6 @@ const JournalArticles = () => {
           )}
         </div>
       </div>
-
-      {/* VIEW MODAL */}
-      <Modal open={viewOpen} onClose={() => setViewOpen(false)} title="Manuscript Details">
-        <div className="space-y-5 sm:space-y-6">
-          <div className="bg-slate-50 rounded-2xl p-4 sm:p-6 border border-slate-100">
-            <h3 className="text-xs font-black uppercase text-blue-600 mb-4 flex items-center gap-2 tracking-widest">
-              <FiFileText /> Submission Info
-            </h3>
-
-            <div className="grid grid-cols-1 gap-y-4">
-              <InfoRow label="Title" value={viewArticle?.title} primary />
-              <InfoRow label="Abstract" value={viewArticle?.abstract} />
-              <InfoRow
-                label="Keywords"
-                value={Array.isArray(viewArticle?.keywords) ? viewArticle.keywords.join(", ") : "-"}
-              />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-2 border-t border-slate-200 pt-4">
-                <InfoRow label="Language" value={viewArticle?.language} />
-                <InfoRow label="APC Status" value={viewArticle?.apc_paid ? "Paid" : "Pending"} />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-50 rounded-2xl p-4 sm:p-6 border border-slate-100">
-            <h3 className="text-xs font-black uppercase text-emerald-600 mb-4 flex items-center gap-2 tracking-widest">
-              <FiUser /> Submitter Details
-            </h3>
-
-            {viewUserLoading ? (
-              <div className="animate-pulse space-y-3">
-                <div className="h-4 bg-slate-200 rounded w-3/4" />
-                <div className="h-4 bg-slate-200 rounded w-2/3" />
-              </div>
-            ) : viewUser ? (
-              <div className="grid grid-cols-1 gap-y-3 text-sm">
-                <InfoRow label="Full Name" value={viewUser?.name || viewUser?.full_name} />
-                <InfoRow label="Contact Email" value={viewUser?.email} />
-              </div>
-            ) : (
-              <p className="text-xs text-slate-400">User data unavailable</p>
-            )}
-          </div>
-        </div>
-      </Modal>
 
       {/* EDIT MODAL */}
       <Modal open={editOpen} onClose={() => !editSaving && setEditOpen(false)} title="Edit Manuscript">
@@ -493,7 +418,7 @@ const JournalArticles = () => {
           >
             {editSaving ? "Saving..." : (
               <>
-                <FiSave /> Save Changes
+                Save Changes
               </>
             )}
           </button>
@@ -543,32 +468,15 @@ const Modal = ({ open, onClose, title, children }) => {
             type="button"
             className="p-2 hover:bg-slate-100 rounded-full transition-colors"
           >
-            <FiX size={22} />
+            ✕
           </button>
         </div>
 
-        <div className="p-4 sm:p-8 max-h-[80vh] overflow-y-auto">
-          {children}
-        </div>
+        <div className="p-4 sm:p-8 max-h-[80vh] overflow-y-auto">{children}</div>
       </div>
     </div>
   );
 };
-
-const InfoRow = ({ label, value, primary }) => (
-  <div className="flex flex-col gap-1">
-    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.14em]">
-      {label}
-    </span>
-    <span
-      className={`${
-        primary ? "text-slate-900 font-black text-base" : "text-slate-600 text-sm"
-      } leading-relaxed`}
-    >
-      {value || "N/A"}
-    </span>
-  </div>
-);
 
 const CustomInput = ({ label, full, ...props }) => (
   <div className={`${full ? "md:col-span-2" : ""}`}>

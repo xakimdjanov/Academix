@@ -29,6 +29,7 @@ import JournalReports from "./components/JournalAdmin/JournalReports/JournalRepo
 import JournalSettings from "./components/JournalAdmin/JournalSettings/JournalSettings";
 import AddJournal from "./components/JournalAdmin/AddJournal/AddJournal";
 import JournalList from "./components/JournalAdmin/AddJournal/GetEditJournal";
+import ArticlesDetails from "./pages/JournalAdmin/ArticlesDetails/ArticlesDetails";
 
 const App = () => {
   return (
@@ -71,6 +72,7 @@ const App = () => {
           <Route path="/journal-list/addjournal" element={<AddJournal />} />
           <Route path="/journal-list" element={<JournalList />} />
           <Route path="/journal-list/editjournal/:id" element={<AddJournal />} />
+          <Route path="/articledetails/:id" element={<ArticlesDetails />} />
         </Route>
       </Routes>
     </div>

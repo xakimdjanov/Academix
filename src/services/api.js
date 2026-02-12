@@ -109,3 +109,12 @@ export const userService = {
   update: (id, data) => axiosInstance.put(`/users/updateUser/${id}`, data),
   delete: (id) => axiosInstance.delete(`/users/deleteUser/${id}`),
 };
+
+//11 ReviewAssignments
+export const ReviewAssignments = {
+  create: (data) => axiosInstance.post("/reviews/create", data),
+  getAll: () => axiosInstance.get("/reviews"),
+  getById: (id) => axiosInstance.get(`/reviews/${id}`),
+  update: (id, data) => axiosInstance.put(`/reviews/${id}`, data),
+  delete: (id) => axiosInstance.delete(`/reviews/${id}`),
+};
