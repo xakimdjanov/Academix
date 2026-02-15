@@ -208,7 +208,6 @@ const JournalEditors = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900">Review Assignments</h1>
-          <p className="text-sm text-slate-500 italic">Editor tanlab article biriktirish</p>
         </div>
 
         <button
@@ -236,7 +235,7 @@ const JournalEditors = () => {
           {/* Article select */}
           <div className="md:col-span-2">
             <label className="text-[11px] font-black text-slate-500 mb-2 block ml-1 uppercase">
-              Article (sizning journallaringiz)
+              Article
             </label>
             <select
               value={form.article_id}
@@ -258,22 +257,19 @@ const JournalEditors = () => {
           {/* Assigned By (UI) = Article owner full name, read-only */}
           <div className="md:col-span-2">
             <label className="text-[11px] font-black text-slate-500 mb-2 block ml-1 uppercase">
-              Assigned By (Article Owner) — o‘zgarmaydi
+              Assigned By
             </label>
             <input
               value={formatNameWithLastInitial(authorFullName)}
               disabled
               className="w-full rounded-2xl border border-slate-200 px-4 py-3 bg-slate-100 text-slate-800 font-extrabold text-sm cursor-not-allowed"
             />
-            <div className="mt-2 text-[11px] text-slate-400">
-              user_id: <span className="font-bold">{authorUserId ?? "N/A"}</span>
-            </div>
           </div>
 
           {/* Editor select */}
           <div>
             <label className="text-[11px] font-black text-slate-500 mb-2 block ml-1 uppercase">
-              Editor (barcha editorlar)
+              Editor
             </label>
             <select
               value={form.editor_id}
@@ -328,11 +324,6 @@ const JournalEditors = () => {
             >
               <FiSend /> {assignLoading ? "Sending..." : "Create Assignment"}
             </button>
-          </div>
-
-          <div className="md:col-span-2 text-[11px] text-slate-400">
-            Eslatma: UI’dagi “Assigned By” — maqola egasi (user).  
-            Backend FK sababli payload’dagi <b>assigned_by</b> editor_id bo‘lib yuboriladi.
           </div>
         </div>
       </div>
