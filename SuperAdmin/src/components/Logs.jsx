@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { FiSearch, FiClock, FiActivity } from "react-icons/fi";
+import { FiSearch, FiActivity } from "react-icons/fi";
 import { auditLogService } from "../services/api";
 
 const TABS = [
@@ -19,7 +19,12 @@ const matchTab = (log, tabKey) => {
   const action = compact(log?.action);
 
   if (tabKey === "login") {
-    return entity.includes("login") || action.includes("login") || action.includes("signin") || action.includes("logout");
+    return (
+      entity.includes("login") ||
+      action.includes("login") ||
+      action.includes("signin") ||
+      action.includes("logout")
+    );
   }
   if (tabKey === "article") return entity.includes("article") || action.includes("article");
   if (tabKey === "payment") return entity.includes("payment") || action.includes("payment");
@@ -43,10 +48,16 @@ const Logs = () => {
     setLoading(true);
     try {
       const res = await auditLogService.getAll();
-      const data = res?.data?.data || res?.data?.logs || res?.data?.auditLogs || res?.data || [];
+      const data =
+        res?.data?.data ||
+        res?.data?.logs ||
+        res?.data?.auditLogs ||
+        res?.data ||
+        [];
       setLogs(Array.isArray(data) ? data : []);
     } catch (e) {
       toast.error("Failed to load activity logs");
+      setLogs([]);
     } finally {
       setLoading(false);
     }
@@ -63,8 +74,15 @@ const Logs = () => {
       .filter((l) => {
         if (!q) return true;
         const actor = l?.actor || {};
-        const hay = [actor?.full_name, actor?.email, l?.action, l?.entity_type, l?.ip_address]
-          .map(v => norm(v)).join(" ");
+        const hay = [
+          actor?.full_name,
+          actor?.email,
+          l?.action,
+          l?.entity_type,
+          l?.ip_address,
+        ]
+          .map((v) => norm(v))
+          .join(" ");
         return hay.includes(q);
       });
   }, [logs, activeTab, query]);
@@ -74,28 +92,33 @@ const Logs = () => {
       {/* Header */}
       <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray-800">Activity Logs</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-800">
+            Activity Logs
+          </h1>
           <p className="text-sm text-gray-500">Track all system actions and events</p>
         </div>
+
         <div className="relative w-full md:w-80">
           <FiSearch className="absolute top-3 left-3 text-gray-400" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by user, action, IP..."
-            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm"
+            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-600 text-sm outline-none"
           />
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => setActiveTab(t.key)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-              activeTab === t.key ? "bg-indigo-600 text-white shadow-md shadow-indigo-100" : "bg-white text-gray-500 border border-gray-100 hover:bg-gray-50"
+            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
+              activeTab === t.key
+                ? "bg-blue-700 text-white border-blue-700 shadow-md shadow-blue-100"
+                : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
             }`}
           >
             {t.label}
@@ -107,13 +130,16 @@ const Logs = () => {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-5 border-b border-gray-50 flex items-center justify-between">
           <h2 className="font-bold text-gray-800 flex items-center gap-2">
-            <FiActivity className="text-indigo-600" />
+            <FiActivity className="text-blue-700" />
             {TABS.find((t) => t.key === activeTab)?.label}
           </h2>
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{filtered.length} Entries</span>
+
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+            {filtered.length} Entries
+          </span>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto scrollbar-none">
           {loading ? (
             <div className="p-10 text-center text-gray-400 italic">Fetching logs...</div>
           ) : (
@@ -128,6 +154,7 @@ const Logs = () => {
                   <th className="py-4 px-6 text-right">Timestamp</th>
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-gray-100">
                 {filtered.map((log, idx) => {
                   const actor = log?.actor || {};
@@ -135,36 +162,58 @@ const Logs = () => {
                     <tr key={log?.id || idx} className="hover:bg-gray-50/50 transition-colors">
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0">
                             {(actor?.full_name?.[0] || "U").toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <div className="text-sm font-bold text-gray-700 truncate max-w-[120px]">
+                            <div className="text-sm font-bold text-gray-700 truncate max-w-[140px]">
                               {actor?.full_name || `User #${log?.actor_user_id}`}
                             </div>
-                            <div className="text-[11px] text-gray-400 truncate max-w-[120px]">{actor?.email || "-"}</div>
+                            <div className="text-[11px] text-gray-400 truncate max-w-[140px]">
+                              {actor?.email || "-"}
+                            </div>
                           </div>
                         </div>
                       </td>
+
                       <td className="py-4 px-6">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 uppercase">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 uppercase">
                           {log?.action || "-"}
                         </span>
                       </td>
+
                       <td className="py-4 px-6">
                         <div className="text-xs font-bold text-gray-700">{log?.entity_type || "-"}</div>
                         <div className="text-[10px] text-gray-400">ID: {log?.entity_id ?? "-"}</div>
                       </td>
-                      <td className="py-4 px-6 font-mono text-[11px] text-gray-500">{log?.ip_address || "-"}</td>
-                      <td className="py-4 px-6 text-xs text-gray-400 italic truncate max-w-[150px]">
+
+                      <td className="py-4 px-6 font-mono text-[11px] text-gray-500">
+                        {log?.ip_address || "-"}
+                      </td>
+
+                      <td className="py-4 px-6 text-xs text-gray-400 italic truncate max-w-[180px]">
                         {safePreview(log?.metadata)}
                       </td>
+
                       <td className="py-4 px-6 text-right text-[11px] text-gray-400">
-                        {log?.createdAt ? new Date(log.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : "-"}
+                        {log?.createdAt
+                          ? new Date(log.createdAt).toLocaleString([], {
+                              dateStyle: "short",
+                              timeStyle: "short",
+                            })
+                          : "-"}
                       </td>
                     </tr>
                   );
                 })}
+
+                {filtered.length === 0 && !loading && (
+                  <tr>
+                    <td colSpan="6" className="p-10 text-center text-gray-400 italic">
+                      No logs found
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           )}
