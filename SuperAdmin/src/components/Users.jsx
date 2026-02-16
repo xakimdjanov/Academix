@@ -12,10 +12,12 @@ const Users = () => {
       const res = await axiosInstance.get("/users/getUser");
       const data = res?.data?.data || res?.data || [];
 
-      const formatted = data.map((user) => ({
+      const formatted = (Array.isArray(data) ? data : []).map((user) => ({
         ...user,
         status: "Active",
         role: "User",
+        // fallback uchun flag: rasm xato bo‘lsa harf ko‘rsatamiz
+        avatarError: false,
       }));
 
       setUsers(formatted);
@@ -33,7 +35,7 @@ const Users = () => {
   const toggleStatus = (id) => {
     setUsers((prev) =>
       prev.map((user) =>
-        user.id === id
+        (user.id ?? user._id) === id
           ? {
               ...user,
               status: user.status === "Active" ? "Blocked" : "Active",
@@ -43,12 +45,22 @@ const Users = () => {
     );
   };
 
+  const markAvatarError = (id) => {
+    setUsers((prev) =>
+      prev.map((user) =>
+        (user.id ?? user._id) === id ? { ...user, avatarError: true } : user
+      )
+    );
+  };
+
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-full overflow-hidden">
       {/* Header */}
       <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray-800">User Management</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-800">
+            User Management
+          </h1>
           <p className="text-sm text-gray-500">View and manage system users</p>
         </div>
         <div className="text-sm font-medium bg-indigo-50 text-indigo-600 px-4 py-2 rounded-lg self-start sm:self-center">
@@ -74,62 +86,83 @@ const Users = () => {
               </thead>
 
               <tbody className="divide-y divide-gray-100">
-                {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
-                    {/* User Info */}
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <img
-                          src={user.avatar_url || "https://via.placeholder.com/40"}
-                          alt="avatar"
-                          className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100 shrink-0"
-                        />
-                        <span className="font-semibold text-gray-700 truncate max-w-[150px]">
-                          {user.full_name}
+                {users.map((user) => {
+                  const uid = user.id ?? user._id; // id masalasini ham yopdik
+                  const name = user.full_name || user.name || user.username || "User";
+                  const firstLetter = name?.trim()?.[0]?.toUpperCase() || "U";
+
+                  // avatar_url bo‘sh string bo‘lsa ham false bo‘lishi uchun trim qildik
+                  const hasAvatar = Boolean(user.avatar_url && user.avatar_url.trim());
+                  const showImage = hasAvatar && user.avatarError === false;
+
+                  return (
+                    <tr
+                      key={uid}
+                      className="hover:bg-gray-50/50 transition-colors"
+                    >
+                      {/* User Info */}
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {showImage ? (
+                            <img
+                              src={user.avatar_url}
+                              alt="avatar"
+                              className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100 shrink-0"
+                              onError={() => markAvatarError(uid)} // ✅ rasm yiqilsa harfga o‘tadi
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-sm ring-2 ring-gray-100 shrink-0">
+                              {firstLetter}
+                            </div>
+                          )}
+
+                          <span className="font-semibold text-gray-700 truncate max-w-[150px]">
+                            {name}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Email */}
+                      <td className="py-4 px-6 text-sm text-gray-500 truncate max-w-[200px]">
+                        {user.email}
+                      </td>
+
+                      {/* Role */}
+                      <td className="py-4 px-6 text-center">
+                        <span className="px-3 py-1 text-[11px] font-bold rounded-md bg-indigo-50 text-indigo-600 border border-indigo-100">
+                          {user.role}
                         </span>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Email */}
-                    <td className="py-4 px-6 text-sm text-gray-500 truncate max-w-[200px]">
-                      {user.email}
-                    </td>
+                      {/* Status */}
+                      <td className="py-4 px-6 text-center">
+                        <span
+                          className={`px-3 py-1 text-[11px] font-bold rounded-md border ${
+                            user.status === "Active"
+                              ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                              : "bg-rose-50 text-rose-600 border-rose-100"
+                          }`}
+                        >
+                          {user.status}
+                        </span>
+                      </td>
 
-                    {/* Role */}
-                    <td className="py-4 px-6 text-center">
-                      <span className="px-3 py-1 text-[11px] font-bold rounded-md bg-indigo-50 text-indigo-600 border border-indigo-100">
-                        {user.role}
-                      </span>
-                    </td>
-
-                    {/* Status */}
-                    <td className="py-4 px-6 text-center">
-                      <span
-                        className={`px-3 py-1 text-[11px] font-bold rounded-md border ${
-                          user.status === "Active"
-                            ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                            : "bg-rose-50 text-rose-600 border-rose-100"
-                        }`}
-                      >
-                        {user.status}
-                      </span>
-                    </td>
-
-                    {/* Action */}
-                    <td className="py-4 px-6 text-right">
-                      <button
-                        onClick={() => toggleStatus(user.id)}
-                        className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
-                          user.status === "Active"
-                            ? "bg-rose-500 text-white hover:bg-rose-600"
-                            : "bg-emerald-500 text-white hover:bg-emerald-600"
-                        }`}
-                      >
-                        {user.status === "Active" ? "Block" : "Activate"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      {/* Action */}
+                      <td className="py-4 px-6 text-right">
+                        <button
+                          onClick={() => toggleStatus(uid)}
+                          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                            user.status === "Active"
+                              ? "bg-rose-500 text-white hover:bg-rose-600"
+                              : "bg-emerald-500 text-white hover:bg-emerald-600"
+                          }`}
+                        >
+                          {user.status === "Active" ? "Block" : "Activate"}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
 
                 {users.length === 0 && (
                   <tr>
