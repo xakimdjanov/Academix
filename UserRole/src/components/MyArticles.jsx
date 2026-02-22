@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { FiEye, FiRefreshCw, FiSearch, FiX } from "react-icons/fi";
 import toast, { Toaster } from "react-hot-toast";
 import { articleService } from "../services/api";
@@ -11,14 +12,30 @@ const formatDate = (iso) => {
   return d.toLocaleString();
 };
 
+const normalizeKeywords = (keywords) => {
+  if (!keywords) return [];
+  if (Array.isArray(keywords)) return keywords;
+  if (typeof keywords === "string") {
+    try {
+      const parsed = JSON.parse(keywords);
+      return Array.isArray(parsed) ? parsed : keywords.split(",").map((x) => x.trim()).filter(Boolean);
+    } catch {
+      return keywords.split(",").map((x) => x.trim()).filter(Boolean);
+    }
+  }
+  return [];
+};
+
 const StatusBadge = ({ status }) => {
   const base =
     "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1";
   const map = {
-    Submitted: "bg-blue-50 text-blue-700 ring-blue-200",
-    "In Review": "bg-amber-50 text-amber-700 ring-amber-200",
+    Submitted: "bg-gray-50 text-gray-700 ring-gray-200",
+    "Under Review": "bg-blue-50 text-blue-700 ring-blue-200",
+    "Needs Revision": "bg-amber-50 text-amber-700 ring-amber-200",
     Accepted: "bg-emerald-50 text-emerald-700 ring-emerald-200",
     Rejected: "bg-rose-50 text-rose-700 ring-rose-200",
+    Published: "bg-purple-50 text-purple-700 ring-purple-200",
   };
   const cls = map[status] || "bg-gray-50 text-gray-700 ring-gray-200";
   return <span className={`${base} ${cls}`}>{status || "Unknown"}</span>;
@@ -125,10 +142,7 @@ const MyArticles = () => {
               <tbody className="divide-y divide-gray-100">
                 {!loading && filtered.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="px-4 py-10 text-center text-gray-500"
-                    >
+                    <td colSpan={6} className="px-4 py-10 text-center text-gray-500">
                       Maqola topilmadi
                     </td>
                   </tr>
@@ -162,13 +176,23 @@ const MyArticles = () => {
                     </td>
 
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => setSelected(a)}
-                        className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
-                      >
-                        <FiEye />
-                        View
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <Link
+                          to={`/articles/${a.id}`}
+                          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                        >
+                          <FiEye />
+                          View
+                        </Link>
+
+                        <button
+                          type="button"
+                          onClick={() => setSelected(a)}
+                          className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black"
+                        >
+                          Quick view
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -183,6 +207,7 @@ const MyArticles = () => {
         </div>
       </div>
 
+      {/* QUICK VIEW MODAL */}
       {selected && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-3 sm:items-center"
@@ -243,20 +268,27 @@ const MyArticles = () => {
 
             <div className="mt-4 rounded-xl border border-gray-200 p-3">
               <div className="text-xs font-semibold text-gray-500">Abstract</div>
-              <p className="mt-1 text-sm text-gray-800">
+              <p className="mt-1 whitespace-pre-wrap text-sm text-gray-800">
                 {selected?.abstract || "-"}
               </p>
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              {(selected?.keywords || []).map((k, idx) => (
-                <span
-                  key={`${k}-${idx}`}
-                  className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700"
-                >
-                  {k}
-                </span>
-              ))}
+            <div className="mt-4">
+              <div className="text-xs font-semibold text-gray-500">Keywords</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {normalizeKeywords(selected?.keywords).length === 0 ? (
+                  <span className="text-sm text-gray-600">-</span>
+                ) : (
+                  normalizeKeywords(selected?.keywords).map((k, idx) => (
+                    <span
+                      key={`${k}-${idx}`}
+                      className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700"
+                    >
+                      {k}
+                    </span>
+                  ))
+                )}
+              </div>
             </div>
 
             {selected?.file_url && (
@@ -272,6 +304,17 @@ const MyArticles = () => {
                 </a>
               </div>
             )}
+
+            <div className="mt-5 flex justify-end">
+              <Link
+                to={`/articles/${selected.id}`}
+                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
+                onClick={() => setSelected(null)}
+              >
+                <FiEye />
+                Open full details
+              </Link>
+            </div>
           </div>
         </div>
       )}
@@ -279,4 +322,4 @@ const MyArticles = () => {
   );
 };
 
-export default MyArticles;  
+export default MyArticles;

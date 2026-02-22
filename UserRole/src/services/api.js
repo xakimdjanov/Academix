@@ -127,3 +127,11 @@ export const ReviewAssignments = {
   update: (id, data) => axiosInstance.put(`/reviews/${id}`, data),
   delete: (id) => axiosInstance.delete(`/reviews/${id}`),
 };
+
+// Chat
+export const chatService = {
+  send: (data) => axiosInstance.post("/chat/send", data),
+  getUserChatList: (userId) => axiosInstance.get(`/chat/userChatList/${userId}`),
+  updateStatus: (id, data) => axiosInstance.put(`/chat/updateStatus/${id}`, data),
+  delete: (id) => axiosInstance.delete(`/chat/delete/${id}`),
+};

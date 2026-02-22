@@ -535,10 +535,6 @@ const SignUp = () => {
                     </div>
                   </div>
                 </div>
-
-                <div className="mt-4 text-xs text-[#6B7280]">
-                  file field: <b>avatar_url</b> • role=user
-                </div>
               </div>
             </div>
           </form>

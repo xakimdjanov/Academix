@@ -15,6 +15,8 @@ import SignUp from "./pages/Auth/SignUp";
 import SignIn from "./pages/Auth/SignIn";
 import ForgotPass from "./pages/ForgotPass";
 import ResetPass from "./pages/ResetPass";
+import ArticleDetails from "./pages/ArticleDetails";
+import Chat from "./components/Chat";
 
 // ✅ optional: simple private route wrapper
 const PrivateRoute = ({ children }) => {
@@ -53,6 +55,8 @@ const App = () => {
           <Route path="notifications" element={<Notifications />} />
           <Route path="payments" element={<Payments />} />
           <Route path="submit-article" element={<SubmitArticle />} />
+          <Route path="chat" element={<Chat />} />
+          <Route path="/articles/:id" element={<ArticleDetails />} />
         </Route>
 
         {/* ✅ Not found */}

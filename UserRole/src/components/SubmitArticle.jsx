@@ -74,9 +74,14 @@ const SubmitArticle = () => {
     loadJournals();
   }, []);
 
+  const formatOrcid = (value) => {
+    const digits = value.replace(/\D/g, "").slice(0, 16); // faqat raqam
+    return digits.replace(/(\d{4})(?=\d)/g, "$1-");
+  };
+
   const selectedJournal = useMemo(
     () => journals.find((j) => String(j.id) === String(selectedJournalId)),
-    [journals, selectedJournalId]
+    [journals, selectedJournalId],
   );
 
   const addKeyword = () => {
@@ -101,7 +106,9 @@ const SubmitArticle = () => {
   };
 
   const updateAuthor = (idx, field, value) => {
-    setAuthors((p) => p.map((a, i) => (i === idx ? { ...a, [field]: value } : a)));
+    setAuthors((p) =>
+      p.map((a, i) => (i === idx ? { ...a, [field]: value } : a)),
+    );
   };
 
   const onPickFile = (f) => {
@@ -151,13 +158,16 @@ const SubmitArticle = () => {
       const first = authors[0];
       if (!first?.name?.trim()) return "Kamida 1 ta author name majburiy";
       if (!first?.email?.trim()) return "Kamida 1 ta author email majburiy";
-      const badEmail = authors.find((a) => a.email && !/^\S+@\S+\.\S+$/.test(a.email));
+      const badEmail = authors.find(
+        (a) => a.email && !/^\S+@\S+\.\S+$/.test(a.email),
+      );
       if (badEmail) return "Email format xato";
     }
 
     if (s === 4) {
       if (!fileUrl.trim()) return "File URL kiriting";
-      if (!isValidUrl(fileUrl.trim())) return "File URL noto‘g‘ri (https://...)";
+      if (!isValidUrl(fileUrl.trim()))
+        return "File URL noto‘g‘ri (https://...)";
     }
 
     return null;
@@ -176,7 +186,8 @@ const SubmitArticle = () => {
     if (err) return toast.error(err);
 
     const userId = getUserIdFromToken();
-    if (!userId) return toast.error("Token yo‘q yoki yaroqsiz (user_id topilmadi)");
+    if (!userId)
+      return toast.error("Token yo‘q yoki yaroqsiz (user_id topilmadi)");
 
     setSubmitting(true);
     setCreatedArticleId(null);
@@ -192,7 +203,7 @@ const SubmitArticle = () => {
         category: category.trim(),
         language: language.trim(),
         authors: buildAuthorsString(),
-        file_url: fileUrl.trim(),              // MUHIM
+        file_url: fileUrl.trim(), // MUHIM
         file_size: file?.size ? Number(file.size) : 0,
         apc_paid: false,
       };
@@ -224,7 +235,9 @@ const SubmitArticle = () => {
       }
     } catch (e) {
       console.log("CREATE ERROR:", e?.response?.data || e);
-      toast.error("Yuborishda xatolik (backend 400 bo‘lsa payloadni tekshiring)");
+      toast.error(
+        "Yuborishda xatolik (backend 400 bo‘lsa payloadni tekshiring)",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -261,8 +274,9 @@ const SubmitArticle = () => {
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">Submit Article</h1>
-              <p className="text-sm text-gray-600">Backend upload yo‘q: file_url orqali yuboriladi</p>
+              <h1 className="text-xl font-semibold text-gray-900">
+                Submit Article
+              </h1>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -276,9 +290,13 @@ const SubmitArticle = () => {
           <div className="mt-6 border-t border-gray-100 pt-6">
             {step === 1 && (
               <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-gray-900">Step 1: Journal</h2>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Step 1: Journal
+                </h2>
 
-                <label className="block text-sm font-semibold text-gray-800">Journal tanlash</label>
+                <label className="block text-sm font-semibold text-gray-800">
+                  Journal tanlash
+                </label>
 
                 <select
                   value={selectedJournalId}
@@ -296,11 +314,15 @@ const SubmitArticle = () => {
 
                 {selectedJournal && (
                   <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                    <div className="text-sm font-semibold text-gray-900">{selectedJournal.name}</div>
+                    <div className="text-sm font-semibold text-gray-900">
+                      {selectedJournal.name}
+                    </div>
                     <div className="mt-1 text-xs text-gray-600">
                       Subject area: {selectedJournal.subject_area || "-"}
                     </div>
-                    <div className="mt-1 text-xs text-gray-600">Status: {selectedJournal.status || "-"}</div>
+                    <div className="mt-1 text-xs text-gray-600">
+                      Status: {selectedJournal.status || "-"}
+                    </div>
                   </div>
                 )}
               </div>
@@ -308,10 +330,14 @@ const SubmitArticle = () => {
 
             {step === 2 && (
               <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-gray-900">Step 2: Article Info</h2>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Step 2: Article Info
+                </h2>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800">Title</label>
+                  <label className="block text-sm font-semibold text-gray-800">
+                    Title
+                  </label>
                   <input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
@@ -321,7 +347,9 @@ const SubmitArticle = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800">Abstract</label>
+                  <label className="block text-sm font-semibold text-gray-800">
+                    Abstract
+                  </label>
                   <textarea
                     value={abstract}
                     onChange={(e) => setAbstract(e.target.value)}
@@ -331,7 +359,9 @@ const SubmitArticle = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800">Keywords (tag)</label>
+                  <label className="block text-sm font-semibold text-gray-800">
+                    Keywords (tag)
+                  </label>
                   <div className="mt-1 flex gap-2">
                     <input
                       value={keywordInput}
@@ -371,7 +401,9 @@ const SubmitArticle = () => {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-800">Category</label>
+                    <label className="block text-sm font-semibold text-gray-800">
+                      Category
+                    </label>
                     <input
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
@@ -381,7 +413,9 @@ const SubmitArticle = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-800">Language</label>
+                    <label className="block text-sm font-semibold text-gray-800">
+                      Language
+                    </label>
                     <input
                       value={language}
                       onChange={(e) => setLanguage(e.target.value)}
@@ -396,7 +430,9 @@ const SubmitArticle = () => {
             {step === 3 && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-3">
-                  <h2 className="text-lg font-semibold text-gray-900">Step 3: Authors</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Step 3: Authors
+                  </h2>
                   <button
                     type="button"
                     onClick={addAuthor}
@@ -409,9 +445,14 @@ const SubmitArticle = () => {
 
                 <div className="space-y-3">
                   {authors.map((a, idx) => (
-                    <div key={idx} className="rounded-2xl border border-gray-200 p-4">
+                    <div
+                      key={idx}
+                      className="rounded-2xl border border-gray-200 p-4"
+                    >
                       <div className="flex items-start justify-between gap-3">
-                        <div className="text-sm font-semibold text-gray-900">Author {idx + 1}</div>
+                        <div className="text-sm font-semibold text-gray-900">
+                          Author {idx + 1}
+                        </div>
 
                         {authors.length > 1 && (
                           <button
@@ -427,29 +468,53 @@ const SubmitArticle = () => {
 
                       <div className="mt-4 grid gap-4 sm:grid-cols-3">
                         <div>
-                          <label className="block text-sm font-semibold text-gray-800">Author name</label>
+                          <label className="block text-sm font-semibold text-gray-800">
+                            Author name
+                          </label>
                           <input
                             value={a.name}
-                            onChange={(e) => updateAuthor(idx, "name", e.target.value)}
+                            onChange={(e) =>
+                              updateAuthor(idx, "name", e.target.value)
+                            }
                             className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-300"
                             placeholder="Full name..."
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-semibold text-gray-800">Email</label>
+                          <label className="block text-sm font-semibold text-gray-800">
+                            Email
+                          </label>
                           <input
                             value={a.email}
-                            onChange={(e) => updateAuthor(idx, "email", e.target.value)}
+                            onChange={(e) =>
+                              updateAuthor(idx, "email", e.target.value)
+                            }
                             className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-300"
                             placeholder="email@example.com"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-semibold text-gray-800">ORCID</label>
+                          <label className="block text-sm font-semibold text-gray-800">
+                            ORCID
+                          </label>
+
                           <input
                             value={a.orcid}
-                            onChange={(e) => updateAuthor(idx, "orcid", e.target.value)}
-                            className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-300"
+                            onChange={(e) =>
+                              updateAuthor(
+                                idx,
+                                "orcid",
+                                formatOrcid(e.target.value),
+                              )
+                            }
+                            maxLength={19}
+                            inputMode="numeric"
+                            className="
+    mt-1 w-full rounded-xl border border-gray-200
+    bg-white px-3 py-2 text-sm text-gray-900
+    outline-none transition
+    focus:border-gray-900 focus:ring-2 focus:ring-gray-200
+  "
                             placeholder="0000-0000-0000-0000"
                           />
                         </div>
@@ -462,17 +527,15 @@ const SubmitArticle = () => {
 
             {step === 4 && (
               <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-gray-900">Step 4: File URL</h2>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Step 4: File URL
+                </h2>
 
                 <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
                     <FiLink />
                     File URL (majburiy)
                   </div>
-                  <p className="mt-1 text-xs text-gray-600">
-                    Backendda upload endpoint yo‘q. Faylni Google Drive/Dropbox/Cloudinary/S3 ga
-                    yuklab, shu yerga to‘g‘ridan-to‘g‘ri URL kiriting.
-                  </p>
 
                   <input
                     value={fileUrl}
@@ -503,7 +566,14 @@ const SubmitArticle = () => {
                     type="file"
                     accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                     onChange={(e) => onPickFile(e.target.files?.[0])}
-                    className="mt-3 block w-full text-sm"
+                    className="
+    mt-3 w-full text-sm text-gray-700
+    file:mr-4 file:rounded-xl file:border-0
+    file:bg-gray-900 file:px-4 file:py-2
+    file:text-sm file:font-semibold
+    file:text-white hover:file:bg-black
+    cursor-pointer
+  "
                   />
 
                   {file && (
@@ -520,7 +590,9 @@ const SubmitArticle = () => {
                 </div>
 
                 <div className="rounded-2xl border border-gray-200 bg-white p-4">
-                  <div className="text-sm font-semibold text-gray-900">Submit + AI analysis</div>
+                  <div className="text-sm font-semibold text-gray-900">
+                    Submit + AI analysis
+                  </div>
 
                   <button
                     type="button"
@@ -528,7 +600,11 @@ const SubmitArticle = () => {
                     disabled={submitting || analyzing}
                     className="mt-3 w-full rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-60"
                   >
-                    {submitting ? "Submitting..." : analyzing ? "Analyzing..." : "Submit Article"}
+                    {submitting
+                      ? "Submitting..."
+                      : analyzing
+                        ? "Analyzing..."
+                        : "Submit Article"}
                   </button>
 
                   {createdArticleId && (
@@ -539,7 +615,9 @@ const SubmitArticle = () => {
 
                   {aiReport && (
                     <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                      <div className="text-sm font-semibold text-gray-900">AI analysis</div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        AI analysis
+                      </div>
                       <pre className="mt-2 whitespace-pre-wrap text-sm text-gray-800">
                         {aiReport}
                       </pre>
