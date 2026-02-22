@@ -174,8 +174,8 @@ const MyProfile = () => {
 
       // backend field nomlari
       fd.append("full_name", fullName.trim());
-      fd.append("email", email);           // readonly ham yuboriladi
-      fd.append("password", password);     // MUHIM: server 500 bo‘lmasin
+      fd.append("email", email); // readonly ham yuboriladi
+      fd.append("password", password); // MUHIM: server 500 bo‘lmasin
 
       // Send empty value — bo‘sh bo‘lsa ham yuboramiz
       fd.append("phone", phone || "");
@@ -194,11 +194,23 @@ const MyProfile = () => {
       await loadProfile();
     } catch (e) {
       console.log("PROFILE UPDATE ERROR:", e?.response?.data || e);
-      toast.error("Server xatolik (500). Backend validation/field nomlarini tekshirish kerak.");
+      toast.error(
+        "Server xatolik (500). Backend validation/field nomlarini tekshirish kerak.",
+      );
     } finally {
       setSaving(false);
       setPassword("");
     }
+  };
+
+  const formatOrcid = (value) => {
+    // Faqat raqamlarni qoldiramiz
+    const digits = value.replace(/\D/g, "").slice(0, 16);
+
+    // Har 4 ta raqamdan keyin "-" qo‘shamiz
+    const formatted = digits.replace(/(\d{4})(?=\d)/g, "$1-");
+
+    return formatted;
   };
 
   return (
@@ -212,7 +224,9 @@ const MyProfile = () => {
               <FiUser />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">My Profile</h1>
+              <h1 className="text-xl font-semibold text-gray-900">
+                My Profile
+              </h1>
               <p className="text-sm text-gray-600">
                 {loading ? "Loading..." : editing ? "Edit mode" : "View mode"}
               </p>
@@ -251,7 +265,9 @@ const MyProfile = () => {
         <div className="mt-5 grid gap-4 lg:grid-cols-3">
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold text-gray-900">Profile image</div>
+              <div className="text-sm font-semibold text-gray-900">
+                Profile image
+              </div>
               <FiCamera className="text-gray-500" />
             </div>
 
@@ -267,39 +283,90 @@ const MyProfile = () => {
               {editing && (
                 <div className="w-full">
                   <label className="block text-sm font-semibold text-gray-800">
-                    Upload avatar (file)
+                    Upload avatar
                   </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => onPickAvatar(e.target.files?.[0])}
-                    className="mt-2 block w-full text-sm"
-                  />
-                  <div className="mt-2 text-xs text-gray-500">
-                    PNG/JPG/WebP • max 5MB
+
+                  <div className="mt-2 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <div className="flex items-start gap-4">
+                      {/* Preview */}
+                      <div className="h-16 w-16 overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
+                        {avatarPreview ? (
+                          <img
+                            src={avatarPreview}
+                            alt="Avatar preview"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
+                            No image
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Upload area */}
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-800">
+                          Drop your image here, or{" "}
+                          <label className="cursor-pointer text-gray-900 underline underline-offset-2 hover:text-gray-700">
+                            browse
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                onPickAvatar(file);
+                              }}
+                            />
+                          </label>
+                        </div>
+
+                        <div className="mt-1 text-xs text-gray-500">
+                          PNG/JPG/WebP • max 5MB
+                        </div>
+
+                        {/* Actions */}
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <label className="inline-flex cursor-pointer items-center rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-100">
+                            Change
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                onPickAvatar(file);
+                              }}
+                            />
+                          </label>
+
+                          {avatarPreview ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAvatarPreview(null);
+                                onPickAvatar(undefined); // agar sizda remove logika bo‘lsa
+                              }}
+                              className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                            >
+                              Remove
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
-
-            <div className="mt-5 border-t border-gray-100 pt-4 text-xs text-gray-500">
-              <div>
-                Created:{" "}
-                <span className="font-semibold text-gray-700">
-                  {user?.createdAt ? new Date(user.createdAt).toLocaleString() : "-"}
-                </span>
-              </div>
-              <div className="mt-1">
-                Updated:{" "}
-                <span className="font-semibold text-gray-700">
-                  {user?.updatedAt ? new Date(user.updatedAt).toLocaleString() : "-"}
-                </span>
-              </div>
-            </div>
           </div>
 
           <div className="lg:col-span-2 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="text-sm font-semibold text-gray-900">Profile details</div>
+            <div className="text-sm font-semibold text-gray-900">
+              Profile details
+            </div>
 
             <div className="mt-5 space-y-4">
               <Row label="Full name" value={user?.full_name}>
@@ -337,9 +404,10 @@ const MyProfile = () => {
                 {editing ? (
                   <input
                     value={orcid}
-                    onChange={(e) => setOrcid(e.target.value)}
+                    onChange={(e) => setOrcid(formatOrcid(e.target.value))}
                     className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-300"
                     placeholder="0000-0000-0000-0000"
+                    maxLength={19}
                   />
                 ) : null}
               </Row>

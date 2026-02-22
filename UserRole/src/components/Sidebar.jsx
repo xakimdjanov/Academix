@@ -13,6 +13,7 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiAlertTriangle,
+  FiMessageCircle,
 } from "react-icons/fi";
 import { userService } from "../services/api";
 
@@ -21,8 +22,9 @@ const menuItems = [
   { path: "/my-profile", label: "My Profile", icon: FiUser },
   { path: "/my-articles", label: "My Articles", icon: FiFileText },
   { path: "/submit-article", label: "Submit Article", icon: FiSend },
-  { path: "/payments", label: "Payments", icon: FiCreditCard },
+  // { path: "/payments", label: "Payments", icon: FiCreditCard },
   { path: "/notifications", label: "Notifications", icon: FiBell },
+  { path: "/chat", label: "Chat", icon: FiMessageCircle },
 ];
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";

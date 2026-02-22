@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FiBell, FiCheck, FiRefreshCw, FiSearch, FiX } from "react-icons/fi";
 import toast, { Toaster } from "react-hot-toast";
-import { notificationService } from "../services/api"; // yo'lingizga moslang
+import { notificationService } from "../services/api";
+import { getUserIdFromToken } from "../utils/getUserIdFromToken";
 
 const formatDate = (iso) => {
   if (!iso) return "-";
@@ -21,12 +22,10 @@ const StatusBadge = ({ status }) => {
   return <span className={`${base} ${cls}`}>{status || "unknown"}</span>;
 };
 
-// Avatar: rasm ishlamasa yoki yo'q bo'lsa bosh harf
 const Avatar = ({ src, name, size = 48 }) => {
   const [error, setError] = useState(false);
   const initial = name?.trim()?.charAt(0)?.toUpperCase() || "?";
 
-  // name bo'yicha barqaror rang tanlash
   const colors = [
     "bg-blue-100 text-blue-700",
     "bg-emerald-100 text-emerald-700",
@@ -99,12 +98,23 @@ const Notifications = () => {
   const [selected, setSelected] = useState(null);
 
   const fetchNotifications = useCallback(async (showToast = false) => {
+    const myId = getUserIdFromToken();
+    if (!myId) {
+      setItems([]);
+      toast.error("Token topilmadi yoki yaroqsiz");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await notificationService.getAll();
       const list = Array.isArray(res?.data) ? res.data : [];
-      setItems(list);
-      if (showToast) toast.success("Notifications yuklandi");
+
+      // ✅ faqat userning o'ziniki
+      const mine = list.filter((n) => Number(n?.user_id) === Number(myId));
+
+      setItems(mine);
+      if (showToast) toast.success("My notifications yuklandi");
     } catch (e) {
       toast.error("Yuklashda xatolik");
     } finally {
@@ -136,21 +146,13 @@ const Notifications = () => {
     return list.filter((n) => {
       const title = (n?.title || "").toLowerCase();
       const msg = (n?.message || "").toLowerCase();
-      const name = (n?.user?.full_name || "").toLowerCase();
-      const email = (n?.user?.email || "").toLowerCase();
-      return (
-        title.includes(q) ||
-        msg.includes(q) ||
-        name.includes(q) ||
-        email.includes(q)
-      );
+      return title.includes(q) || msg.includes(q);
     });
   }, [items, tab, query]);
 
   const markAsRead = async (n) => {
     if (!n?.id) return;
 
-    // optimistic update
     setItems((prev) =>
       prev.map((x) => (x.id === n.id ? { ...x, status: "read" } : x))
     );
@@ -159,7 +161,6 @@ const Notifications = () => {
       await notificationService.update(n.id, { status: "read" });
       toast.success("Read qilindi");
     } catch (e) {
-      // revert
       setItems((prev) =>
         prev.map((x) => (x.id === n.id ? { ...x, status: n.status } : x))
       );
@@ -183,9 +184,8 @@ const Notifications = () => {
               </h1>
               <p className="text-sm text-gray-600">
                 All: <span className="font-semibold">{counts.all}</span> •
-                Unread:{" "}
-                <span className="font-semibold">{counts.unread}</span> • Read:{" "}
-                <span className="font-semibold">{counts.read}</span>
+                Unread: <span className="font-semibold">{counts.unread}</span> •
+                Read: <span className="font-semibold">{counts.read}</span>
               </p>
             </div>
           </div>
@@ -208,7 +208,7 @@ const Notifications = () => {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search title, message, user..."
+              placeholder="Search title, message..."
               className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-10 pr-3 text-sm outline-none focus:border-gray-300"
             />
           </div>
@@ -247,13 +247,6 @@ const Notifications = () => {
                     </div>
 
                     <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-                      <span>
-                        User:{" "}
-                        <span className="font-semibold text-gray-700">
-                          {n?.user?.full_name || "-"}
-                        </span>
-                      </span>
-                      <span>Email: {n?.user?.email || "-"}</span>
                       <span>Created: {formatDate(n?.createdAt)}</span>
                     </div>
                   </div>
@@ -297,10 +290,6 @@ const Notifications = () => {
                 <h2 className="text-lg font-semibold text-gray-900">
                   {selected?.title || "Notification"}
                 </h2>
-                <p className="mt-1 text-sm text-gray-600">
-                  From: {selected?.user?.full_name || "-"} •{" "}
-                  {selected?.user?.email || "-"}
-                </p>
               </div>
 
               <button
@@ -351,4 +340,4 @@ const Notifications = () => {
   );
 };
 
-export default Notifications; 
+export default Notifications;
