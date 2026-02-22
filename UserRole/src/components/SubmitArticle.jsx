@@ -5,13 +5,14 @@ import {
   FiCheck,
   FiPlus,
   FiTrash2,
-  FiLink,
   FiUpload,
   FiFileText,
+  FiUser,
+  FiPhone,
+  FiGlobe,
 } from "react-icons/fi";
 import toast, { Toaster } from "react-hot-toast";
 import { articleService, journalService } from "../services/api";
-import axiosInstance from "../services/axiosInstance";
 import { getUserIdFromToken } from "../utils/getUserIdFromToken";
 
 const MAX_FILE_MB = 20;
@@ -21,24 +22,22 @@ const ACCEPTED_MIME = [
   "application/msword",
 ];
 
-const emptyAuthor = { name: "", email: "", orcid: "" };
-
-const isValidUrl = (v) => {
-  try {
-    const u = new URL(v);
-    return u.protocol === "http:" || u.protocol === "https:";
-  } catch {
-    return false;
-  }
+const emptyAuthor = {
+  fullName: "",
+  phone: "",
+  orcidId: "",
+  // imageUrl backend tomonidan qo'shiladi, frontendda alohida state: authorImages
 };
 
 const SubmitArticle = () => {
   const [step, setStep] = useState(1);
 
+  // Journals
   const [journals, setJournals] = useState([]);
   const [loadingJournals, setLoadingJournals] = useState(false);
   const [selectedJournalId, setSelectedJournalId] = useState("");
 
+  // Article info
   const [title, setTitle] = useState("");
   const [abstract, setAbstract] = useState("");
   const [keywords, setKeywords] = useState([]);
@@ -46,19 +45,19 @@ const SubmitArticle = () => {
   const [category, setCategory] = useState("");
   const [language, setLanguage] = useState("");
 
+  // Authors - faqat matn ma'lumotlari
   const [authors, setAuthors] = useState([{ ...emptyAuthor }]);
+  // Author images - alohida state (index -> File)
+  const [authorImages, setAuthorImages] = useState({});
 
-  // Backend upload yo‘q, shuning uchun file URL ishlatamiz
-  const [fileUrl, setFileUrl] = useState("");
-  // Fayl tanlash ixtiyoriy: faqat size/type ko‘rsatish uchun
-  const [file, setFile] = useState(null);
+  // Article file
+  const [articleFile, setArticleFile] = useState(null);
 
+  // UI states
   const [submitting, setSubmitting] = useState(false);
-  const [analyzing, setAnalyzing] = useState(false);
-
   const [createdArticleId, setCreatedArticleId] = useState(null);
-  const [aiReport, setAiReport] = useState("");
 
+  // Load journals
   useEffect(() => {
     const loadJournals = async () => {
       setLoadingJournals(true);
@@ -74,21 +73,17 @@ const SubmitArticle = () => {
     loadJournals();
   }, []);
 
-  const formatOrcid = (value) => {
-    const digits = value.replace(/\D/g, "").slice(0, 16); // faqat raqam
-    return digits.replace(/(\d{4})(?=\d)/g, "$1-");
-  };
-
   const selectedJournal = useMemo(
     () => journals.find((j) => String(j.id) === String(selectedJournalId)),
-    [journals, selectedJournalId],
+    [journals, selectedJournalId]
   );
 
+  // Keywords
   const addKeyword = () => {
     const v = keywordInput.trim();
     if (!v) return;
     if (keywords.some((k) => k.toLowerCase() === v.toLowerCase())) {
-      setKeywordInput("");
+      toast.error("Bu keyword allaqachon qo'shilgan");
       return;
     }
     setKeywords((p) => [...p, v]);
@@ -99,48 +94,91 @@ const SubmitArticle = () => {
     setKeywords((p) => p.filter((_, i) => i !== idx));
   };
 
-  const addAuthor = () => setAuthors((p) => [...p, { ...emptyAuthor }]);
+  // Authors
+  const addAuthor = () => {
+    setAuthors((p) => [...p, { ...emptyAuthor }]);
+  };
 
   const removeAuthor = (idx) => {
+    if (authors.length === 1) {
+      toast.error("Kamida bitta author bo'lishi kerak");
+      return;
+    }
     setAuthors((p) => p.filter((_, i) => i !== idx));
+    // Remove associated image
+    setAuthorImages((prev) => {
+      const newState = { ...prev };
+      delete newState[idx];
+      return newState;
+    });
   };
 
   const updateAuthor = (idx, field, value) => {
     setAuthors((p) =>
-      p.map((a, i) => (i === idx ? { ...a, [field]: value } : a)),
+      p.map((a, i) => (i === idx ? { ...a, [field]: value } : a))
     );
   };
 
-  const onPickFile = (f) => {
-    if (!f) return;
+  const handleAuthorImage = (idx, file) => {
+    if (!file) return;
 
-    if (!ACCEPTED_MIME.includes(f.type)) {
+    // Check file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Faqat rasm fayllari qabul qilinadi");
+      return;
+    }
+
+    // Check size (5MB max for images)
+    const sizeMb = file.size / (1024 * 1024);
+    if (sizeMb > 5) {
+      toast.error("Rasm hajmi 5MB dan katta bo'lmasin");
+      return;
+    }
+
+    setAuthorImages((prev) => ({ ...prev, [idx]: file }));
+  };
+
+  // Format ORCID: 0000-0000-0000-0000
+  const formatOrcid = (value) => {
+    const digits = value.replace(/\D/g, "").slice(0, 16);
+    const parts = [];
+    for (let i = 0; i < digits.length; i += 4) {
+      parts.push(digits.slice(i, i + 4));
+    }
+    return parts.join("-");
+  };
+
+  // Format phone number
+  const formatPhone = (value) => {
+    const digits = value.replace(/\D/g, "");
+    if (digits.length > 12) return value;
+    
+    // Uzbekistan format: +998 XX XXX XX XX
+    if (digits.startsWith("998") && digits.length >= 12) {
+      return digits.replace(/(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})/, "+$1 $2 $3 $4 $5");
+    }
+    return digits;
+  };
+
+  // Article file handler
+  const handleArticleFile = (file) => {
+    if (!file) return;
+
+    if (!ACCEPTED_MIME.includes(file.type)) {
       toast.error("Faqat PDF yoki DOCX/DOC fayl qabul qilinadi");
       return;
     }
 
-    const sizeMb = f.size / (1024 * 1024);
+    const sizeMb = file.size / (1024 * 1024);
     if (sizeMb > MAX_FILE_MB) {
-      toast.error(`Fayl hajmi ${MAX_FILE_MB}MB dan katta bo‘lmasin`);
+      toast.error(`Fayl hajmi ${MAX_FILE_MB}MB dan katta bo'lmasin`);
       return;
     }
 
-    setFile(f);
+    setArticleFile(file);
   };
 
-  const buildAuthorsString = () => {
-    return authors
-      .filter((a) => a.name || a.email || a.orcid)
-      .map((a) => {
-        const parts = [];
-        if (a.name) parts.push(a.name.trim());
-        if (a.email) parts.push(`<${a.email.trim()}>`);
-        if (a.orcid) parts.push(`ORCID:${a.orcid.trim()}`);
-        return parts.join(" ");
-      })
-      .join("; ");
-  };
-
+  // Validation
   const validateStep = (s) => {
     if (s === 1) {
       if (!selectedJournalId) return "Journal tanlang";
@@ -155,19 +193,39 @@ const SubmitArticle = () => {
     }
 
     if (s === 3) {
-      const first = authors[0];
-      if (!first?.name?.trim()) return "Kamida 1 ta author name majburiy";
-      if (!first?.email?.trim()) return "Kamida 1 ta author email majburiy";
-      const badEmail = authors.find(
-        (a) => a.email && !/^\S+@\S+\.\S+$/.test(a.email),
-      );
-      if (badEmail) return "Email format xato";
+      // Check each author
+      for (let i = 0; i < authors.length; i++) {
+        const author = authors[i];
+        
+        if (!author.fullName?.trim()) {
+          return `Author #${i + 1}: Full name majburiy`;
+        }
+        
+        const phoneDigits = author.phone?.replace(/\D/g, "") || "";
+        if (phoneDigits.length < 9) {
+          return `Author #${i + 1}: Telefon raqam kamida 9 raqamdan iborat bo'lishi kerak`;
+        }
+        
+        const orcidDigits = author.orcidId?.replace(/\D/g, "") || "";
+        if (orcidDigits.length !== 16) {
+          return `Author #${i + 1}: ORCID 16 raqamdan iborat bo'lishi kerak (0000-0000-0000-0000)`;
+        }
+        
+        // Check ORCID format
+        const orcidRegex = /^\d{4}-\d{4}-\d{4}-\d{4}$/;
+        if (!orcidRegex.test(author.orcidId)) {
+          return `Author #${i + 1}: ORCID formati noto'g'ri (0000-0000-0000-0000)`;
+        }
+        
+        // Check image - MUHIM!
+        if (!authorImages[i]) {
+          return `Author #${i + 1} uchun rasm yuklang`;
+        }
+      }
     }
 
     if (s === 4) {
-      if (!fileUrl.trim()) return "File URL kiriting";
-      if (!isValidUrl(fileUrl.trim()))
-        return "File URL noto‘g‘ri (https://...)";
+      if (!articleFile) return "Maqola faylini yuklang";
     }
 
     return null;
@@ -175,86 +233,118 @@ const SubmitArticle = () => {
 
   const next = () => {
     const err = validateStep(step);
-    if (err) return toast.error(err);
+    if (err) {
+      toast.error(err);
+      return;
+    }
     setStep((p) => Math.min(4, p + 1));
   };
 
   const prev = () => setStep((p) => Math.max(1, p - 1));
 
+  // Submit with FormData
   const submit = async () => {
     const err = validateStep(4);
-    if (err) return toast.error(err);
+    if (err) {
+      toast.error(err);
+      return;
+    }
 
     const userId = getUserIdFromToken();
-    if (!userId)
-      return toast.error("Token yo‘q yoki yaroqsiz (user_id topilmadi)");
+    if (!userId) {
+      return toast.error("Token yo'q yoki yaroqsiz");
+    }
 
     setSubmitting(true);
     setCreatedArticleId(null);
-    setAiReport("");
 
     try {
-      const payload = {
-        journal_id: Number(selectedJournalId),
-        user_id: Number(userId),
-        title: title.trim(),
-        abstract: abstract.trim(),
-        keywords, // ARRAY
-        category: category.trim(),
-        language: language.trim(),
-        authors: buildAuthorsString(),
-        file_url: fileUrl.trim(), // MUHIM
-        file_size: file?.size ? Number(file.size) : 0,
-        apc_paid: false,
-      };
+      const formData = new FormData();
 
-      const res = await articleService.create(payload);
-      const created = res?.data;
-      setCreatedArticleId(created?.id ?? null);
-      toast.success("Maqola yuborildi");
+      // 1. Basic fields
+      formData.append("journal_id", selectedJournalId);
+      formData.append("user_id", userId);
+      formData.append("title", title.trim());
+      formData.append("abstract", abstract.trim());
+      formData.append("keywords", JSON.stringify(keywords));
+      formData.append("category", category.trim());
+      formData.append("language", language.trim());
+      formData.append("apc_paid", "false");
 
-      // AI analysis (agar backendda /ai/analyze bo‘lsa)
-      setAnalyzing(true);
-      try {
-        const aiRes = await axiosInstance.post("/ai/analyze", {
-          title: payload.title,
-          abstract: payload.abstract,
-          keywords: payload.keywords,
-          category: payload.category,
-          language: payload.language,
-          journalName: selectedJournal?.name || "",
-          authors,
-        });
-        setAiReport(aiRes?.data?.report || "AI javob bo‘sh qaytdi");
-        toast.success("AI tahlil tayyor");
-      } catch (aiErr) {
-        console.log("AI ERROR:", aiErr?.response?.data || aiErr);
-        toast.error("/ai/analyze endpoint yo‘q yoki xatolik");
-      } finally {
-        setAnalyzing(false);
+      // 2. Authors - JSON string
+      const authorsForBackend = authors.map((author) => ({
+        fullName: author.fullName.trim(),
+        phone: author.phone.replace(/\D/g, ""), // faqat raqamlar
+        orcidId: author.orcidId.trim(),
+        // imageUrl backend tomonidan qo'shiladi
+      }));
+      formData.append("authors", JSON.stringify(authorsForBackend));
+
+      // 3. Article file - name "file_url" bo'lishi kerak
+      if (articleFile) {
+        formData.append("file_url", articleFile);
       }
+
+      // 4. Author images - name "author_images"
+      // MUHIM: har bir author uchun rasm borligi tekshirilgan
+      Object.entries(authorImages).forEach(([index, file]) => {
+        formData.append("author_images", file);
+      });
+
+      // Send to backend
+      const res = await articleService.create(formData);
+      
+      const created = res?.data?.article || res?.data;
+      setCreatedArticleId(created?.id ?? null);
+      
+      toast.success("Maqola muvaffaqiyatli yuborildi");
+
+      // Reset form after successful submission
+      setTimeout(() => {
+        setStep(1);
+        setSelectedJournalId("");
+        setTitle("");
+        setAbstract("");
+        setKeywords([]);
+        setCategory("");
+        setLanguage("");
+        setAuthors([{ ...emptyAuthor }]);
+        setAuthorImages({});
+        setArticleFile(null);
+      }, 3000);
+
     } catch (e) {
-      console.log("CREATE ERROR:", e?.response?.data || e);
-      toast.error(
-        "Yuborishda xatolik (backend 400 bo‘lsa payloadni tekshiring)",
-      );
+      console.log("Submit Error:", e?.response?.data || e);
+      
+      // Backenddan kelgan xatolikni ko'rsatish
+      if (e?.response?.data?.errors) {
+        const errors = e.response.data.errors;
+        errors.forEach(err => {
+          toast.error(`${err.field}: ${err.message}`);
+        });
+      } else {
+        toast.error(
+          e?.response?.data?.message || 
+          "Yuborishda xatolik yuz berdi"
+        );
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
+  // Step component
   const StepPill = ({ n, label }) => {
     const active = step === n;
     const done = step > n;
     return (
       <div className="flex items-center gap-3">
         <div
-          className={[
-            "flex h-8 w-8 items-center justify-center rounded-full border text-sm font-semibold",
-            done ? "bg-gray-900 text-white border-gray-900" : "",
-            active && !done ? "border-gray-900 text-gray-900" : "",
-            !active && !done ? "border-gray-200 text-gray-600" : "",
-          ].join(" ")}
+          className={`flex h-8 w-8 items-center justify-center rounded-full border text-sm font-semibold transition-colors ${
+            done ? "bg-gray-900 text-white border-gray-900" : ""
+          } ${active && !done ? "border-gray-900 text-gray-900" : ""} ${
+            !active && !done ? "border-gray-200 text-gray-600" : ""
+          }`}
         >
           {done ? <FiCheck /> : n}
         </div>
@@ -272,97 +362,105 @@ const SubmitArticle = () => {
 
       <div className="mx-auto max-w-5xl p-4 sm:p-6">
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          {/* Header */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-xl font-semibold text-gray-900">
                 Submit Article
               </h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Fill in the details to submit your article
+              </p>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <StepPill n={1} label="Journal" />
               <StepPill n={2} label="Article Info" />
               <StepPill n={3} label="Authors" />
-              <StepPill n={4} label="File URL" />
+              <StepPill n={4} label="Upload" />
             </div>
           </div>
 
+          {/* Step Content */}
           <div className="mt-6 border-t border-gray-100 pt-6">
+            {/* Step 1: Journal */}
             {step === 1 && (
               <div className="space-y-4">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  Step 1: Journal
+                  Step 1: Select Journal
                 </h2>
 
-                <label className="block text-sm font-semibold text-gray-800">
-                  Journal tanlash
-                </label>
-
-                <select
-                  value={selectedJournalId}
-                  onChange={(e) => setSelectedJournalId(e.target.value)}
-                  disabled={loadingJournals}
-                  className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-300 disabled:opacity-60"
-                >
-                  <option value="">Select journal...</option>
-                  {journals.map((j) => (
-                    <option key={j.id} value={j.id}>
-                      {j.name} {j.issn ? `(${j.issn})` : ""}
-                    </option>
-                  ))}
-                </select>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-1">
+                    Journal <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={selectedJournalId}
+                    onChange={(e) => setSelectedJournalId(e.target.value)}
+                    disabled={loadingJournals}
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-100 disabled:opacity-60"
+                  >
+                    <option value="">Select a journal...</option>
+                    {journals.map((j) => (
+                      <option key={j.id} value={j.id}>
+                        {j.name} {j.issn ? `(ISSN: ${j.issn})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                 {selectedJournal && (
                   <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                    <div className="text-sm font-semibold text-gray-900">
+                    <h3 className="font-semibold text-gray-900">
                       {selectedJournal.name}
-                    </div>
-                    <div className="mt-1 text-xs text-gray-600">
-                      Subject area: {selectedJournal.subject_area || "-"}
-                    </div>
-                    <div className="mt-1 text-xs text-gray-600">
-                      Status: {selectedJournal.status || "-"}
+                    </h3>
+                    <div className="mt-2 space-y-1 text-sm text-gray-600">
+                      <p>ISSN: {selectedJournal.issn || "N/A"}</p>
+                      <p>Subject: {selectedJournal.subject_area || "N/A"}</p>
+                      <p>Status: {selectedJournal.status || "Active"}</p>
                     </div>
                   </div>
                 )}
               </div>
             )}
 
+            {/* Step 2: Article Info */}
             {step === 2 && (
               <div className="space-y-4">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  Step 2: Article Info
+                  Step 2: Article Information
                 </h2>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800">
-                    Title
+                  <label className="block text-sm font-semibold text-gray-800 mb-1">
+                    Title <span className="text-red-500">*</span>
                   </label>
                   <input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-300"
-                    placeholder="Article title..."
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-100"
+                    placeholder="Enter article title..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800">
-                    Abstract
+                  <label className="block text-sm font-semibold text-gray-800 mb-1">
+                    Abstract <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     value={abstract}
                     onChange={(e) => setAbstract(e.target.value)}
-                    className="mt-1 min-h-[120px] w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-300"
-                    placeholder="Abstract..."
+                    rows={5}
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-100"
+                    placeholder="Enter abstract..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800">
-                    Keywords (tag)
+                  <label className="block text-sm font-semibold text-gray-800 mb-1">
+                    Keywords <span className="text-red-500">*</span>
                   </label>
-                  <div className="mt-1 flex gap-2">
+                  <div className="flex gap-2">
                     <input
                       value={keywordInput}
                       onChange={(e) => setKeywordInput(e.target.value)}
@@ -372,151 +470,169 @@ const SubmitArticle = () => {
                           addKeyword();
                         }
                       }}
-                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-300"
-                      placeholder="keyword yozing va Enter bosing"
+                      className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-100"
+                      placeholder="Type keyword and press Enter"
                     />
                     <button
                       type="button"
                       onClick={addKeyword}
-                      className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
+                      className="rounded-xl bg-gray-900 px-6 py-2.5 text-sm font-semibold text-white hover:bg-black transition-colors"
                     >
                       Add
                     </button>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {keywords.map((k, idx) => (
-                      <button
-                        key={`${k}-${idx}`}
-                        type="button"
-                        onClick={() => removeKeyword(idx)}
-                        className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-200"
-                        title="Remove"
-                      >
-                        {k}
-                      </button>
-                    ))}
-                  </div>
+                  {keywords.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {keywords.map((k, idx) => (
+                        <span
+                          key={idx}
+                          onClick={() => removeKeyword(idx)}
+                          className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 cursor-pointer hover:bg-gray-200 transition-colors"
+                        >
+                          {k}
+                          <span className="text-gray-500">×</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-800">
-                      Category
+                    <label className="block text-sm font-semibold text-gray-800 mb-1">
+                      Category <span className="text-red-500">*</span>
                     </label>
                     <input
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-300"
-                      placeholder="Category..."
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-100"
+                      placeholder="e.g., Research Article"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-800">
-                      Language
+                    <label className="block text-sm font-semibold text-gray-800 mb-1">
+                      Language <span className="text-red-500">*</span>
                     </label>
                     <input
                       value={language}
                       onChange={(e) => setLanguage(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-300"
-                      placeholder="Language..."
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-100"
+                      placeholder="e.g., English"
                     />
                   </div>
                 </div>
               </div>
             )}
 
+            {/* Step 3: Authors */}
             {step === 3 && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-gray-900">
                     Step 3: Authors
                   </h2>
                   <button
                     type="button"
                     onClick={addAuthor}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
+                    className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black transition-colors"
                   >
                     <FiPlus />
-                    Add author
+                    Add Author
                   </button>
                 </div>
 
-                <div className="space-y-3">
-                  {authors.map((a, idx) => (
+                <div className="space-y-4">
+                  {authors.map((author, idx) => (
                     <div
                       key={idx}
-                      className="rounded-2xl border border-gray-200 p-4"
+                      className="rounded-xl border border-gray-200 bg-white p-4"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="text-sm font-semibold text-gray-900">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-gray-900">
                           Author {idx + 1}
-                        </div>
-
-                        {authors.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeAuthor(idx)}
-                            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
-                          >
-                            <FiTrash2 />
-                            Remove
-                          </button>
-                        )}
+                          {idx === 0 && (
+                            <span className="ml-2 text-xs bg-gray-100 px-2 py-0.5 rounded-full">
+                              Corresponding
+                            </span>
+                          )}
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => removeAuthor(idx)}
+                          className="text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          <FiTrash2 size={18} />
+                        </button>
                       </div>
 
-                      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                      <div className="grid gap-4 sm:grid-cols-2">
                         <div>
-                          <label className="block text-sm font-semibold text-gray-800">
-                            Author name
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">
+                            Full Name <span className="text-red-500">*</span>
                           </label>
-                          <input
-                            value={a.name}
-                            onChange={(e) =>
-                              updateAuthor(idx, "name", e.target.value)
-                            }
-                            className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-300"
-                            placeholder="Full name..."
-                          />
+                          <div className="relative">
+                            <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                            <input
+                              value={author.fullName}
+                              onChange={(e) => updateAuthor(idx, "fullName", e.target.value)}
+                              className="w-full rounded-xl border border-gray-200 bg-white pl-10 pr-4 py-2.5 text-sm outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-100"
+                              placeholder="John Doe"
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-800">
-                            Email
-                          </label>
-                          <input
-                            value={a.email}
-                            onChange={(e) =>
-                              updateAuthor(idx, "email", e.target.value)
-                            }
-                            className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-300"
-                            placeholder="email@example.com"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-800">
-                            ORCID
-                          </label>
 
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">
+                            Phone <span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <FiPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                            <input
+                              value={author.phone}
+                              onChange={(e) => updateAuthor(idx, "phone", formatPhone(e.target.value))}
+                              className="w-full rounded-xl border border-gray-200 bg-white pl-10 pr-4 py-2.5 text-sm outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-100"
+                              placeholder="+998 90 123 45 67"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">
+                            ORCID <span className="text-red-500">*</span>
+                          </label>
+                          <div className="relative">
+                            <FiGlobe className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                            <input
+                              value={author.orcidId}
+                              onChange={(e) => updateAuthor(idx, "orcidId", formatOrcid(e.target.value))}
+                              className="w-full rounded-xl border border-gray-200 bg-white pl-10 pr-4 py-2.5 text-sm outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-100"
+                              placeholder="0000-0000-0000-0000"
+                              maxLength={19}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">
+                            Photo <span className="text-red-500">*</span>
+                          </label>
                           <input
-                            value={a.orcid}
-                            onChange={(e) =>
-                              updateAuthor(
-                                idx,
-                                "orcid",
-                                formatOrcid(e.target.value),
-                              )
-                            }
-                            maxLength={19}
-                            inputMode="numeric"
-                            className="
-    mt-1 w-full rounded-xl border border-gray-200
-    bg-white px-3 py-2 text-sm text-gray-900
-    outline-none transition
-    focus:border-gray-900 focus:ring-2 focus:ring-gray-200
-  "
-                            placeholder="0000-0000-0000-0000"
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleAuthorImage(idx, e.target.files?.[0])}
+                            className="w-full text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-gray-900 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-black"
                           />
+                          {authorImages[idx] ? (
+                            <p className="mt-1 text-xs text-green-600">
+                              ✓ Rasm yuklandi: {authorImages[idx].name}
+                            </p>
+                          ) : (
+                            <p className="mt-1 text-xs text-red-500">
+                              * Rasm majburiy
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -525,102 +641,77 @@ const SubmitArticle = () => {
               </div>
             )}
 
+            {/* Step 4: Upload */}
             {step === 4 && (
               <div className="space-y-4">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  Step 4: File URL
+                  Step 4: Upload Article
                 </h2>
 
-                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                    <FiLink />
-                    File URL (majburiy)
+                <div className="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 p-6">
+                  <div className="text-center">
+                    <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
+                    <div className="mt-4">
+                      <label
+                        htmlFor="file-upload"
+                        className="cursor-pointer rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black transition-colors"
+                      >
+                        Select Article File
+                      </label>
+                      <input
+                        id="file-upload"
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => handleArticleFile(e.target.files?.[0])}
+                        className="hidden"
+                      />
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500">
+                      PDF or DOC/DOCX up to {MAX_FILE_MB}MB
+                    </p>
                   </div>
 
-                  <input
-                    value={fileUrl}
-                    onChange={(e) => setFileUrl(e.target.value)}
-                    placeholder="https://..."
-                    className="mt-3 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-300"
-                  />
-
-                  {fileUrl.trim() && (
-                    <a
-                      href={fileUrl.trim()}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-2 inline-block text-sm font-semibold underline underline-offset-4"
-                    >
-                      Open link
-                    </a>
-                  )}
-                </div>
-
-                <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-6">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                    <FiUpload />
-                    Optional: File choose (faqat size/type tekshiruv)
-                  </div>
-
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    onChange={(e) => onPickFile(e.target.files?.[0])}
-                    className="
-    mt-3 w-full text-sm text-gray-700
-    file:mr-4 file:rounded-xl file:border-0
-    file:bg-gray-900 file:px-4 file:py-2
-    file:text-sm file:font-semibold
-    file:text-white hover:file:bg-black
-    cursor-pointer
-  "
-                  />
-
-                  {file && (
-                    <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
-                      <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                        <FiFileText />
-                        {file.name}
-                      </div>
-                      <div className="mt-1 text-xs text-gray-600">
-                        {(file.size / (1024 * 1024)).toFixed(2)} MB
+                  {articleFile && (
+                    <div className="mt-4 rounded-xl border border-gray-200 bg-white p-3">
+                      <div className="flex items-center gap-3">
+                        <FiFileText className="text-gray-400" size={20} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {articleFile.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {(articleFile.size / (1024 * 1024)).toFixed(2)} MB
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setArticleFile(null)}
+                          className="text-gray-400 hover:text-red-500"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="rounded-2xl border border-gray-200 bg-white p-4">
-                  <div className="text-sm font-semibold text-gray-900">
-                    Submit + AI analysis
-                  </div>
-
+                {/* Submit Section - AI analitika olib tashlandi */}
+                <div className="rounded-xl border border-gray-200 bg-white p-4">
+                  <h3 className="font-semibold text-gray-900 mb-3">
+                    Submit Article
+                  </h3>
+                  
                   <button
                     type="button"
                     onClick={submit}
-                    disabled={submitting || analyzing}
-                    className="mt-3 w-full rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-60"
+                    disabled={submitting}
+                    className="w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-black transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {submitting
-                      ? "Submitting..."
-                      : analyzing
-                        ? "Analyzing..."
-                        : "Submit Article"}
+                    {submitting ? "Submitting..." : "Submit Article"}
                   </button>
 
                   {createdArticleId && (
-                    <div className="mt-3 text-xs text-gray-600">
-                      Created article ID: {createdArticleId}
-                    </div>
-                  )}
-
-                  {aiReport && (
-                    <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                      <div className="text-sm font-semibold text-gray-900">
-                        AI analysis
-                      </div>
-                      <pre className="mt-2 whitespace-pre-wrap text-sm text-gray-800">
-                        {aiReport}
-                      </pre>
+                    <div className="mt-3 p-3 bg-green-50 text-green-700 rounded-lg text-sm">
+                      ✅ Article submitted successfully! ID: {createdArticleId}
                     </div>
                   )}
                 </div>
@@ -628,12 +719,13 @@ const SubmitArticle = () => {
             )}
           </div>
 
+          {/* Navigation */}
           <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-5">
             <button
               type="button"
               onClick={prev}
-              disabled={step === 1}
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 disabled:opacity-60"
+              disabled={step === 1 || submitting}
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <FiArrowLeft />
               Back
@@ -642,8 +734,8 @@ const SubmitArticle = () => {
             <button
               type="button"
               onClick={step === 4 ? submit : next}
-              disabled={submitting || analyzing}
-              className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-60"
+              disabled={submitting}
+              className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {step === 4 ? "Submit" : "Next"}
               <FiArrowRight />

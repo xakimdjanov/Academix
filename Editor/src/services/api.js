@@ -21,10 +21,8 @@ export const journalAdminService = {
     axiosInstance.post("/JournalAdmin/register", data, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
-  forgotPassword: (data) =>
-    axiosInstance.post("/JournalAdmin/forgot-password", data),
-  resetPassword: (data) =>
-    axiosInstance.post("/JournalAdmin/reset-password", data),
+  forgotPassword: (data) => axiosInstance.post("/JournalAdmin/forgot-password", data),
+  resetPassword: (data) => axiosInstance.post("/JournalAdmin/reset-password", data),
   login: (credentials) =>
     axiosInstance.post("/JournalAdmin/login", credentials),
   getAll: () => axiosInstance.get("/JournalAdmin/getJournalAdmin"),
@@ -47,12 +45,7 @@ export const editorService = {
 
 // --- 4. MAQOLALAR (ARTICLES) SERVISI ---
 export const articleService = {
-  create: (data) => 
-    axiosInstance.post("/article/create", data, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }),
+  create: (data) => axiosInstance.post("/article/create", data),
   getAll: () => axiosInstance.get("/article/getAll"),
   getById: (id) => axiosInstance.get(`/article/getById/${id}`),
   search: (query) =>
@@ -109,14 +102,7 @@ export const auditLogService = {
 
 // --- 10. FOYDALANUVCHILAR (USERS - Mualliflar uchun) ---
 export const userService = {
-  register: (data) =>
-    axiosInstance.post("/users/register", data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
-  forgotPassword: (data) =>
-    axiosInstance.post("/users/forgot-passvwrd", data),
-  resetPassword: (data) =>
-    axiosInstance.post("/users/reset-passvwrd", data),
+  register: (data) => axiosInstance.post("/users/register", data),
   login: (credentials) => axiosInstance.post("/users/login", credentials),
   getAll: () => axiosInstance.get("/users/getUser"),
   getById: (id) => axiosInstance.get(`/users/getUserById/${id}`),
@@ -133,10 +119,13 @@ export const ReviewAssignments = {
   delete: (id) => axiosInstance.delete(`/reviews/${id}`),
 };
 
-// Chat
-export const chatService = {
-  send: (data) => axiosInstance.post("/chat/send", data),
-  getUserChatList: (userId) => axiosInstance.get(`/chat/userChatList/${userId}`),
-  updateStatus: (id, data) => axiosInstance.put(`/chat/updateStatus/${id}`, data),
-  delete: (id) => axiosInstance.delete(`/chat/delete/${id}`),
+export const ChatService = {
+  sendMessage: (data) => axiosInstance.post("/chat/send", data),
+  getChat: (userId, editorId) =>
+    axiosInstance.get(`/chat`, { params: { userId, editorId } }),
+  updateStatus: (id, status) =>
+    axiosInstance.put(`/chat/updateStatus/${id}`, { status }),
+  deleteMessage: (id) => axiosInstance.delete(`/chat/delete/${id}`),
+  getUserChatList: (userId) =>
+    axiosInstance.get(`/chat/userChatList/${userId}`),
 };

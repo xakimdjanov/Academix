@@ -374,11 +374,36 @@ const ArticleDetails = () => {
             </div>
 
             <div className="mt-4 rounded-xl border border-gray-200 p-4">
-              <div className="text-sm font-semibold text-gray-900">Authors</div>
-              <div className="mt-2 text-sm text-gray-800">
-                {article?.authors || "-"}
-              </div>
+  <div className="text-sm font-semibold text-gray-900">Authors</div>
+  <div className="mt-2 space-y-4">
+    {Array.isArray(article?.authors) ? (
+      article.authors.map((author, idx) => (
+        <div key={idx} className="flex items-center gap-3 border-b border-gray-50 pb-2 last:border-0">
+          {author.imageUrl && (
+            <img 
+              src={author.imageUrl} 
+              alt={author.fullName} 
+              className="h-10 w-10 rounded-full object-cover border"
+            />
+          )}
+          <div>
+            <div className="text-sm font-bold text-gray-900">{author.fullName}</div>
+            <div className="text-xs text-gray-500">
+              ORCID: {author.orcidId}
             </div>
+            <div className="text-xs text-gray-500">
+            Tel: {author.phone}
+            </div>
+          </div>
+        </div>
+      ))
+    ) : (
+      <span className="text-sm text-gray-500">
+        {typeof article?.authors === "string" ? article.authors : "-"}
+      </span>
+    )}
+  </div>
+</div>
 
             <div className="mt-4 rounded-xl border border-gray-200 p-4">
               <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
