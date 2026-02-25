@@ -43,34 +43,45 @@ const Row = ({ label, value, children }) => (
       {children ? (
         children
       ) : (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800">
-          {value || "-"}
+        <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800">
+          {value || "—"}
         </div>
       )}
     </div>
   </div>
 );
 
+// Fields allowed to be updated via API
+const allowedUpdateFields = ["full_name", "phone", "orcid", "affiliation", "country"];
+
+const pickChangedFields = (original, edited) => {
+  const payload = {};
+  for (const key of allowedUpdateFields) {
+    const oldVal = (original?.[key] ?? "").toString().trim();
+    const newVal = (edited?.[key] ?? "").toString().trim();
+    if (newVal !== oldVal) payload[key] = newVal;
+  }
+  return payload;
+};
+
 const MyProfile = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [user, setUser] = useState(null);
 
+  const [user, setUser] = useState(null);
   const [editing, setEditing] = useState(false);
 
-  // form
+  // Editable fields
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState(""); // readonly
   const [phone, setPhone] = useState("");
   const [orcid, setOrcid] = useState("");
   const [affiliation, setAffiliation] = useState("");
   const [country, setCountry] = useState("");
-  const [role, setRole] = useState("user");
 
-  // IMPORTANT: backend password majburiy bo‘lishi mumkin
-  const [password, setPassword] = useState("");
+  // Readonly
+  const [email, setEmail] = useState("");
 
-  // avatar file
+  // Avatar
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState("");
 
@@ -78,9 +89,10 @@ const MyProfile = () => {
 
   const loadProfile = useCallback(async () => {
     if (!myId) {
-      toast.error("Token topilmadi (user id yo‘q)");
+      toast.error("Session not found (user ID missing)");
       return;
     }
+
     setLoading(true);
     try {
       const res = await userService.getById(myId);
@@ -88,18 +100,16 @@ const MyProfile = () => {
       setUser(u);
 
       setFullName(u?.full_name || "");
-      setEmail(u?.email || "");
       setPhone(u?.phone || "");
       setOrcid(u?.orcid || "");
       setAffiliation(u?.affiliation || "");
       setCountry(u?.country || "");
-      setRole(u?.role || "user");
+      setEmail(u?.email || "");
 
-      setPassword("");
       setAvatarFile(null);
       setAvatarPreview("");
     } catch (e) {
-      toast.error("Profilni yuklashda xatolik");
+      toast.error("Failed to load profile");
     } finally {
       setLoading(false);
     }
@@ -127,14 +137,12 @@ const MyProfile = () => {
     setEditing(false);
 
     setFullName(user?.full_name || "");
-    setEmail(user?.email || "");
     setPhone(user?.phone || "");
     setOrcid(user?.orcid || "");
     setAffiliation(user?.affiliation || "");
     setCountry(user?.country || "");
-    setRole(user?.role || "user");
+    setEmail(user?.email || "");
 
-    setPassword("");
     setAvatarFile(null);
     if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     setAvatarPreview("");
@@ -143,12 +151,12 @@ const MyProfile = () => {
   const onPickAvatar = (file) => {
     if (!file) return;
     if (!file.type?.startsWith("image/")) {
-      toast.error("Faqat rasm fayl (png/jpg/webp)");
+      toast.error("Only image files allowed (png/jpg/webp)");
       return;
     }
     const mb = file.size / (1024 * 1024);
     if (mb > 5) {
-      toast.error("Avatar 5MB dan katta bo‘lmasin");
+      toast.error("Avatar must be under 5MB");
       return;
     }
 
@@ -157,77 +165,79 @@ const MyProfile = () => {
     setAvatarPreview(URL.createObjectURL(file));
   };
 
+  const removePickedAvatar = () => {
+    setAvatarFile(null);
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    setAvatarPreview("");
+  };
+
+  const formatOrcid = (value) => {
+    const digits = value.replace(/\D/g, "").slice(0, 16);
+    return digits.replace(/(\d{4})(?=\d)/g, "$1-");
+  };
+
   const save = async () => {
     if (!user?.id) return;
 
-    if (!fullName.trim()) return toast.error("Full name majburiy");
-
-    // backend password majburiy bo‘lsa — user kiritishi kerak
-    if (!password) {
-      toast.error("Save qilish uchun password kiriting");
+    if (!fullName.trim()) {
+      toast.error("Full name is required");
       return;
     }
 
     setSaving(true);
     try {
-      const fd = new FormData();
+      // 1) Update text fields (only changed ones)
+      const edited = {
+        full_name: fullName.trim(),
+        phone: phone.trim() || "",
+        orcid: orcid.trim() || "",
+        affiliation: affiliation.trim() || "",
+        country: country.trim() || "",
+      };
 
-      // backend field nomlari
-      fd.append("full_name", fullName.trim());
-      fd.append("email", email); // readonly ham yuboriladi
-      fd.append("password", password); // MUHIM: server 500 bo‘lmasin
+      const payload = pickChangedFields(user, edited);
 
-      // Send empty value — bo‘sh bo‘lsa ham yuboramiz
-      fd.append("phone", phone || "");
-      fd.append("orcid", orcid || "");
-      fd.append("affiliation", affiliation || "");
-      fd.append("country", country || "");
-      fd.append("role", role || "user");
+      if (Object.keys(payload).length > 0) {
+        await userService.update(user.id, payload);
+      }
 
-      // avatar_url file bo‘lsa
-      if (avatarFile) fd.append("avatar_url", avatarFile);
+      // 2) Update avatar if selected
+      if (avatarFile) {
+        const fd = new FormData();
+        fd.append("avatar_url", avatarFile);
+        await userService.imgUpdate(user.id, fd);
+      }
 
-      await userService.update(user.id, fd);
+      if (Object.keys(payload).length === 0 && !avatarFile) {
+        toast("No changes were made 🙂");
+      } else {
+        toast.success("Profile updated successfully");
+      }
 
-      toast.success("Profil saqlandi");
       setEditing(false);
       await loadProfile();
     } catch (e) {
-      console.log("PROFILE UPDATE ERROR:", e?.response?.data || e);
-      toast.error(
-        "Server xatolik (500). Backend validation/field nomlarini tekshirish kerak.",
-      );
+      console.log("STATUS:", e?.response?.status);
+      console.log("DATA:", e?.response?.data);
+      toast.error("Failed to save profile");
     } finally {
       setSaving(false);
-      setPassword("");
     }
-  };
-
-  const formatOrcid = (value) => {
-    // Faqat raqamlarni qoldiramiz
-    const digits = value.replace(/\D/g, "").slice(0, 16);
-
-    // Har 4 ta raqamdan keyin "-" qo‘shamiz
-    const formatted = digits.replace(/(\d{4})(?=\d)/g, "$1-");
-
-    return formatted;
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Toaster position="top-right" />
 
-      <div className="mx-auto max-w-5xl p-4 sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-gray-200 bg-white">
-              <FiUser />
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-gray-200 bg-white shadow-sm">
+              <FiUser className="text-gray-700" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">
-                My Profile
-              </h1>
-              <p className="text-sm text-gray-600">
+              <h1 className="text-2xl font-semibold text-gray-900">My Profile</h1>
+              <p className="mt-1 text-sm text-gray-600">
                 {loading ? "Loading..." : editing ? "Edit mode" : "View mode"}
               </p>
             </div>
@@ -236,60 +246,56 @@ const MyProfile = () => {
           {!editing ? (
             <button
               onClick={startEdit}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-black transition shadow-sm"
             >
-              <FiEdit3 />
-              Edit
+              <FiEdit3 size={16} />
+              Edit Profile
             </button>
           ) : (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-3">
               <button
                 onClick={cancelEdit}
-                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition"
               >
-                <FiX />
+                <FiX size={16} />
                 Cancel
               </button>
               <button
                 onClick={save}
                 disabled={saving}
-                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-60 transition shadow-sm"
               >
-                <FiSave />
-                {saving ? "Saving..." : "Save"}
+                <FiSave size={16} />
+                {saving ? "Saving..." : "Save Changes"}
               </button>
             </div>
           )}
         </div>
 
-        <div className="mt-5 grid gap-4 lg:grid-cols-3">
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="mt-8 grid gap-6 lg:grid-cols-3">
+          {/* Avatar Section */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold text-gray-900">
-                Profile image
-              </div>
+              <div className="text-sm font-semibold text-gray-900">Profile Picture</div>
               <FiCamera className="text-gray-500" />
             </div>
 
-            <div className="mt-4 flex flex-col items-center gap-3">
-              <Avatar src={currentAvatarSrc} name={fullName} size={104} />
+            <div className="mt-6 flex flex-col items-center gap-4">
+              <Avatar src={currentAvatarSrc} name={fullName} size={120} />
               <div className="text-center">
-                <div className="text-base font-semibold text-gray-900">
-                  {fullName || "-"}
-                </div>
-                <div className="text-sm text-gray-600">{email || "-"}</div>
+                <div className="text-lg font-semibold text-gray-900">{fullName || "—"}</div>
+                <div className="text-sm text-gray-600">{email || "—"}</div>
               </div>
 
               {editing && (
-                <div className="w-full">
-                  <label className="block text-sm font-semibold text-gray-800">
-                    Upload avatar
+                <div className="w-full mt-4">
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">
+                    Upload new avatar
                   </label>
 
-                  <div className="mt-2 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-                    <div className="flex items-start gap-4">
-                      {/* Preview */}
-                      <div className="h-16 w-16 overflow-hidden rounded-2xl border border-gray-200 bg-gray-50">
+                  <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+                    <div className="flex flex-col sm:flex-row items-start gap-5">
+                      <div className="h-20 w-20 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm flex-shrink-0">
                         {avatarPreview ? (
                           <img
                             src={avatarPreview}
@@ -303,57 +309,50 @@ const MyProfile = () => {
                         )}
                       </div>
 
-                      {/* Upload area */}
                       <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-800">
-                          Drop your image here, or{" "}
-                          <label className="cursor-pointer text-gray-900 underline underline-offset-2 hover:text-gray-700">
-                            browse
+                        <p className="text-sm text-gray-700">
+                          Drag & drop or{" "}
+                          <label className="cursor-pointer font-medium text-gray-900 underline underline-offset-2 hover:text-gray-700">
+                            browse files
                             <input
                               type="file"
                               accept="image/*"
                               className="hidden"
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
-                                if (!file) return;
-                                onPickAvatar(file);
+                                if (file) onPickAvatar(file);
                               }}
                             />
                           </label>
-                        </div>
+                        </p>
 
-                        <div className="mt-1 text-xs text-gray-500">
-                          PNG/JPG/WebP • max 5MB
-                        </div>
+                        <p className="mt-1 text-xs text-gray-500">
+                          PNG, JPG, WebP • max 5MB
+                        </p>
 
-                        {/* Actions */}
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          <label className="inline-flex cursor-pointer items-center rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-100">
-                            Change
+                        <div className="mt-4 flex flex-wrap gap-3">
+                          <label className="cursor-pointer inline-flex items-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 transition">
+                            Choose File
                             <input
                               type="file"
                               accept="image/*"
                               className="hidden"
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
-                                if (!file) return;
-                                onPickAvatar(file);
+                                if (file) onPickAvatar(file);
                               }}
                             />
                           </label>
 
-                          {avatarPreview ? (
+                          {avatarPreview && (
                             <button
                               type="button"
-                              onClick={() => {
-                                setAvatarPreview(null);
-                                onPickAvatar(undefined); // agar sizda remove logika bo‘lsa
-                              }}
-                              className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                              onClick={removePickedAvatar}
+                              className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition"
                             >
                               Remove
                             </button>
-                          ) : null}
+                          )}
                         </div>
                       </div>
                     </div>
@@ -363,106 +362,88 @@ const MyProfile = () => {
             </div>
           </div>
 
-          <div className="lg:col-span-2 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="text-sm font-semibold text-gray-900">
-              Profile details
-            </div>
+          {/* Profile Details */}
+          <div className="lg:col-span-2 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="text-sm font-semibold text-gray-900 mb-5">Profile Information</div>
 
-            <div className="mt-5 space-y-4">
-              <Row label="Full name" value={user?.full_name}>
+            <div className="space-y-5">
+              <Row label="Full Name">
                 {editing ? (
                   <input
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-300"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-gray-300 transition"
+                    placeholder="Enter your full name"
                   />
-                ) : null}
+                ) : (
+                  user?.full_name || "—"
+                )}
               </Row>
 
-              <Row label="Email (readonly)" value={user?.email}>
+              <Row label="Email (cannot be changed)">
                 {editing ? (
                   <input
                     value={email}
                     readOnly
-                    className="w-full cursor-not-allowed rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 outline-none"
+                    className="w-full cursor-not-allowed rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-600 outline-none"
                   />
-                ) : null}
+                ) : (
+                  email || "—"
+                )}
               </Row>
 
-              <Row label="Phone" value={user?.phone}>
+              <Row label="Phone Number">
                 {editing ? (
                   <input
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-300"
-                    placeholder="Phone..."
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-gray-300 transition"
+                    placeholder="+998 90 123 45 67"
                   />
-                ) : null}
+                ) : (
+                  phone || "—"
+                )}
               </Row>
 
-              <Row label="ORCID" value={user?.orcid}>
+              <Row label="ORCID iD">
                 {editing ? (
                   <input
                     value={orcid}
                     onChange={(e) => setOrcid(formatOrcid(e.target.value))}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-300"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-gray-300 transition"
                     placeholder="0000-0000-0000-0000"
                     maxLength={19}
                   />
-                ) : null}
+                ) : (
+                  orcid || "—"
+                )}
               </Row>
 
-              <Row label="Institution" value={user?.affiliation}>
+              <Row label="Affiliation / Institution">
                 {editing ? (
                   <input
                     value={affiliation}
                     onChange={(e) => setAffiliation(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-300"
-                    placeholder="Affiliation..."
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-gray-300 transition"
+                    placeholder="University / Organization"
                   />
-                ) : null}
+                ) : (
+                  affiliation || "—"
+                )}
               </Row>
 
-              <Row label="Country" value={user?.country}>
+              <Row label="Country">
                 {editing ? (
                   <input
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-300"
-                    placeholder="Country..."
+                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-gray-300 transition"
+                    placeholder="Country"
                   />
-                ) : null}
+                ) : (
+                  country || "—"
+                )}
               </Row>
-
-              <Row label="Role" value={user?.role || "user"}>
-                {editing ? (
-                  <select
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-300"
-                  >
-                    <option value="user">user</option>
-                    <option value="editor">editor</option>
-                    <option value="journal_admin">journal_admin</option>
-                    <option value="admin">admin</option>
-                  </select>
-                ) : null}
-              </Row>
-
-              {editing && (
-                <Row label="Password (required)" value="">
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-300"
-                    placeholder="Enter your password to save"
-                  />
-                  <div className="mt-2 text-xs text-gray-500">
-                    Backend update’da password majburiy bo‘lishi mumkin.
-                  </div>
-                </Row>
-              )}
             </div>
           </div>
         </div>

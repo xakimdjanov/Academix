@@ -5,21 +5,22 @@ import { notificationService } from "../services/api";
 import { getUserIdFromToken } from "../utils/getUserIdFromToken";
 
 const formatDate = (iso) => {
-  if (!iso) return "-";
+  if (!iso) return "—";
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "-";
+  if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleString();
 };
 
 const StatusBadge = ({ status }) => {
-  const base =
-    "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1";
+  const base = "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1";
+
   const map = {
     unread: "bg-blue-50 text-blue-700 ring-blue-200",
     read: "bg-gray-50 text-gray-700 ring-gray-200",
   };
-  const cls = map[status] || "bg-gray-50 text-gray-700 ring-gray-200";
-  return <span className={`${base} ${cls}`}>{status || "unknown"}</span>;
+
+  const cls = map[status?.toLowerCase()] || "bg-gray-50 text-gray-700 ring-gray-200";
+  return <span className={`${base} ${cls}`}>{status || "Unknown"}</span>;
 };
 
 const Avatar = ({ src, name, size = 48 }) => {
@@ -61,7 +62,7 @@ const Tabs = ({ value, onChange, counts }) => {
       <button
         onClick={() => onChange(id)}
         className={[
-          "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold border",
+          "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold border transition",
           active
             ? "bg-gray-900 text-white border-gray-900"
             : "bg-white text-gray-900 border-gray-200 hover:bg-gray-50",
@@ -101,7 +102,7 @@ const Notifications = () => {
     const myId = getUserIdFromToken();
     if (!myId) {
       setItems([]);
-      toast.error("Token topilmadi yoki yaroqsiz");
+      toast.error("Session not found or invalid token");
       return;
     }
 
@@ -110,13 +111,13 @@ const Notifications = () => {
       const res = await notificationService.getAll();
       const list = Array.isArray(res?.data) ? res.data : [];
 
-      // ✅ faqat userning o'ziniki
+      // Only user's own notifications
       const mine = list.filter((n) => Number(n?.user_id) === Number(myId));
 
       setItems(mine);
-      if (showToast) toast.success("My notifications yuklandi");
+      if (showToast) toast.success("Notifications loaded");
     } catch (e) {
-      toast.error("Yuklashda xatolik");
+      toast.error("Failed to load notifications");
     } finally {
       setLoading(false);
     }
@@ -127,14 +128,13 @@ const Notifications = () => {
   }, [fetchNotifications]);
 
   const counts = useMemo(() => {
-    const unread = items.filter((n) => n?.status === "unread").length;
-    const read = items.filter((n) => n?.status === "read").length;
+    const unread = items.filter((n) => (n?.status || "").toLowerCase() === "unread").length;
+    const read = items.filter((n) => (n?.status || "").toLowerCase() === "read").length;
     return { all: items.length, unread, read };
   }, [items]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-
     let list = items;
 
     if (tab !== "all") {
@@ -153,18 +153,20 @@ const Notifications = () => {
   const markAsRead = async (n) => {
     if (!n?.id) return;
 
+    // Optimistic update
     setItems((prev) =>
       prev.map((x) => (x.id === n.id ? { ...x, status: "read" } : x))
     );
 
     try {
       await notificationService.update(n.id, { status: "read" });
-      toast.success("Read qilindi");
+      toast.success("Marked as read");
     } catch (e) {
+      // Rollback on error
       setItems((prev) =>
         prev.map((x) => (x.id === n.id ? { ...x, status: n.status } : x))
       );
-      toast.error("Update xatolik");
+      toast.error("Failed to update status");
     }
   };
 
@@ -173,16 +175,14 @@ const Notifications = () => {
       <Toaster position="top-right" />
 
       <div className="mx-auto max-w-6xl p-4 sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white border border-gray-200">
-              <FiBell />
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white border border-gray-200 shadow-sm">
+              <FiBell className="text-gray-700" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">
-                Notifications
-              </h1>
-              <p className="text-sm text-gray-600">
+              <h1 className="text-xl font-semibold text-gray-900">Notifications</h1>
+              <p className="mt-1 text-sm text-gray-600">
                 All: <span className="font-semibold">{counts.all}</span> •
                 Unread: <span className="font-semibold">{counts.unread}</span> •
                 Read: <span className="font-semibold">{counts.read}</span>
@@ -193,61 +193,61 @@ const Notifications = () => {
           <button
             onClick={() => fetchNotifications(true)}
             disabled={loading}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-60 transition shadow-sm"
           >
             <FiRefreshCw className={loading ? "animate-spin" : ""} />
             {loading ? "Loading..." : "Refresh"}
           </button>
         </div>
 
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <Tabs value={tab} onChange={setTab} counts={counts} />
 
-          <div className="relative w-full sm:w-96">
-            <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <div className="relative w-full sm:w-80 lg:w-96">
+            <FiSearch className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search title, message..."
-              className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-10 pr-3 text-sm outline-none focus:border-gray-300"
+              placeholder="Search by title or message..."
+              className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-11 pr-4 text-sm outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition"
             />
           </div>
         </div>
 
-        <div className="mt-5 space-y-3">
+        <div className="mt-6 space-y-3">
           {!loading && filtered.length === 0 && (
-            <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-gray-600">
-              Hech narsa topilmadi
+            <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500 shadow-sm">
+              No notifications found
             </div>
           )}
 
           {filtered.map((n) => (
             <div
               key={n.id}
-              className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm"
+              className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow transition-shadow"
             >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-start gap-3">
                   <Avatar
                     src={n?.user?.avatar_url}
-                    name={n?.user?.full_name}
+                    name={n?.user?.full_name || n?.user?.name}
                     size={48}
                   />
 
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <div className="truncate text-sm font-semibold text-gray-900">
-                        {n?.title || "-"}
+                        {n?.title || "Notification"}
                       </div>
                       <StatusBadge status={n?.status} />
                     </div>
 
                     <div className="mt-1 line-clamp-2 text-sm text-gray-700">
-                      {n?.message || "-"}
+                      {n?.message || "—"}
                     </div>
 
-                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-                      <span>Created: {formatDate(n?.createdAt)}</span>
+                    <div className="mt-2 text-xs text-gray-500">
+                      Created: {formatDate(n?.createdAt)}
                     </div>
                   </div>
                 </div>
@@ -255,17 +255,17 @@ const Notifications = () => {
                 <div className="flex flex-wrap gap-2 sm:justify-end">
                   <button
                     onClick={() => setSelected(n)}
-                    className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                    className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition"
                   >
                     View
                   </button>
 
-                  {n?.status === "unread" && (
+                  {n?.status?.toLowerCase() === "unread" && (
                     <button
                       onClick={() => markAsRead(n)}
-                      className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
+                      className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black transition"
                     >
-                      <FiCheck />
+                      <FiCheck size={16} />
                       Mark as read
                     </button>
                   )}
@@ -276,61 +276,65 @@ const Notifications = () => {
         </div>
       </div>
 
+      {/* Modal */}
       {selected && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-3 sm:items-center"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
           onClick={() => setSelected(null)}
         >
           <div
-            className="w-full max-w-2xl rounded-2xl bg-white p-5 shadow-xl"
+            className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  {selected?.title || "Notification"}
-                </h2>
-              </div>
+            <div className="flex items-start justify-between gap-4">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {selected?.title || "Notification"}
+              </h2>
 
               <button
                 onClick={() => setSelected(null)}
-                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                className="rounded-xl border border-gray-200 p-2 text-gray-600 hover:bg-gray-50 transition"
               >
-                <FiX />
-                Close
+                <FiX size={20} />
               </button>
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-gray-200 p-3">
-                <div className="text-xs font-semibold text-gray-500">Status</div>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-gray-200 p-4">
+                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Status
+                </div>
                 <div className="mt-2">
                   <StatusBadge status={selected?.status} />
                 </div>
               </div>
 
-              <div className="rounded-xl border border-gray-200 p-3">
-                <div className="text-xs font-semibold text-gray-500">Created</div>
-                <div className="mt-1 text-sm text-gray-900">
+              <div className="rounded-xl border border-gray-200 p-4">
+                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Created
+                </div>
+                <div className="mt-2 text-sm text-gray-900">
                   {formatDate(selected?.createdAt)}
                 </div>
               </div>
             </div>
 
-            <div className="mt-4 rounded-xl border border-gray-200 p-3">
-              <div className="text-xs font-semibold text-gray-500">Message</div>
-              <p className="mt-1 text-sm text-gray-800">
-                {selected?.message || "-"}
+            <div className="mt-5 rounded-xl border border-gray-200 p-4">
+              <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                Message
+              </div>
+              <p className="text-sm text-gray-800 whitespace-pre-wrap">
+                {selected?.message || "No message content"}
               </p>
             </div>
 
-            {selected?.status === "unread" && (
+            {selected?.status?.toLowerCase() === "unread" && (
               <button
                 onClick={() => markAsRead(selected)}
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
+                className="mt-6 w-full rounded-xl bg-gray-900 py-3 text-white font-semibold hover:bg-black transition flex items-center justify-center gap-2"
               >
-                <FiCheck />
-                Mark as read
+                <FiCheck size={18} />
+                Mark as Read
               </button>
             )}
           </div>

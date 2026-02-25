@@ -6,9 +6,9 @@ import { articleService } from "../services/api";
 import { getUserIdFromToken } from "../utils/getUserIdFromToken";
 
 const formatDate = (iso) => {
-  if (!iso) return "-";
+  if (!iso) return "—";
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "-";
+  if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleString();
 };
 
@@ -18,9 +18,17 @@ const normalizeKeywords = (keywords) => {
   if (typeof keywords === "string") {
     try {
       const parsed = JSON.parse(keywords);
-      return Array.isArray(parsed) ? parsed : keywords.split(",").map((x) => x.trim()).filter(Boolean);
+      return Array.isArray(parsed)
+        ? parsed
+        : keywords
+            .split(",")
+            .map((x) => x.trim())
+            .filter(Boolean);
     } catch {
-      return keywords.split(",").map((x) => x.trim()).filter(Boolean);
+      return keywords
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean);
     }
   }
   return [];
@@ -29,6 +37,7 @@ const normalizeKeywords = (keywords) => {
 const StatusBadge = ({ status }) => {
   const base =
     "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1";
+
   const map = {
     Submitted: "bg-gray-50 text-gray-700 ring-gray-200",
     "Under Review": "bg-blue-50 text-blue-700 ring-blue-200",
@@ -37,6 +46,7 @@ const StatusBadge = ({ status }) => {
     Rejected: "bg-rose-50 text-rose-700 ring-rose-200",
     Published: "bg-purple-50 text-purple-700 ring-purple-200",
   };
+
   const cls = map[status] || "bg-gray-50 text-gray-700 ring-gray-200";
   return <span className={`${base} ${cls}`}>{status || "Unknown"}</span>;
 };
@@ -52,7 +62,7 @@ const MyArticles = () => {
 
     if (!myId) {
       setArticles([]);
-      toast.error("Token topilmadi yoki yaroqsiz");
+      toast.error("Session not found or invalid token");
       return;
     }
 
@@ -62,13 +72,13 @@ const MyArticles = () => {
       const list = Array.isArray(res?.data) ? res.data : [];
 
       const myArticles = list.filter(
-        (a) => Number(a?.user_id) === Number(myId)
+        (a) => Number(a?.user_id) === Number(myId),
       );
 
       setArticles(myArticles);
-      if (showToast) toast.success("My articles yuklandi");
+      if (showToast) toast.success("Your articles loaded");
     } catch (e) {
-      toast.error("Yuklashda xatolik");
+      toast.error("Failed to load articles");
     } finally {
       setLoading(false);
     }
@@ -94,30 +104,32 @@ const MyArticles = () => {
     <div className="min-h-screen bg-gray-50">
       <Toaster position="top-right" />
 
-      <div className="mx-auto max-w-6xl p-4 sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto max-w-7xl p-4 sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">My Articles</h1>
-            <p className="text-sm text-gray-600">
+            <h1 className="text-2xl font-semibold text-gray-900">
+              My Articles
+            </h1>
+            <p className="mt-1 text-sm text-gray-600">
               Total: <span className="font-semibold">{filtered.length}</span>
             </p>
           </div>
 
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-            <div className="relative w-full sm:w-80">
-              <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-80 lg:w-96">
+              <FiSearch className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search title, journal, status..."
-                className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-10 pr-3 text-sm outline-none focus:border-gray-300"
+                placeholder="Search by title, journal or status..."
+                className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-11 pr-4 text-sm outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition"
               />
             </div>
 
             <button
               onClick={() => fetchMyArticles(true)}
               disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-60 transition shadow-sm"
             >
               <FiRefreshCw className={loading ? "animate-spin" : ""} />
               {loading ? "Loading..." : "Refresh"}
@@ -125,72 +137,87 @@ const MyArticles = () => {
           </div>
         </div>
 
-        <div className="mt-5 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="mt-6 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-600">
+            <table className="min-w-full divide-y divide-gray-100 text-sm">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3">Article Title</th>
-                  <th className="px-4 py-3">Journal</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Submitted</th>
-                  <th className="px-4 py-3">Updated</th>
-                  <th className="px-4 py-3">Action</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                    Article Title
+                  </th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                    Journal
+                  </th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                    Status
+                  </th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                    Submitted
+                  </th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                    Updated
+                  </th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                    Action
+                  </th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-gray-100">
                 {!loading && filtered.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-gray-500">
-                      Maqola topilmadi
+                    <td
+                      colSpan={6}
+                      className="px-5 py-12 text-center text-gray-500"
+                    >
+                      No articles found
                     </td>
                   </tr>
                 )}
 
                 {filtered.map((a) => (
-                  <tr key={a.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <div className="font-semibold text-gray-900">
-                        {a?.title || "-"}
+                  <tr key={a.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-5 py-4">
+                      <div className="font-medium text-gray-900">
+                        {a?.title || "—"}
                       </div>
                       <div className="mt-1 text-xs text-gray-500">
-                        Category: {a?.category || "-"}
+                        Category: {a?.category || "—"}
                       </div>
                     </td>
 
-                    <td className="px-4 py-3 text-gray-700">
-                      {a?.journal?.name || "-"}
+                    <td className="px-5 py-4 text-gray-700">
+                      {a?.journal?.name || "—"}
                     </td>
 
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-4">
                       <StatusBadge status={a?.status} />
                     </td>
 
-                    <td className="px-4 py-3 text-gray-700">
+                    <td className="px-5 py-4 text-gray-600">
                       {formatDate(a?.createdAt)}
                     </td>
 
-                    <td className="px-4 py-3 text-gray-700">
+                    <td className="px-5 py-4 text-gray-600">
                       {formatDate(a?.updatedAt)}
                     </td>
 
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-4">
                       <div className="flex flex-wrap gap-2">
                         <Link
                           to={`/articles/${a.id}`}
-                          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 transition"
                         >
-                          <FiEye />
+                          <FiEye size={16} />
                           View
                         </Link>
 
                         <button
                           type="button"
                           onClick={() => setSelected(a)}
-                          className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black"
+                          className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black transition"
                         >
-                          Quick view
+                          Quick View
                         </button>
                       </div>
                     </td>
@@ -200,119 +227,147 @@ const MyArticles = () => {
             </table>
           </div>
 
-          <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3 text-xs text-gray-500">
-            <div>Showing: {filtered.length}</div>
+          <div className="flex items-center justify-between border-t border-gray-100 px-5 py-3 text-xs text-gray-500">
+            <div>Showing {filtered.length} article(s)</div>
             <div>{loading ? "Loading..." : "Ready"}</div>
           </div>
         </div>
       </div>
 
-      {/* QUICK VIEW MODAL */}
+      {/* Quick View Modal - Improved & User-Friendly */}
       {selected && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-3 sm:items-center"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={() => setSelected(null)}
         >
           <div
-            className="w-full max-w-2xl rounded-2xl bg-white p-5 shadow-xl"
+            className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  {selected?.title || "Article"}
-                </h2>
-                <p className="mt-1 text-sm text-gray-600">
-                  Journal: {selected?.journal?.name || "-"}
-                </p>
-              </div>
-
-              <button
-                onClick={() => setSelected(null)}
-                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
-              >
-                <FiX />
-                Close
-              </button>
-            </div>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-gray-200 p-3">
-                <div className="text-xs font-semibold text-gray-500">Status</div>
-                <div className="mt-2">
-                  <StatusBadge status={selected?.status} />
+            {/* Header with gradient */}
+            <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-5 text-white">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <h2 className="text-xl sm:text-2xl font-bold line-clamp-2">
+                    {selected?.title || "Article Details"}
+                  </h2>
+                  <p className="mt-2 text-sm text-gray-300 opacity-90">
+                    {selected?.journal?.name || "—"}
+                  </p>
                 </div>
-              </div>
 
-              <div className="rounded-xl border border-gray-200 p-3">
-                <div className="text-xs font-semibold text-gray-500">Language</div>
-                <div className="mt-1 text-sm text-gray-900">
-                  {selected?.language || "-"}
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-gray-200 p-3">
-                <div className="text-xs font-semibold text-gray-500">Submitted</div>
-                <div className="mt-1 text-sm text-gray-900">
-                  {formatDate(selected?.createdAt)}
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-gray-200 p-3">
-                <div className="text-xs font-semibold text-gray-500">Updated</div>
-                <div className="mt-1 text-sm text-gray-900">
-                  {formatDate(selected?.updatedAt)}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 rounded-xl border border-gray-200 p-3">
-              <div className="text-xs font-semibold text-gray-500">Abstract</div>
-              <p className="mt-1 whitespace-pre-wrap text-sm text-gray-800">
-                {selected?.abstract || "-"}
-              </p>
-            </div>
-
-            <div className="mt-4">
-              <div className="text-xs font-semibold text-gray-500">Keywords</div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {normalizeKeywords(selected?.keywords).length === 0 ? (
-                  <span className="text-sm text-gray-600">-</span>
-                ) : (
-                  normalizeKeywords(selected?.keywords).map((k, idx) => (
-                    <span
-                      key={`${k}-${idx}`}
-                      className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700"
-                    >
-                      {k}
-                    </span>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {selected?.file_url && (
-              <div className="mt-4 rounded-xl border border-gray-200 p-3">
-                <div className="text-xs font-semibold text-gray-500">File</div>
-                <a
-                  href={selected.file_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-1 inline-block text-sm font-semibold underline underline-offset-4"
+                <button
+                  onClick={() => setSelected(null)}
+                  className="mt-1 rounded-full p-2 text-gray-300 hover:bg-white/10 transition"
                 >
-                  Open file
-                </a>
+                  <FiX size={24} />
+                </button>
               </div>
-            )}
+            </div>
 
-            <div className="mt-5 flex justify-end">
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+              <div className="grid gap-8 sm:grid-cols-2">
+                {/* Left column - Key Info */}
+                <div className="space-y-6">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                      Status
+                    </div>
+                    <StatusBadge status={selected?.status} />
+                  </div>
+
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                      Language
+                    </div>
+                    <div className="text-base font-medium text-gray-900">
+                      {selected?.language || "—"}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                      Submitted On
+                    </div>
+                    <div className="text-base text-gray-700">
+                      {formatDate(selected?.createdAt)}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                      Last Updated
+                    </div>
+                    <div className="text-base text-gray-700">
+                      {formatDate(selected?.updatedAt)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right column - Abstract & Keywords */}
+                <div className="space-y-6">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                      Abstract
+                    </div>
+                    <div className="max-h-56 overflow-y-auto rounded-xl bg-gray-50 p-5 text-sm text-gray-800 border border-gray-200 leading-relaxed">
+                      {selected?.abstract || "No abstract provided."}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                      Keywords
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {normalizeKeywords(selected?.keywords).length === 0 ? (
+                        <span className="text-sm text-gray-500 italic">
+                          No keywords added
+                        </span>
+                      ) : (
+                        normalizeKeywords(selected?.keywords).map((k, idx) => (
+                          <span
+                            key={`${k}-${idx}`}
+                            className="rounded-full bg-blue-50/70 px-4 py-1.5 text-sm font-medium text-blue-700 border border-blue-100"
+                          >
+                            {k}
+                          </span>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* File Section */}
+              {selected?.file_url && (
+                <div className="mt-10 pt-6 border-t border-gray-200">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
+                    Manuscript File
+                  </div>
+                  <a
+                    href={selected.file_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-3 rounded-xl bg-gray-100 px-6 py-4 text-base font-medium text-gray-800 hover:bg-gray-200 transition shadow-sm hover:shadow"
+                  >
+                    <FiEye size={20} />
+                    Open / Download Manuscript
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="border-t border-gray-200 bg-gray-50 px-6 py-5 flex justify-end">
               <Link
                 to={`/articles/${selected.id}`}
-                className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
+                className="inline-flex items-center gap-3 rounded-xl bg-gray-900 px-8 py-4 text-base font-semibold text-white hover:bg-black transition shadow-md"
                 onClick={() => setSelected(null)}
               >
-                <FiEye />
-                Open full details
+                <FiEye size={20} />
+                View Full Article Page
               </Link>
             </div>
           </div>
