@@ -55,11 +55,9 @@ const SignUp = () => {
   // ✅ endi username + telegram_id ham bor
   const [form, setForm] = useState({
     full_name: "",
-    username: "",
     email: "",
     password: "",
     phone: "",
-    telegram_id: "",
     orcid: "",
     affiliation: "",
     country: "Uzbekistan",
@@ -133,11 +131,9 @@ const SignUp = () => {
       // ✅ required (xohlasangiz phone/orcid/affiliation ixtiyoriy qilamiz)
       const requiredKeys = [
         "full_name",
-        "username",
         "email",
         "password",
         "phone",
-        "telegram_id",
         "orcid",
         "affiliation",
       ];
@@ -164,21 +160,13 @@ const SignUp = () => {
         return;
       }
 
-      // telegram_id ni raqamga o‘xshatib tekshirish (ixtiyoriy, lekin foydali)
-      if (!/^\d+$/.test(form.telegram_id.trim())) {
-        toast.error("Telegram ID should contain only digits.");
-        return;
-      }
-
       const fd = new FormData();
 
       // ✅ swagger + DB fieldlar
       fd.append("full_name", form.full_name.trim());
-      fd.append("username", form.username.trim());      // ✅ endi yuboriladi
       fd.append("email", form.email.trim());
       fd.append("password", form.password);
       fd.append("phone", form.phone.trim());
-      fd.append("telegram_id", form.telegram_id.trim()); // ✅ endi yuboriladi
       fd.append("orcid", form.orcid.trim());
       fd.append("affiliation", form.affiliation.trim());
       fd.append("country", finalCountry);
@@ -341,20 +329,6 @@ const SignUp = () => {
                   />
 
                   <Field
-                    label="Username *"
-                    icon={<FiAtSign className="text-[#0B2A6D]" />}
-                    input={
-                      <input
-                        name="username"
-                        value={form.username}
-                        onChange={onChange}
-                        placeholder="abdukarimov7"
-                        className={inputCls}
-                      />
-                    }
-                  />
-
-                  <Field
                     label="Email *"
                     icon={<FiMail className="text-[#0B2A6D]" />}
                     input={
@@ -408,20 +382,6 @@ const SignUp = () => {
                         value={form.phone}
                         onChange={onChange}
                         placeholder="911785791"
-                        className={inputCls}
-                      />
-                    }
-                  />
-
-                  <Field
-                    label="Telegram ID *"
-                    icon={<FiHash className="text-[#0B2A6D]" />}
-                    input={
-                      <input
-                        name="telegram_id"
-                        value={form.telegram_id}
-                        onChange={onChange}
-                        placeholder="6519831069"
                         className={inputCls}
                       />
                     }

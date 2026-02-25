@@ -5,7 +5,6 @@ import {
   FiUser,
   FiFileText,
   FiSend,
-  FiCreditCard,
   FiBell,
   FiLogOut,
   FiMenu,
@@ -15,14 +14,13 @@ import {
   FiAlertTriangle,
   FiMessageCircle,
 } from "react-icons/fi";
-import { userService } from "../services/api";
+import { userService, chatService, notificationService } from "../services/api";
 
 const menuItems = [
   { path: "/dashboard", label: "Dashboard", icon: FiHome },
   { path: "/my-profile", label: "My Profile", icon: FiUser },
   { path: "/my-articles", label: "My Articles", icon: FiFileText },
   { path: "/submit-article", label: "Submit Article", icon: FiSend },
-  // { path: "/payments", label: "Payments", icon: FiCreditCard },
   { path: "/notifications", label: "Notifications", icon: FiBell },
   { path: "/chat", label: "Chat", icon: FiMessageCircle },
 ];
@@ -38,35 +36,70 @@ const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
+  // ✅ badges
+  const [chatUnread, setChatUnread] = useState(0);
+  const [notifUnread, setNotifUnread] = useState(0);
+  const formatBadge = (n) => (n > 99 ? "99+" : String(n));
+
   const userId = useMemo(() => localStorage.getItem("user_id"), []);
 
   useEffect(() => {
     const load = async () => {
       if (!userId) return;
-
-      // localdan ham ko'rsatib turamiz
       const cached = localStorage.getItem("user_data");
       if (cached) {
         try {
           setUser(JSON.parse(cached));
         } catch {}
       }
-
       try {
         const res = await userService.getById(userId);
-        const userData =
-          res?.data?.data || res?.data?.user || res?.data || null;
-
+        const userData = res?.data?.data || res?.data?.user || res?.data || null;
         if (userData) {
           setUser(userData);
           localStorage.setItem("user_data", JSON.stringify(userData));
         }
+      } catch (e) {}
+    };
+    load();
+  }, [userId]);
+
+  // ✅ Chat + Notifications unread count (Telegram like)
+  useEffect(() => {
+    if (!userId) return;
+
+    const loadBadges = async () => {
+      try {
+        // ---- Notifications unread ----
+        const nRes = await notificationService.getAll();
+        const nList = Array.isArray(nRes?.data) ? nRes.data : [];
+        const myNotifs = nList.filter((n) => Number(n?.user_id) === Number(userId));
+        const unreadNotifs = myNotifs.filter((n) => (n?.status || "").toLowerCase() === "unread").length;
+        setNotifUnread(unreadNotifs);
+
+        // ---- Chat unread (editor yozgan + o'qilmagan) ----
+        const cRes = await chatService.getUserChatList(userId);
+        const cList = Array.isArray(cRes?.data) ? cRes.data : [];
+        const myChats = cList.filter(
+          (m) => String(m?.userId ?? m?.user_id ?? m?.user?.id) === String(userId)
+        );
+
+        const unreadChats = myChats.filter((m) => {
+          const fromEditor = !m?.is_from_user; // editor yozgan
+          const s = (m?.status ?? m?.message_status ?? "").toString().toLowerCase();
+          const isRead = m?.is_read === true || s === "read" || s === "seen" || s === "viewed";
+          return fromEditor && !isRead;
+        }).length;
+
+        setChatUnread(unreadChats);
       } catch (e) {
-        // agar API ishlamasa ham cached ko'rinaveradi
+        // silent
       }
     };
 
-    load();
+    loadBadges();
+    const interval = setInterval(loadBadges, 5000); // 5s polling
+    return () => clearInterval(interval);
   }, [userId]);
 
   const confirmLogout = () => {
@@ -108,7 +141,7 @@ const Sidebar = () => {
       {!isMobileOpen && (
         <button
           onClick={() => setIsMobileOpen(true)}
-          className="lg:hidden fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-[#002147] text-white shadow-xl border border-white/10 active:scale-95 transition-transform"
+          className="lg:hidden fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-[#002147] text-white shadow-xl active:scale-95 transition-transform"
         >
           <FiMenu size={24} />
         </button>
@@ -124,28 +157,24 @@ const Sidebar = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 h-screen z-50 transition-all duration-300 bg-[#002147] border-r border-white/5
+        className={`fixed lg:sticky top-0 left-0 h-screen z-50 transition-all duration-300 bg-[#002147] border-r border-white/5 
         ${isMobileOpen ? "translate-x-0 w-[280px]" : "-translate-x-full lg:translate-x-0"}
         ${isCollapsed && !isMobileOpen ? "w-20" : "w-64"}`}
       >
-        <div className="h-full flex flex-col text-white overflow-hidden relative">
+        <div className="h-full flex flex-col text-white relative">
           {/* Mobile close */}
           {isMobileOpen && (
             <button
               onClick={() => setIsMobileOpen(false)}
-              className="lg:hidden absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors text-white/70 active:rotate-90 duration-200"
+              className="lg:hidden absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full text-white/70 active:rotate-90 duration-200"
             >
               <FiX size={24} />
             </button>
           )}
 
-          {/* Header / profile */}
+          {/* Header / Profile */}
           <div className="p-4 border-b border-white/10 shrink-0">
-            <div
-              className={`flex flex-col ${
-                isCollapsed && !isMobileOpen ? "items-center" : "items-start"
-              } gap-3`}
-            >
+            <div className={`flex flex-col ${isCollapsed && !isMobileOpen ? "items-center" : "items-start"} gap-3`}>
               <div className="flex items-center w-full justify-between">
                 <div className="flex items-center gap-3 min-w-0">
                   <div
@@ -169,17 +198,12 @@ const Sidebar = () => {
 
                   {(!isCollapsed || isMobileOpen) && (
                     <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-bold truncate text-white">
-                        User
-                      </p>
-                      <p className="text-[12px] text-white/50 truncate font-medium">
-                        {formattedName}
-                      </p>
+                      <p className="text-[14px] font-bold truncate text-white">User</p>
+                      <p className="text-[12px] text-white/50 truncate font-medium">{formattedName}</p>
                     </div>
                   )}
                 </div>
 
-                {/* collapse button */}
                 {!isCollapsed && (
                   <button
                     onClick={() => setIsCollapsed(true)}
@@ -201,11 +225,15 @@ const Sidebar = () => {
             </div>
           </div>
 
-          {/* Nav */}
-          <nav className="flex-1 overflow-y-auto no-scrollbar py-4 px-3 space-y-1">
+          {/* Navigation */}
+          <nav className={`flex-1 py-4 px-3 space-y-1 no-scrollbar ${isCollapsed && !isMobileOpen ? "overflow-visible" : "overflow-y-auto"}`}>
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
+
+              const isChat = item.path === "/chat";
+              const isNotif = item.path === "/notifications";
+              const count = isChat ? chatUnread : isNotif ? notifUnread : 0;
 
               return (
                 <NavLink
@@ -214,26 +242,38 @@ const Sidebar = () => {
                   onClick={() => setIsMobileOpen(false)}
                   className={`flex items-center group relative p-3 rounded-xl transition-all duration-200 ${
                     isCollapsed && !isMobileOpen ? "justify-center" : "gap-3"
-                  } ${
-                    isActive
-                      ? "bg-blue-600 shadow-lg shadow-blue-900/40 text-white"
-                      : "text-white/60 hover:bg-white/5 hover:text-white"
-                  }`}
+                  } ${isActive ? "bg-blue-600 shadow-lg shadow-blue-900/40 text-white" : "text-white/60 hover:bg-white/5 hover:text-white"}`}
                 >
                   <Icon
                     className={`text-xl shrink-0 transition-transform duration-200 ${
                       isActive ? "scale-110" : "group-hover:scale-110"
                     }`}
                   />
+
                   {(!isCollapsed || isMobileOpen) && (
-                    <span className="text-[14px] font-medium tracking-wide">
+                    <span className="text-[14px] font-medium tracking-wide whitespace-nowrap">
                       {item.label}
                     </span>
                   )}
 
-                  {/* Tooltip when collapsed */}
+                  {/* ✅ Badge (Chat / Notifications) */}
+                  {count > 0 && (
+                    <span
+                      className={[
+                        "inline-flex items-center justify-center",
+                        "min-w-[22px] h-[22px] px-1.5",
+                        "rounded-full text-[11px] font-bold",
+                        "bg-red-500 text-white border-2 border-[#002147]",
+                        isCollapsed && !isMobileOpen ? "absolute -top-1 -right-1" : "ml-auto",
+                      ].join(" ")}
+                    >
+                      {formatBadge(count)}
+                    </span>
+                  )}
+
+                  {/* Tooltip - faqat collapsed holatda */}
                   {isCollapsed && !isMobileOpen && (
-                    <div className="absolute left-full ml-4 scale-0 group-hover:scale-100 transition-all origin-left bg-gray-900 text-white text-[11px] px-3 py-1.5 rounded-lg shadow-2xl z-50 whitespace-nowrap pointer-events-none">
+                    <div className="absolute left-full ml-4 opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0 transition-all duration-200 bg-gray-900 text-white text-[12px] px-3 py-1.5 rounded-lg shadow-2xl z-[100] whitespace-nowrap pointer-events-none">
                       {item.label}
                     </div>
                   )}
@@ -251,9 +291,7 @@ const Sidebar = () => {
               }`}
             >
               <FiLogOut className="text-xl shrink-0" />
-              {(!isCollapsed || isMobileOpen) && (
-                <span className="text-[14px] font-bold">Logout</span>
-              )}
+              {(!isCollapsed || isMobileOpen) && <span className="text-[14px] font-bold">Logout</span>}
             </button>
           </div>
         </div>
@@ -262,24 +300,14 @@ const Sidebar = () => {
       {/* Logout Modal */}
       {isLogoutModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-md animate-in fade-in duration-200"
-            onClick={() => setIsLogoutModalOpen(false)}
-          />
-
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-md" onClick={() => setIsLogoutModalOpen(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200">
             <div className="flex flex-col items-center text-center">
               <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
                 <FiAlertTriangle className="text-red-500" size={32} />
               </div>
-
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                Logout
-              </h3>
-              <p className="text-gray-500 mb-6">
-                Are you sure you want to leave the profile?
-              </p>
-
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Logout</h3>
+              <p className="text-gray-500 mb-6">Are you sure you want to leave the profile?</p>
               <div className="flex gap-3 w-full">
                 <button
                   onClick={() => setIsLogoutModalOpen(false)}

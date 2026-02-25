@@ -7,10 +7,14 @@ import {
   FiXCircle,
   FiUpload,
   FiBell,
+  FiArrowUpRight,
 } from "react-icons/fi";
 import toast, { Toaster } from "react-hot-toast";
 import { articleService, notificationService } from "../services/api";
 import { getUserIdFromToken } from "../utils/getUserIdFromToken";
+import { useNavigate } from "react-router-dom";
+
+const formatBadge = (n) => (n > 99 ? "99+" : String(n));
 
 const StatusBadge = ({ status }) => {
   const base =
@@ -29,14 +33,17 @@ const StatusBadge = ({ status }) => {
   return <span className={`${base} ${cls}`}>{status || "Unknown"}</span>;
 };
 
-const StatCard = ({ title, value, icon }) => (
-  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-    <div className="flex items-center justify-between">
-      <div>
-        <div className="text-xs font-semibold text-gray-500 uppercase">
+const StatCard = ({ title, value, icon, hint }) => (
+  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center justify-between gap-4">
+      <div className="min-w-0">
+        <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">
           {title}
         </div>
-        <div className="mt-2 text-2xl font-bold text-gray-900">{value}</div>
+        <div className="mt-2 text-2xl font-extrabold text-gray-900">
+          {value}
+        </div>
+        {hint && <div className="mt-1 text-xs text-gray-500">{hint}</div>}
       </div>
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-700">
         {icon}
@@ -46,6 +53,8 @@ const StatCard = ({ title, value, icon }) => (
 );
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+
   const [articles, setArticles] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -54,7 +63,7 @@ const Dashboard = () => {
 
   const fetchData = async () => {
     if (!userId) {
-      toast.error("User topilmadi");
+      toast.error("User not found");
       return;
     }
 
@@ -65,12 +74,14 @@ const Dashboard = () => {
         notificationService.getAll(),
       ]);
 
-      const allArticles = articleRes?.data || [];
+      const allArticles = Array.isArray(articleRes?.data) ? articleRes.data : [];
       const myArticles = allArticles.filter(
         (a) => Number(a.user_id) === Number(userId)
       );
 
-      const allNotifications = notificationRes?.data || [];
+      const allNotifications = Array.isArray(notificationRes?.data)
+        ? notificationRes.data
+        : [];
       const myNotifications = allNotifications.filter(
         (n) => Number(n.user_id) === Number(userId)
       );
@@ -78,7 +89,7 @@ const Dashboard = () => {
       setArticles(myArticles);
       setNotifications(myNotifications);
     } catch (e) {
-      toast.error("Dashboard yuklashda xatolik");
+      toast.error("Failed to load dashboard data");
     } finally {
       setLoading(false);
     }
@@ -88,7 +99,7 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  // 📊 STATISTICS
+  // Statistics calculation
   const stats = useMemo(() => {
     return {
       total: articles.length,
@@ -99,6 +110,12 @@ const Dashboard = () => {
       published: articles.filter((a) => a.status === "Published").length,
     };
   }, [articles]);
+
+  const unreadNotifCount = useMemo(() => {
+    return notifications.filter(
+      (n) => String(n?.status || "").toLowerCase() === "unread"
+    ).length;
+  }, [notifications]);
 
   const recentArticles = useMemo(() => {
     return [...articles]
@@ -116,52 +133,90 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gray-50">
       <Toaster position="top-right" />
 
-      <div className="mx-auto max-w-7xl p-4 sm:p-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-gray-900">
-            User Dashboard
-          </h1>
-          <button
-            onClick={fetchData}
-            disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-60"
-          >
-            <FiRefreshCw className={loading ? "animate-spin" : ""} />
-            Refresh
-          </button>
-        </div>
+      {/* Sticky header */}
+      <div className="sticky top-0 z-20 border-b border-gray-200 bg-white/80 backdrop-blur">
+        <div className="mx-auto max-w-7xl p-4 sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="truncate text-xl sm:text-2xl font-bold text-gray-900">
+                  My Dashboard
+                </h1>
 
+                {unreadNotifCount > 0 && (
+                  <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 ring-1 ring-blue-200">
+                    <FiBell />
+                    {formatBadge(unreadNotifCount)} unread
+                  </span>
+                )}
+              </div>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Track your article status and latest updates
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate("/notifications")}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+              >
+                <FiBell />
+                Notifications
+                <FiArrowUpRight />
+              </button>
+
+              <button
+                onClick={fetchData}
+                disabled={loading}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-60"
+              >
+                <FiRefreshCw className={loading ? "animate-spin" : ""} />
+                Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-7xl p-4 sm:p-6">
         {/* STATISTICS GRID */}
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard
             title="Total Submitted"
             value={stats.total}
             icon={<FiFileText />}
+            hint="All your submissions"
           />
           <StatCard
             title="Under Review"
             value={stats.review}
             icon={<FiClock />}
+            hint="Currently being reviewed"
           />
           <StatCard
             title="Needs Revision"
             value={stats.revision}
             icon={<FiUpload />}
+            hint="Requires updates"
           />
           <StatCard
             title="Accepted"
             value={stats.accepted}
             icon={<FiCheckCircle />}
+            hint="Approved articles"
           />
           <StatCard
             title="Rejected"
             value={stats.rejected}
             icon={<FiXCircle />}
+            hint="Not accepted"
           />
           <StatCard
             title="Published"
             value={stats.published}
             icon={<FiCheckCircle />}
+            hint="Published articles"
           />
         </div>
 
@@ -169,13 +224,21 @@ const Dashboard = () => {
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           {/* Recent Articles */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="text-sm font-semibold text-gray-900">
-              Recent Articles
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-bold text-gray-900">
+                Recent Articles
+              </div>
+              <button
+                onClick={() => navigate("/my-articles")}
+                className="text-xs font-semibold text-gray-600 hover:text-gray-900"
+              >
+                View all
+              </button>
             </div>
 
             <div className="mt-4 space-y-3">
               {recentArticles.length === 0 && (
-                <div className="text-sm text-gray-600">
+                <div className="rounded-xl border border-dashed border-gray-200 p-4 text-sm text-gray-600">
                   No articles found
                 </div>
               )}
@@ -183,10 +246,10 @@ const Dashboard = () => {
               {recentArticles.map((a) => (
                 <div
                   key={a.id}
-                  className="flex items-center justify-between rounded-xl border border-gray-100 p-3 hover:bg-gray-50"
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-gray-100 p-3 hover:bg-gray-50 transition"
                 >
-                  <div>
-                    <div className="text-sm font-semibold text-gray-900">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-gray-900">
                       {a.title}
                     </div>
                     <div className="text-xs text-gray-500">
@@ -201,36 +264,78 @@ const Dashboard = () => {
 
           {/* Recent Notifications */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-              <FiBell />
-              Recent Notifications
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm font-bold text-gray-900">
+                <FiBell />
+                Recent Notifications
+              </div>
+              <button
+                onClick={() => navigate("/notifications")}
+                className="text-xs font-semibold text-gray-600 hover:text-gray-900"
+              >
+                View all
+              </button>
             </div>
 
             <div className="mt-4 space-y-3">
               {recentNotifications.length === 0 && (
-                <div className="text-sm text-gray-600">
-                  No notifications
+                <div className="rounded-xl border border-dashed border-gray-200 p-4 text-sm text-gray-600">
+                  No notifications yet
                 </div>
               )}
 
-              {recentNotifications.map((n) => (
-                <div
-                  key={n.id}
-                  className="rounded-xl border border-gray-100 p-3 hover:bg-gray-50"
-                >
-                  <div className="text-sm font-semibold text-gray-900">
-                    {n.title}
+              {recentNotifications.map((n) => {
+                const isUnread =
+                  String(n?.status || "").toLowerCase() === "unread";
+
+                return (
+                  <div
+                    key={n.id}
+                    className={[
+                      "rounded-2xl border p-3 transition",
+                      isUnread
+                        ? "border-blue-100 bg-blue-50/40"
+                        : "border-gray-100 hover:bg-gray-50",
+                    ].join(" ")}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={[
+                              "h-2.5 w-2.5 rounded-full",
+                              isUnread ? "bg-blue-600" : "bg-gray-300",
+                            ].join(" ")}
+                          />
+                          <div className="truncate text-sm font-semibold text-gray-900">
+                            {n.title}
+                          </div>
+                          {isUnread && (
+                            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                              UNREAD
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-1 text-xs text-gray-600 line-clamp-2">
+                          {n.message}
+                        </div>
+
+                        <div className="mt-2 text-xs text-gray-500">
+                          {new Date(n.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="mt-1 text-xs text-gray-600 line-clamp-2">
-                    {n.message}
-                  </div>
-                  <div className="mt-1 text-xs text-gray-500">
-                    {new Date(n.createdAt).toLocaleDateString()}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
+        </div>
+
+        {/* Mobile helper text */}
+        <div className="mt-6 text-center text-xs text-gray-500 sm:hidden">
+          Tip: Click “Refresh” to update • Unread notifications appear as a badge
         </div>
       </div>
     </div>

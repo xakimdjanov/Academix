@@ -3,44 +3,108 @@
 @tailwind utilities;
 
 @layer utilities {
-  /* Scroll bor, lekin ko‘rinmaydi */
+  /* 1. Scrollbar butunlay yashirin (ko'rinmaydi, lekin scroll ishlaydi) */
   .scrollbar-none {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+    -ms-overflow-style: none;          /* Internet Explorer va Edge */
+    scrollbar-width: none;             /* Firefox */
   }
+
   .scrollbar-none::-webkit-scrollbar {
-    display: none;
+    display: none;                     /* Chrome, Safari, Edge */
   }
 
-  /* Chiroyli minimal scrollbar */
-  .scrollbar-modern {
+  /* 2. Engil, chiroyli va zamonaviy scrollbar (eng ko'p ishlatiladigan variant) */
+  .scrollbar-sleek {
+    scrollbar-width: thin;             /* Firefox */
+    scrollbar-color: rgba(100, 116, 139, 0.4) transparent;
+  }
+
+  .scrollbar-sleek::-webkit-scrollbar {
+    width: 6px;                        /* juda yupqa */
+    height: 6px;                       /* horizontal scroll uchun ham */
+  }
+
+  .scrollbar-sleek::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+    margin: 2px;
+  }
+
+  .scrollbar-sleek::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.4); /* slate-500 ning ochroq varianti */
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  .scrollbar-sleek::-webkit-scrollbar-thumb:hover {
+    background: rgba(71, 85, 105, 0.7); /* slate-600 hoverda */
+  }
+
+  /* 3. Juda nozik va deyarli ko'rinmaydigan, lekin hoverda paydo bo'ladigan */
+  .scrollbar-ghost {
     scrollbar-width: thin;
-    scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+    scrollbar-color: transparent transparent;
   }
 
-  .scrollbar-modern::-webkit-scrollbar {
-    width: 6px;
+  .scrollbar-ghost::-webkit-scrollbar {
+    width: 4px;
   }
 
-  .scrollbar-modern::-webkit-scrollbar-track {
+  .scrollbar-ghost::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  .scrollbar-modern::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.22);
-    border-radius: 9999px;
+  .scrollbar-ghost::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 10px;
   }
 
-  .scrollbar-modern::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.38);
+  .scrollbar-ghost:hover::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.5); /* slate-400 */
+  }
+
+  /* Qo'shimcha: smooth scroll uchun (ayniqsa mobil uchun foydali) */
+  .smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch; /* iOS momentum scroll */
   }
 }
 
-/* MUHIM: flex scroll ishlashi uchun */
+/* Global reset va asosiy sozlamalar */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 html,
 body,
 #root {
   height: 100%;
+  width: 100%;
+  overflow-x: hidden;           /* gorizontal scroll oldini olish uchun */
+}
+
+/* Default font va text smoothing */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f8fafc;     /* slate-50 ga yaqin */
+  color: #0f172a;                /* slate-900 */
+}
+
+/* Scrollbar faqat kerak bo'lganda ko'rinishi uchun umumiy class */
+.overflow-y-auto {
+  @apply scrollbar-sleek smooth-scroll;
+}
+
+/* Agar juda ko'p joyda scrollbar-none ishlatmoqchi bo'lsangiz */
+.no-scrollbar {
+  @apply scrollbar-none;
 }
 
 *{
