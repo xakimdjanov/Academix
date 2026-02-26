@@ -402,7 +402,7 @@ const Chat = () => {
             ))}
 
             {articleThreads.length === 0 && (
-              <div className="p-6 text-sm text-gray-400">Sizda hozircha editor biriktirilgan maqola yo‘q.</div>
+              <div className="p-6 text-sm text-gray-400">You don't have any assigned articles yet.</div>
             )}
           </div>
         </div>
