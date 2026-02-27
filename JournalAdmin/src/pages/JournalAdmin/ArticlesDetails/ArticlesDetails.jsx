@@ -53,6 +53,30 @@ const ArticlesDetails = () => {
       </div>
     );
 
+    const formatAuthors = (v) => {
+  if (!v) return "N/A";
+  if (typeof v === "string") return v;
+
+  if (Array.isArray(v)) {
+    return (
+      v
+        .map((x) =>
+          typeof x === "string"
+            ? x
+            : x?.fullName || x?.name || x?.email || x?.phone || x?.orcidId || ""
+        )
+        .filter(Boolean)
+        .join(", ") || "N/A"
+    );
+  }
+
+  if (typeof v === "object") {
+    return v?.fullName || v?.name || v?.email || v?.phone || v?.orcidId || "N/A";
+  }
+
+  return String(v);
+};
+
   if (!article)
     return (
       <div className="max-w-5xl mx-auto p-6">
@@ -98,7 +122,7 @@ const ArticlesDetails = () => {
           <InfoRow label="Title" value={article?.title} primary />
           <InfoRow label="Category" value={article?.category} />
           <InfoRow label="Language" value={article?.language} />
-          <InfoRow label="Authors" value={article?.authors} />
+          <InfoRow label="Authors" value={formatAuthors(article?.authors ?? article?.author)} />
           <InfoRow
             label="Keywords"
             value={Array.isArray(article?.keywords) ? article.keywords.join(", ") : article?.keywords}

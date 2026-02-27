@@ -46,12 +46,37 @@ const Dashboard = () => {
     return Number.isFinite(ms) ? ms : 0;
   };
 
+  const renderAuthor = (article) => {
+  const v = article?.authors ?? article?.author;
+
+  if (!v) return "—";
+  if (typeof v === "string") return v;
+
+  if (Array.isArray(v)) {
+    return v
+      .map((x) => (typeof x === "string" ? x : x?.fullName || x?.name || x?.email || ""))
+      .filter(Boolean)
+      .join(", ") || "—";
+  }
+
+  if (typeof v === "object") {
+    return v?.fullName || v?.name || v?.email || v?.phone || v?.orcidId || "—";
+  }
+
+  return String(v);
+};
+
   const normalizeStatus = (s) => {
-    const v = String(s || "").trim().toLowerCase();
+    const v = String(s || "")
+      .trim()
+      .toLowerCase();
     if (v === "submitted") return "Submitted";
-    if (v === "under review" || v === "under_review" || v === "review") return "Under Review";
-    if (v === "needs revision" || v === "needs_revision" || v === "revision") return "Needs Revision";
-    if (v === "accepted" || v === "approve" || v === "approved") return "Accepted";
+    if (v === "under review" || v === "under_review" || v === "review")
+      return "Under Review";
+    if (v === "needs revision" || v === "needs_revision" || v === "revision")
+      return "Needs Revision";
+    if (v === "accepted" || v === "approve" || v === "approved")
+      return "Accepted";
     if (v === "rejected" || v === "reject") return "Rejected";
     return s ? String(s) : "Submitted";
   };
@@ -124,28 +149,35 @@ const Dashboard = () => {
   const total = articles.length;
 
   const submitted = useMemo(
-    () => articles.filter((a) => normalizeStatus(a?.status) === "Submitted").length,
-    [articles]
+    () =>
+      articles.filter((a) => normalizeStatus(a?.status) === "Submitted").length,
+    [articles],
   );
 
   const underReview = useMemo(
-    () => articles.filter((a) => normalizeStatus(a?.status) === "Under Review").length,
-    [articles]
+    () =>
+      articles.filter((a) => normalizeStatus(a?.status) === "Under Review")
+        .length,
+    [articles],
   );
 
   const needsRevision = useMemo(
-    () => articles.filter((a) => normalizeStatus(a?.status) === "Needs Revision").length,
-    [articles]
+    () =>
+      articles.filter((a) => normalizeStatus(a?.status) === "Needs Revision")
+        .length,
+    [articles],
   );
 
   const accepted = useMemo(
-    () => articles.filter((a) => normalizeStatus(a?.status) === "Accepted").length,
-    [articles]
+    () =>
+      articles.filter((a) => normalizeStatus(a?.status) === "Accepted").length,
+    [articles],
   );
 
   const rejected = useMemo(
-    () => articles.filter((a) => normalizeStatus(a?.status) === "Rejected").length,
-    [articles]
+    () =>
+      articles.filter((a) => normalizeStatus(a?.status) === "Rejected").length,
+    [articles],
   );
 
   // Revenue default: Accepted * APC_PRICE
@@ -188,10 +220,18 @@ const Dashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-        <StatCard title="Total Submissions" value={total} icon={<FiFileText />} />
+        <StatCard
+          title="Total Submissions"
+          value={total}
+          icon={<FiFileText />}
+        />
         <StatCard title="Under Review" value={underReview} icon={<FiClock />} />
         <StatCard title="Accepted" value={accepted} icon={<FiCheckCircle />} />
-        <StatCard title="Revenue (APC)" value={`$${revenueFormatted}`} icon={<FiDollarSign />} />
+        <StatCard
+          title="Revenue (APC)"
+          value={`$${revenueFormatted}`}
+          icon={<FiDollarSign />}
+        />
       </div>
 
       {/* Extra status pills (optional) */}
@@ -204,7 +244,9 @@ const Dashboard = () => {
       {/* Recent Articles */}
       <div className="bg-white rounded-2xl shadow p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3 mb-4">
-          <h2 className="text-base sm:text-lg font-semibold">Recent Submissions</h2>
+          <h2 className="text-base sm:text-lg font-semibold">
+            Recent Submissions
+          </h2>
           <span className="text-xs text-gray-500">
             Showing {Math.min(5, articles.length)} of {articles.length}
           </span>
@@ -237,11 +279,15 @@ const Dashboard = () => {
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-gray-600">
                   <div>
                     <p className="text-[11px] text-gray-400">Author</p>
-                    <p className="break-words line-clamp-1">{a?.authors || a?.author || "—"}</p>
+                    <p className="break-words line-clamp-1">
+                      {renderAuthor(a)}
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="text-[11px] text-gray-400">Language</p>
-                    <p className="break-words line-clamp-1">{a?.language || "—"}</p>
+                    <p className="break-words line-clamp-1">
+                      {a?.language || "—"}
+                    </p>
                   </div>
                 </div>
 
@@ -261,7 +307,9 @@ const Dashboard = () => {
             );
           })}
 
-          {articles.length === 0 && <p className="text-gray-400 mt-2">No submissions yet.</p>}
+          {articles.length === 0 && (
+            <p className="text-gray-400 mt-2">No submissions yet.</p>
+          )}
         </div>
 
         {/* Desktop/Tablet: Table */}
@@ -300,12 +348,14 @@ const Dashboard = () => {
 
                     <td className="py-3 pr-4">
                       <span className="text-gray-700 break-words line-clamp-1">
-                        {a?.authors || a?.author || "—"}
+                        {renderAuthor(a)}
                       </span>
                     </td>
 
                     <td className="py-3 pr-4">
-                      <span className="text-gray-700">{a?.language || "—"}</span>
+                      <span className="text-gray-700">
+                        {a?.language || "—"}
+                      </span>
                     </td>
 
                     <td className="py-3 pr-4">
@@ -328,7 +378,9 @@ const Dashboard = () => {
             </tbody>
           </table>
 
-          {articles.length === 0 && <p className="text-gray-400 mt-4">No submissions yet.</p>}
+          {articles.length === 0 && (
+            <p className="text-gray-400 mt-4">No submissions yet.</p>
+          )}
         </div>
       </div>
     </div>
@@ -368,7 +420,10 @@ const DashboardLoading = () => {
 
         <div className="space-y-3 sm:hidden">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="rounded-xl border border-gray-100 p-3 bg-white">
+            <div
+              key={i}
+              className="rounded-xl border border-gray-100 p-3 bg-white"
+            >
               <div className="flex items-start justify-between gap-3">
                 <div className="h-4 w-48 rounded bg-gray-200 animate-pulse" />
                 <div className="h-5 w-20 rounded-full bg-gray-100 animate-pulse" />
@@ -391,7 +446,10 @@ const DashboardLoading = () => {
           <div className="w-full">
             <div className="h-9 w-full rounded-xl bg-gray-100 mb-2 animate-pulse" />
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-12 w-full rounded-xl bg-gray-50 mb-2 animate-pulse" />
+              <div
+                key={i}
+                className="h-12 w-full rounded-xl bg-gray-50 mb-2 animate-pulse"
+              />
             ))}
           </div>
         </div>
@@ -400,7 +458,9 @@ const DashboardLoading = () => {
           <div className="h-10 w-10 rounded-full border-4 border-gray-200 border-t-gray-500 animate-spin" />
         </div>
 
-        <p className="mt-3 text-center text-sm text-gray-400">Loading dashboard...</p>
+        <p className="mt-3 text-center text-sm text-gray-400">
+          Loading dashboard...
+        </p>
       </div>
     </div>
   );
@@ -442,9 +502,12 @@ const StatCard = ({ title, value, icon }) => {
 
 function getStatStyle(title) {
   const t = String(title || "").toLowerCase();
-  if (t.includes("total")) return { bg: "bg-blue-500/10", text: "text-blue-600" };
-  if (t.includes("review")) return { bg: "bg-yellow-500/10", text: "text-yellow-600" };
-  if (t.includes("accepted")) return { bg: "bg-green-500/10", text: "text-green-600" };
+  if (t.includes("total"))
+    return { bg: "bg-blue-500/10", text: "text-blue-600" };
+  if (t.includes("review"))
+    return { bg: "bg-yellow-500/10", text: "text-yellow-600" };
+  if (t.includes("accepted"))
+    return { bg: "bg-green-500/10", text: "text-green-600" };
   if (t.includes("revenue") || t.includes("apc"))
     return { bg: "bg-purple-500/10", text: "text-purple-600" };
   return { bg: "bg-gray-500/10", text: "text-gray-600" };
@@ -460,12 +523,12 @@ const StatusText = ({ status }) => {
     s === "Accepted"
       ? "text-green-600"
       : s === "Rejected"
-      ? "text-rose-600"
-      : s === "Needs Revision"
-      ? "text-amber-600"
-      : s === "Under Review"
-      ? "text-yellow-600"
-      : "text-blue-600";
+        ? "text-rose-600"
+        : s === "Needs Revision"
+          ? "text-amber-600"
+          : s === "Under Review"
+            ? "text-yellow-600"
+            : "text-blue-600";
   return <span className={`${cls} font-medium`}>{s || "Submitted"}</span>;
 };
 
@@ -475,12 +538,12 @@ const StatusPill = ({ status }) => {
     s === "Accepted"
       ? "bg-green-500/10 text-green-700"
       : s === "Rejected"
-      ? "bg-rose-500/10 text-rose-700"
-      : s === "Needs Revision"
-      ? "bg-amber-500/10 text-amber-700"
-      : s === "Under Review"
-      ? "bg-yellow-500/10 text-yellow-700"
-      : "bg-blue-500/10 text-blue-700";
+        ? "bg-rose-500/10 text-rose-700"
+        : s === "Needs Revision"
+          ? "bg-amber-500/10 text-amber-700"
+          : s === "Under Review"
+            ? "bg-yellow-500/10 text-yellow-700"
+            : "bg-blue-500/10 text-blue-700";
 
   return (
     <span className={`px-2 py-1 rounded-full text-[11px] font-semibold ${cls}`}>
@@ -494,10 +557,10 @@ const MiniPill = ({ label, value, tone }) => {
     tone === "blue"
       ? "bg-blue-500/10 text-blue-700"
       : tone === "amber"
-      ? "bg-amber-500/10 text-amber-700"
-      : tone === "rose"
-      ? "bg-rose-500/10 text-rose-700"
-      : "bg-gray-500/10 text-gray-700";
+        ? "bg-amber-500/10 text-amber-700"
+        : tone === "rose"
+          ? "bg-rose-500/10 text-rose-700"
+          : "bg-gray-500/10 text-gray-700";
 
   return (
     <div className={`px-3 py-2 rounded-2xl text-xs font-bold ${cls}`}>
