@@ -573,11 +573,11 @@ const Chat = () => {
     if (fileRef.current) fileRef.current.value = "";
   };
 
-  // Open article modal
-  const openArticlesModal = (articles) => {
-    setSelectedArticles(articles);
-    setShowArticleModal(true);
-  };
+            {articleThreads.length === 0 && (
+              <div className="p-6 text-sm text-gray-400">You don't have any assigned articles yet.</div>
+            )}
+          </div>
+        </div>
 
   return (
     <>

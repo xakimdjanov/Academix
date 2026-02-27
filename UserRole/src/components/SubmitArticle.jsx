@@ -223,7 +223,7 @@ const SubmitArticle = () => {
         <div className="bg-white shadow-lg rounded-2xl border border-gray-200 overflow-hidden">
 
           {/* Header + Progress Steps */}
-          <div className="bg-blue-600 px-6 py-6 text-white">
+          <div className="bg-[#002147] px-6 py-6 text-white">
             <h1 className="text-2xl sm:text-3xl font-bold text-center">Submit Your Article</h1>
             <p className="mt-2 text-blue-100 text-center opacity-90">
               Fill in the details step by step
@@ -235,10 +235,10 @@ const SubmitArticle = () => {
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold border-2 transition-all ${
                       step > n
-                        ? "bg-white text-blue-600 border-white"
+                        ? "bg-white text-[#002147] border-white"
                         : step === n
-                        ? "bg-white text-blue-600 border-white ring-4 ring-blue-300/40"
-                        : "bg-blue-500/40 text-white border-blue-300/60"
+                        ? "bg-white text-[#002147] border-white ring-4 ring-blue-300/40"
+                        : "bg-[#002147]/40 text-white border-blue-300/60"
                     }`}
                   >
                     {step > n ? <FiCheck /> : n}
@@ -262,7 +262,7 @@ const SubmitArticle = () => {
                   value={selectedJournalId}
                   onChange={(e) => setSelectedJournalId(e.target.value)}
                   disabled={loadingJournals}
-                  className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition disabled:opacity-60"
+                  className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition disabled:opacity-60"
                 >
                   <option value="">Choose a journal...</option>
                   {journals.map((j) => (
@@ -273,10 +273,10 @@ const SubmitArticle = () => {
                 </select>
 
                 {selectedJournal && (
-                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 space-y-2">
-                    <h3 className="font-bold text-blue-800">{selectedJournal.name}</h3>
-                    <p className="text-blue-700">ISSN: {selectedJournal.issn || "—"}</p>
-                    <p className="text-blue-700">Field: {selectedJournal.subject_area || "—"}</p>
+                  <div className="bg-[#e6f0ff] border border-blue-100 rounded-xl p-6 space-y-2">
+                    <h3 className="font-bold text-[#002147]">{selectedJournal.name}</h3>
+                    <p className="text-[#002147]">ISSN: {selectedJournal.issn || "—"}</p>
+                    <p className="text-[#002147]">Field: {selectedJournal.subject_area || "—"}</p>
                   </div>
                 )}
               </div>
@@ -292,7 +292,7 @@ const SubmitArticle = () => {
                   <input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                    className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition"
                     placeholder="Enter article title..."
                   />
                 </div>
@@ -303,7 +303,7 @@ const SubmitArticle = () => {
                     value={abstract}
                     onChange={(e) => setAbstract(e.target.value)}
                     rows={5}
-                    className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition resize-y"
+                    className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition resize-y"
                     placeholder="Enter abstract..."
                   />
                 </div>
@@ -315,12 +315,12 @@ const SubmitArticle = () => {
                       value={keywordInput}
                       onChange={(e) => setKeywordInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addKeyword())}
-                      className="flex-1 rounded-xl border border-gray-300 px-5 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                      className="flex-1 rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none"
                       placeholder="Type keyword and press Enter"
                     />
                     <button
                       onClick={addKeyword}
-                      className="rounded-xl bg-blue-600 px-6 py-3 text-white font-medium hover:bg-blue-700 transition"
+                      className="rounded-xl bg-[#002147] px-6 py-3 text-white font-medium hover:bg-[#001a3a] transition"
                     >
                       Add
                     </button>
@@ -331,7 +331,7 @@ const SubmitArticle = () => {
                         <span
                           key={i}
                           onClick={() => removeKeyword(i)}
-                          className="inline-flex items-center gap-1 px-4 py-1.5 rounded-full bg-blue-100 text-blue-800 text-sm cursor-pointer hover:bg-blue-200 transition"
+                          className="inline-flex items-center gap-1 px-4 py-1.5 rounded-full bg-[#e6f0ff] text-[#002147] text-sm cursor-pointer hover:bg-blue-200 transition"
                         >
                           {k} <span className="font-bold">×</span>
                         </span>
@@ -346,7 +346,7 @@ const SubmitArticle = () => {
                     <input
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                      className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition"
                       placeholder="e.g. Research Article"
                     />
                   </div>
@@ -355,7 +355,7 @@ const SubmitArticle = () => {
                     <input
                       value={language}
                       onChange={(e) => setLanguage(e.target.value)}
-                      className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                      className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition"
                       placeholder="e.g. English"
                     />
                   </div>
@@ -370,7 +370,7 @@ const SubmitArticle = () => {
                   <h2 className="text-2xl font-bold text-gray-800">Step 3: Authors</h2>
                   <button
                     onClick={addAuthor}
-                    className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition font-medium"
+                    className="inline-flex items-center gap-2 bg-[#002147] text-white px-5 py-2.5 rounded-xl hover:bg-[#001a3a] transition font-medium"
                   >
                     <FiPlus /> Add Author
                   </button>
@@ -382,7 +382,7 @@ const SubmitArticle = () => {
                       <h3 className="text-lg font-bold text-gray-800">
                         Author {idx + 1}
                         {idx === 0 && (
-                          <span className="ml-3 text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
+                          <span className="ml-3 text-xs bg-[#e6f0ff] text-[#002147] px-3 py-1 rounded-full">
                             Corresponding
                           </span>
                         )}
@@ -402,7 +402,7 @@ const SubmitArticle = () => {
                           <input
                             value={author.fullName}
                             onChange={(e) => updateAuthor(idx, "fullName", e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none"
                             placeholder="John Doe"
                           />
                         </div>
@@ -415,7 +415,7 @@ const SubmitArticle = () => {
                           <input
                             value={author.phone}
                             onChange={(e) => updateAuthor(idx, "phone", formatPhone(e.target.value))}
-                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none"
                             placeholder="+998 90 123 45 67"
                           />
                         </div>
@@ -429,7 +429,7 @@ const SubmitArticle = () => {
                             value={author.orcidId}
                             onChange={(e) => updateAuthor(idx, "orcidId", formatOrcid(e.target.value))}
                             maxLength={19}
-                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none"
                             placeholder="0000-0000-0000-0000"
                           />
                         </div>
@@ -441,7 +441,7 @@ const SubmitArticle = () => {
                           type="file"
                           accept="image/*"
                           onChange={(e) => handleAuthorImage(idx, e.target.files?.[0])}
-                          className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:transition file:cursor-pointer cursor-pointer"
+                          className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-[#002147] file:text-white hover:file:bg-[#001a3a] file:transition file:cursor-pointer cursor-pointer"
                         />
                         {authorImages[idx] ? (
                           <p className="text-green-600 text-sm mt-1">Uploaded: {authorImages[idx].name}</p>
@@ -464,7 +464,7 @@ const SubmitArticle = () => {
                   <FiUpload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                   <label
                     htmlFor="file-upload"
-                    className="cursor-pointer inline-block bg-blue-600 text-white px-8 py-4 rounded-xl font-medium hover:bg-blue-700 transition"
+                    className="cursor-pointer inline-block bg-[#002147] text-white px-8 py-4 rounded-xl font-medium hover:bg-[#001a3a] transition"
                   >
                     Choose File
                   </label>
@@ -482,7 +482,7 @@ const SubmitArticle = () => {
 
                 {articleFile && (
                   <div className="flex items-center gap-4 p-5 bg-gray-50 border border-gray-200 rounded-xl">
-                    <FiFileText className="text-blue-600" size={28} />
+                    <FiFileText className="text-[#002147]" size={28} />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{articleFile.name}</p>
                       <p className="text-sm text-gray-500">
@@ -499,7 +499,7 @@ const SubmitArticle = () => {
                   <button
                     onClick={submit}
                     disabled={submitting}
-                    className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 disabled:opacity-60 transition shadow-md"
+                    className="w-full bg-[#002147] text-white py-4 rounded-xl font-bold hover:bg-[#001a3a] disabled:opacity-60 transition shadow-md"
                   >
                     {submitting ? "Submitting..." : "Submit Article"}
                   </button>
@@ -522,7 +522,7 @@ const SubmitArticle = () => {
             <button
               onClick={step === 4 ? submit : next}
               disabled={submitting}
-              className="flex-1 max-w-xs flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-60 transition shadow-md"
+              className="flex-1 max-w-xs flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-[#002147] text-white font-medium hover:bg-[#001a3a] disabled:opacity-60 transition shadow-md"
             >
               {step === 4 ? "Submit" : "Next"} <FiArrowRight />
             </button>
