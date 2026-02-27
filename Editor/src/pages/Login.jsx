@@ -1,8 +1,21 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { editorService } from "../services/api"; // ✅ Editor API
+import { editorService } from "../services/api";
 import { FiMail, FiLock, FiEye, FiEyeOff, FiEdit3 } from "react-icons/fi";
+
+// Token ichidan user ma'lumotini decode qilish
+const getUserFromToken = () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return null;
+
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload;
+  } catch {
+    return null;
+  }
+};
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -10,10 +23,12 @@ const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
 
-  const onChange = (e) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+  const onChange = (e) =>
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!form.email || !form.password) {
       toast.error("Please fill in all fields.");
       return;
@@ -21,24 +36,44 @@ const SignIn = () => {
 
     setLoading(true);
     try {
-      const res = await editorService.login(form); // ✅ Editor login
-      const token = res?.data?.token || res?.data?.data?.token;
+      const res = await editorService.login(form);
 
+      // Backenddan token olish
+      const token = res?.data?.token || res?.data?.data?.token;
       if (!token) {
-        toast.error("Login failed: Token not received.");
+        toast.error("Login failed: Token missing.");
         return;
       }
 
+      // Tokenni saqlash
       localStorage.setItem("token", token);
-      const editorData = res?.data?.editor || res?.data?.data;
-      if (editorData) {
-        localStorage.setItem("admin", JSON.stringify(editorData)); // Sidebar admin deb o'qiganiga o'zgartirmadim
+
+      // Editor data fallback orqali aniqlanadi
+      const editor =
+        res?.data?.editor ||
+        res?.data?.data?.editor ||
+        res?.data?.user ||
+        res?.data?.data ||
+        null;
+
+      if (editor) {
+        localStorage.setItem("admin", JSON.stringify(editor));
+        localStorage.setItem("user", JSON.stringify(editor));
       }
 
-      toast.success("Welcome back, Editor!");
-      setTimeout(() => navigate("/dashboard"), 800);
+      // Token ichidan ID olish
+      const decoded = getUserFromToken();
+      const editorId = decoded?.id || editor?.id;
+
+      if (editorId) {
+        localStorage.setItem("editorId", String(editorId));
+      }
+
+      toast.success("Welcome back!");
+
+      navigate("/dashboard");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Invalid credentials.");
+      toast.error(error?.response?.data?.message || "Invalid credentials.");
     } finally {
       setLoading(false);
     }
@@ -47,6 +82,8 @@ const SignIn = () => {
   return (
     <div className="min-h-screen bg-[#F6F8FB] flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
+
+        {/* HEADER */}
         <div className="bg-gradient-to-r from-[#1F4F8F] to-blue-600 px-6 py-7 text-center">
           <div className="inline-flex items-center justify-center w-14 h-14 bg-white/20 rounded-full mb-3">
             <FiEdit3 className="text-white text-2xl" />
@@ -55,7 +92,10 @@ const SignIn = () => {
           <p className="text-white/90 text-sm mt-1">Manage journals and reviews</p>
         </div>
 
+        {/* FORM */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          
+          {/* EMAIL INPUT */}
           <div>
             <label className="block text-sm font-medium text-[#1F2937] mb-2">Email</label>
             <div className="relative">
@@ -65,13 +105,15 @@ const SignIn = () => {
                 value={form.email}
                 onChange={onChange}
                 placeholder="editor@example.com"
-                className="w-full rounded-xl border border-gray-300 bg-white pl-12 pr-4 py-3 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#1F4F8F] transition-all"
+                className="w-full rounded-xl border border-gray-300 bg-white pl-12 pr-4 py-3 text-sm text-[#1F2937] 
+                focus:outline-none focus:ring-2 focus:ring-[#1F4F8F] transition-all"
                 required
               />
               <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1F4F8F]" />
             </div>
           </div>
 
+          {/* PASSWORD INPUT */}
           <div>
             <label className="block text-sm font-medium text-[#1F2937] mb-2">Password</label>
             <div className="relative">
@@ -81,10 +123,12 @@ const SignIn = () => {
                 value={form.password}
                 onChange={onChange}
                 placeholder="••••••••"
-                className="w-full rounded-xl border border-gray-300 bg-white pl-12 pr-12 py-3 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#1F4F8F] transition-all"
+                className="w-full rounded-xl border border-gray-300 bg-white pl-12 pr-12 py-3 text-sm text-[#1F2937]
+                focus:outline-none focus:ring-2 focus:ring-[#1F4F8F] transition-all"
                 required
               />
               <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1F4F8F]" />
+
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -95,13 +139,16 @@ const SignIn = () => {
             </div>
           </div>
 
+          {/* SUBMIT BUTTON */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-[#1F4F8F] to-blue-600 text-white rounded-xl py-3 font-semibold shadow-md active:scale-[0.98] disabled:opacity-60"
+            className="w-full bg-gradient-to-r from-[#1F4F8F] to-blue-600 text-white rounded-xl py-3 font-semibold
+            shadow-md active:scale-[0.98] disabled:opacity-60"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
+
         </form>
       </div>
     </div>

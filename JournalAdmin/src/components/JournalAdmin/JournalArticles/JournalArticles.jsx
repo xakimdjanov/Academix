@@ -3,9 +3,22 @@ import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { articleService, journalService } from "../../../services/api";
-import { FiEye, FiEdit2, FiRefreshCw, FiFileText, FiInfo, FiLayers } from "react-icons/fi";
+import {
+  FiEye,
+  FiEdit2,
+  FiRefreshCw,
+  FiFileText,
+  FiInfo,
+  FiLayers,
+} from "react-icons/fi";
 
-const STATUSES = ["Submitted", "Under Review", "Needs Revision", "Accepted", "Rejected"];
+const STATUSES = [
+  "Submitted",
+  "Under Review",
+  "Needs Revision",
+  "Accepted",
+  "Rejected",
+];
 
 const JournalArticles = () => {
   const navigate = useNavigate();
@@ -51,7 +64,7 @@ const JournalArticles = () => {
   const myArticles = useMemo(() => {
     if (myJournalIds.length === 0) return [];
     return (Array.isArray(articles) ? articles : []).filter((a) =>
-      myJournalIds.includes(String(a?.journal_id))
+      myJournalIds.includes(String(a?.journal_id)),
     );
   }, [articles, myJournalIds]);
 
@@ -62,7 +75,10 @@ const JournalArticles = () => {
   const loadAll = async () => {
     try {
       setLoading(true);
-      const [jr, ar] = await Promise.all([journalService.getAll(), articleService.getAll()]);
+      const [jr, ar] = await Promise.all([
+        journalService.getAll(),
+        articleService.getAll(),
+      ]);
       const j = jr?.data?.data || jr?.data?.journals || jr?.data || [];
       const a = ar?.data?.data || ar?.data?.articles || ar?.data || [];
       setJournals(Array.isArray(j) ? j : []);
@@ -86,7 +102,9 @@ const JournalArticles = () => {
     setEditForm({
       title: article?.title || "",
       abstract: article?.abstract || "",
-      keywordsText: Array.isArray(article?.keywords) ? article.keywords.join(", ") : "",
+      keywordsText: Array.isArray(article?.keywords)
+        ? article.keywords.join(", ")
+        : "",
       category: article?.category || "",
       language: article?.language || "",
       authors: article?.authors || "",
@@ -95,6 +113,44 @@ const JournalArticles = () => {
       apc_paid: article?.apc_paid === true,
     });
     setEditOpen(true);
+  };
+
+  const renderAuthor = (article) => {
+    const v = article?.authors ?? article?.author;
+
+    if (!v) return "Not specified";
+    if (typeof v === "string") return v;
+
+    if (Array.isArray(v)) {
+      return (
+        v
+          .map((x) =>
+            typeof x === "string"
+              ? x
+              : x?.fullName ||
+                x?.name ||
+                x?.email ||
+                x?.phone ||
+                x?.orcidId ||
+                "",
+          )
+          .filter(Boolean)
+          .join(", ") || "Not specified"
+      );
+    }
+
+    if (typeof v === "object") {
+      return (
+        v?.fullName ||
+        v?.name ||
+        v?.email ||
+        v?.phone ||
+        v?.orcidId ||
+        "Not specified"
+      );
+    }
+
+    return String(v);
   };
 
   const saveEdit = async () => {
@@ -119,7 +175,9 @@ const JournalArticles = () => {
     try {
       setEditSaving(true);
       await articleService.update(id, payload);
-      setArticles((prev) => prev.map((a) => (getId(a) === id ? { ...a, ...payload } : a)));
+      setArticles((prev) =>
+        prev.map((a) => (getId(a) === id ? { ...a, ...payload } : a)),
+      );
       toast.success("Successfully updated");
       setEditOpen(false);
     } catch (err) {
@@ -201,7 +259,10 @@ const JournalArticles = () => {
           const id = getId(a) || idx;
           const status = getStatus(a);
           return (
-            <div key={id} className="bg-white rounded-3xl border border-slate-100 shadow-sm p-4">
+            <div
+              key={id}
+              className="bg-white rounded-3xl border border-slate-100 shadow-sm p-4"
+            >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="font-extrabold text-slate-900 text-sm line-clamp-2">
@@ -216,8 +277,7 @@ const JournalArticles = () => {
 
               <div className="mt-3 flex items-center justify-between">
                 <div className="text-xs text-slate-600">
-                  <span className="font-bold">Author:</span>{" "}
-                  {a?.authors || "Not specified"}
+                  <span className="font-bold">Author:</span> {renderAuthor(a)}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -246,7 +306,9 @@ const JournalArticles = () => {
             <div className="text-slate-200 mb-3">
               <FiFileText size={56} className="mx-auto" />
             </div>
-            <p className="text-slate-400 font-medium">No articles found in this category.</p>
+            <p className="text-slate-400 font-medium">
+              No articles found in this category.
+            </p>
           </div>
         )}
       </div>
@@ -277,7 +339,10 @@ const JournalArticles = () => {
               {filtered.map((a, idx) => {
                 const status = getStatus(a);
                 return (
-                  <tr key={getId(a) || idx} className="group hover:bg-blue-50/30 transition-colors">
+                  <tr
+                    key={getId(a) || idx}
+                    className="group hover:bg-blue-50/30 transition-colors"
+                  >
                     <td className="py-5 px-8 max-w-md">
                       <div className="font-semibold text-slate-800 truncate group-hover:text-blue-700 transition-colors">
                         {a?.title || "Untitled Manuscript"}
@@ -288,7 +353,7 @@ const JournalArticles = () => {
                     </td>
 
                     <td className="py-5 px-8 text-slate-600 text-sm font-medium">
-                      {a?.authors || "Not specified"}
+                      {renderAuthor(a)}
                     </td>
 
                     <td className="py-5 px-8">
@@ -300,7 +365,9 @@ const JournalArticles = () => {
                     <td className="py-5 px-8">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => navigate(`/articledetails/${getId(a)}`)}
+                          onClick={() =>
+                            navigate(`/articledetails/${getId(a)}`)
+                          }
                           className="p-2.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-[#002147] hover:text-white transition-all shadow-sm"
                           title="View Details"
                         >
@@ -326,40 +393,56 @@ const JournalArticles = () => {
               <div className="text-slate-200 mb-3">
                 <FiFileText size={56} className="mx-auto" />
               </div>
-              <p className="text-slate-400 font-medium">No articles found in this category.</p>
+              <p className="text-slate-400 font-medium">
+                No articles found in this category.
+              </p>
             </div>
           )}
         </div>
       </div>
 
       {/* EDIT MODAL */}
-      <Modal open={editOpen} onClose={() => !editSaving && setEditOpen(false)} title="Edit Manuscript">
+      <Modal
+        open={editOpen}
+        onClose={() => !editSaving && setEditOpen(false)}
+        title="Edit Manuscript"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <CustomInput
             label="Article Title"
             value={editForm.title}
-            onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+            onChange={(e) =>
+              setEditForm({ ...editForm, title: e.target.value })
+            }
             full
           />
           <CustomInput
             label="Category"
             value={editForm.category}
-            onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+            onChange={(e) =>
+              setEditForm({ ...editForm, category: e.target.value })
+            }
           />
           <CustomInput
             label="Language"
             value={editForm.language}
-            onChange={(e) => setEditForm({ ...editForm, language: e.target.value })}
+            onChange={(e) =>
+              setEditForm({ ...editForm, language: e.target.value })
+            }
           />
           <CustomInput
             label="Authors (comma separated)"
             value={editForm.authors}
-            onChange={(e) => setEditForm({ ...editForm, authors: e.target.value })}
+            onChange={(e) =>
+              setEditForm({ ...editForm, authors: e.target.value })
+            }
           />
           <CustomInput
             label="File URL"
             value={editForm.file_url}
-            onChange={(e) => setEditForm({ ...editForm, file_url: e.target.value })}
+            onChange={(e) =>
+              setEditForm({ ...editForm, file_url: e.target.value })
+            }
             full
           />
 
@@ -370,14 +453,18 @@ const JournalArticles = () => {
             <textarea
               className="w-full rounded-2xl border border-slate-200 p-4 focus:ring-4 focus:ring-blue-50 outline-none min-h-[140px] transition-all text-sm leading-relaxed"
               value={editForm.abstract}
-              onChange={(e) => setEditForm({ ...editForm, abstract: e.target.value })}
+              onChange={(e) =>
+                setEditForm({ ...editForm, abstract: e.target.value })
+              }
             />
           </div>
 
           <CustomInput
             label="Keywords (comma separated)"
             value={editForm.keywordsText}
-            onChange={(e) => setEditForm({ ...editForm, keywordsText: e.target.value })}
+            onChange={(e) =>
+              setEditForm({ ...editForm, keywordsText: e.target.value })
+            }
             full
           />
 
@@ -386,7 +473,9 @@ const JournalArticles = () => {
               label="File Size"
               type="number"
               value={editForm.file_size}
-              onChange={(e) => setEditForm({ ...editForm, file_size: e.target.value })}
+              onChange={(e) =>
+                setEditForm({ ...editForm, file_size: e.target.value })
+              }
             />
 
             <label className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3.5">
@@ -394,7 +483,9 @@ const JournalArticles = () => {
               <input
                 type="checkbox"
                 checked={editForm.apc_paid}
-                onChange={(e) => setEditForm({ ...editForm, apc_paid: e.target.checked })}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, apc_paid: e.target.checked })
+                }
                 className="h-5 w-5 accent-[#002147]"
               />
             </label>
@@ -416,11 +507,7 @@ const JournalArticles = () => {
             disabled={editSaving}
             className="w-full sm:w-auto bg-[#002147] text-white px-6 sm:px-10 py-3 rounded-2xl font-bold shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 hover:bg-blue-900 transition-all disabled:opacity-50 active:scale-[0.99]"
           >
-            {editSaving ? "Saving..." : (
-              <>
-                Save Changes
-              </>
-            )}
+            {editSaving ? "Saving..." : <>Save Changes</>}
           </button>
         </div>
       </Modal>
@@ -462,7 +549,9 @@ const Modal = ({ open, onClose, title, children }) => {
 
       <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
         <div className="flex items-center justify-between p-5 sm:p-7 border-b border-slate-50">
-          <h2 className="text-base sm:text-xl font-bold text-slate-800">{title}</h2>
+          <h2 className="text-base sm:text-xl font-bold text-slate-800">
+            {title}
+          </h2>
           <button
             onClick={onClose}
             type="button"
@@ -472,7 +561,9 @@ const Modal = ({ open, onClose, title, children }) => {
           </button>
         </div>
 
-        <div className="p-4 sm:p-8 max-h-[80vh] overflow-y-auto">{children}</div>
+        <div className="p-4 sm:p-8 max-h-[80vh] overflow-y-auto">
+          {children}
+        </div>
       </div>
     </div>
   );
