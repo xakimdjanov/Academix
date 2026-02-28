@@ -459,4 +459,4 @@ const StatCardSmall = ({ icon, title, value, percentage, color }) => {
   );
 };
 
-export default Dashboard;
+export default Dashboard
