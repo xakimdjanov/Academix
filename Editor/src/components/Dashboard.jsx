@@ -210,4 +210,4 @@ const StatCard = ({ title, value, icon, color }) => {
   );
 };
 
-export default Dashboard
+export default Dashboard;
