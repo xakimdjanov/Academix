@@ -15,7 +15,7 @@ import Dashboard from "./components/Dashboard";
 import AssignedArticles from "./components/AssignedArticles";
 import Profile from "./components/Profile";
 import ReviewHistory from "./components/ReviewHistory";
-import ReviewDetail from "./components/ReviewDetail";
+import ReviewDetail from "./pages/ReviewDetail";
 import EditorChat from "./components/EditorChat";
 
 const App = () => {
@@ -33,12 +33,12 @@ const App = () => {
             <Route path="/history" element={<ReviewHistory />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/chat" element={<EditorChat />} />
-            <Route path="/editor/review/:id" element={<ReviewDetail />} />
+            <Route path="/review/:id" element={<ReviewDetail />} />
           </Route>
 
         {/* Default */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Navigate to="/signin" replace />} />
+        <Route path="*" element={<Navigate to="/signin" replace />} />
       </Routes>
     </Router>
   );

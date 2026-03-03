@@ -18,7 +18,7 @@ import { getEditorIdFromToken } from "../utils/getEditorIdFromToken";
 const editorLinks = [
   { name: "Dashboard", path: "/dashboard", icon: <FiGrid /> },
   { name: "Assigned Articles", path: "/assigned", icon: <FiFileText /> },
-  { name: "Review History", path: "/history", icon: <FiClock /> },
+  // { name: "Review History", path: "/history", icon: <FiClock /> },
   { name: "Profile", path: "/profile", icon: <FiUser /> },
   { name: "Messages", path: "/chat", icon: <FiMessageCircle /> },
 ];

@@ -125,15 +125,45 @@ export const ReviewAssignments = {
   delete: (id) => axiosInstance.delete(`/reviews/${id}`),
 };
 
-// 12 Review
+// 13 Review
 export const Review = {
-  create: (data) => axiosInstance.post("/review", data),
-  getAll: () => axiosInstance.get("/review"),
-  getById: (id) => axiosInstance.get(`/review/${id}`),
-  update: (id, data) => axiosInstance.put(`/review/${id}`, data),
-  delete: (id) => axiosInstance.delete(`/review/${id}`),
+  create: (data) => {
+    const token = localStorage.getItem("token");
+    return axiosInstance.post("/review", data, {
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data" 
+      }
+    });
+  },
+  getAll: () => {
+    const token = localStorage.getItem("token");
+    return axiosInstance.get("/review", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  },
+  getById: (id) => {
+    const token = localStorage.getItem("token");
+    return axiosInstance.get(`/review/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  },
+  update: (id, data) => {
+    const token = localStorage.getItem("token");
+    return axiosInstance.put(`/review/${id}`, data, {
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data" 
+      }
+    });
+  },
+  delete: (id) => {
+    const token = localStorage.getItem("token");
+    return axiosInstance.delete(`/review/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  },
 };
-
 //Chat
 export const chatService = {
   send: (data) => {
