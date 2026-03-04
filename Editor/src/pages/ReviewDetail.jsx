@@ -63,59 +63,62 @@ const ReviewDetail = () => {
     if (id && editorId) loadData();
   }, [id, editorId]);
 
-  const handleSubmitReview = async () => {
-    if (!recommendation) return toast.error('Please select a recommendation');
-    if (!commentsToAuthor.trim()) return toast.error('Please provide comments for the author');
+const handleSubmitReview = async () => {
+  if (!recommendation) return toast.error('Please select a recommendation');
+  if (!commentsToAuthor.trim()) return toast.error('Please provide comments for the author');
 
-    try {
-      setSubmitting(true);
+  try {
+    setSubmitting(true);
 
-      const reviewFormData = new FormData();
-      reviewFormData.append('assignment_id', id);
-      reviewFormData.append('article_id', article?.id);
-      reviewFormData.append('editor_id', editorId);
-      reviewFormData.append('recommendation', recommendation);
-      reviewFormData.append('comments_to_author', commentsToAuthor);
-      reviewFormData.append('comments_to_admin', commentsToAdmin || '');
-      if (attachedFile) reviewFormData.append('attached_file', attachedFile);
+    const reviewFormData = new FormData();
+    reviewFormData.append('assignment_id', Number(id)); // Integer bo'lishi shart
+    reviewFormData.append('article_id', Number(article?.id)); // Integer bo'lishi shart
+    reviewFormData.append('editor_id', Number(editorId)); // Integer bo'lishi shart
+    reviewFormData.append('recommendation', recommendation);
+    reviewFormData.append('comments_to_author', commentsToAuthor);
+    reviewFormData.append('comments_to_admin', commentsToAdmin || '');
 
-      if (existingReview) {
-        await Review.update(existingReview.id, reviewFormData);
-      } else {
-        await Review.create(reviewFormData);
-      }
-
-      // Update Article Status
-      try {
-        const statusMap = {
-          'accept': 'Accepted',
-          'reject': 'Rejected',
-          'revision': 'Needs Revision'
-        };
-
-        await articleService.update(article.id, { 
-          status: statusMap[recommendation] 
-        });
-      } catch (articleUpdateError) {
-        console.warn("Status update failed (Enum error), but review was saved.");
-      }
-
-      // Complete assignment
-      await ReviewAssignments.update(id, {
-        status: 'completed',
-        completed_at: new Date().toISOString(),
-      });
-
-      toast.success('Review submitted successfully!');
-      setTimeout(() => navigate('/assigned'), 1000);
-
-    } catch (error) {
-      console.error("Submission Error:", error.response?.data || error.message);
-      toast.error(error.response?.data?.message || 'Server error occurred');
-    } finally {
-      setSubmitting(false);
+    // BU YERDA: attached_file emas, attached_file_url bo'lishi kerak
+    if (attachedFile) {
+      reviewFormData.append('attached_file_url', attachedFile);
     }
-  };
+
+    if (existingReview) {
+      await Review.update(existingReview.id, reviewFormData);
+    } else {
+      await Review.create(reviewFormData);
+    }
+
+    // Maqola statusini yangilash
+    try {
+      const statusMap = {
+        'accept': 'Accepted',
+        'reject': 'Rejected',
+        'revision': 'Needs Revision'
+      };
+      await articleService.update(article.id, { 
+        status: statusMap[recommendation] 
+      });
+    } catch (e) {
+      console.warn("Status update issue:", e);
+    }
+
+    // Assignmentni yakunlash
+    await ReviewAssignments.update(id, {
+      status: 'completed',
+      completed_at: new Date().toISOString(),
+    });
+
+    toast.success('Review submitted successfully!');
+    setTimeout(() => navigate('/assigned'), 1000);
+
+  } catch (error) {
+    console.error("Submission Error Details:", error.response?.data);
+    toast.error(error.response?.data?.message || 'Server error occurred');
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-[400px]">
