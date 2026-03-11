@@ -6,7 +6,6 @@ export const getEditorIdFromToken = () => {
 
   try {
     const decoded = jwtDecode(token);
-    console.log("Decoded token:", decoded); // Tokenni tekshirish uchun
     
     // Token ichidagi editor ID ni topish
     // Qaysi fieldda kelayotganini tekshiring
