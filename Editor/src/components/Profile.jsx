@@ -1,121 +1,223 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiUser, FiMail, FiShield, FiArrowLeft, FiLogOut } from "react-icons/fi";
+import { 
+  FiUser, FiMail, FiShield, FiArrowLeft, 
+  FiLogOut, FiPhone, FiCalendar, FiCamera, FiEdit2, FiCheck, FiX 
+} from "react-icons/fi";
+import { editorService } from "../services/api";
 
 const Profile = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    fullname: "",
+    phone: "",
+    age: ""
+  });
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    if (!token) { navigate("/login"); return; }
 
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    const savedUser =
-      JSON.parse(localStorage.getItem("user")) ||
-      JSON.parse(localStorage.getItem("admin"));
-
-    if (!savedUser) {
-      navigate("/login");
-      return;
-    }
+    const savedUser = JSON.parse(localStorage.getItem("user")) || JSON.parse(localStorage.getItem("admin"));
+    if (!savedUser) { navigate("/login"); return; }
 
     setUser(savedUser);
+    setFormData({
+      fullname: savedUser.fullname || "",
+      phone: savedUser.phone || "",
+      age: savedUser.age || ""
+    });
   }, [navigate]);
+
+  const handleProfileUpdate = async () => {
+    try {
+      setUploading(true);
+      const response = await editorService.update(user.id, formData);
+      const updatedUser = response.data.editor || response.data;
+      
+      if (updatedUser) {
+        setUser(updatedUser);
+        const key = localStorage.getItem("user") ? "user" : "admin";
+        localStorage.setItem(key, JSON.stringify(updatedUser));
+        setIsEditing(false);
+        window.dispatchEvent(new Event("storage"));
+      }
+    } catch (err) {
+      alert("Error: " + (err.response?.data?.message || err.message));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const data = new FormData();
+    data.append("profile_img", file);
+    
+    try {
+      setUploading(true);
+      const response = await editorService.update(user.id, data);
+      const updatedUser = response.data.editor || response.data;
+
+      if (updatedUser) {
+        setUser(updatedUser);
+        const key = localStorage.getItem("user") ? "user" : "admin";
+        localStorage.setItem(key, JSON.stringify(updatedUser));
+        window.dispatchEvent(new Event("storage"));
+      }
+    } catch (err) {
+      alert("Error uploading image");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.clear();
     navigate("/login");
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent"></div>
-      </div>
-    );
-  }
+  if (!user) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent"></div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4 md:p-6">
-      <div className="max-w-md w-full">
-        {/* Back Button */}
+    <div className="min-h-screen bg-[#f8fafc] p-4 md:p-10 flex flex-col items-center">
+      <div className="max-w-4xl w-full">
         <button 
-          onClick={() => navigate("/dashboard")}
-          className="mb-6 flex items-center gap-2 text-slate-500 hover:text-[#002147] transition-colors font-medium group"
+          onClick={() => navigate("/dashboard")} 
+          className="mb-6 flex items-center gap-2 text-slate-500 hover:text-[#002147] transition-all font-medium group"
         >
-          <FiArrowLeft className="group-hover:-translate-x-1 transition-transform" />
-          Back to Dashboard
+          <FiArrowLeft className="group-hover:-translate-x-1" /> Back to Dashboard
         </button>
 
-        {/* Profile Card */}
-        <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/60 overflow-hidden border border-slate-100">
-          {/* Header/Cover Gradient */}
-          <div className="h-32 bg-gradient-to-r from-[#002147] to-blue-600 relative">
-            <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
-              <div className="h-24 w-24 rounded-3xl bg-white p-1 shadow-lg">
-                <div className="h-full w-full rounded-[1.2rem] bg-slate-100 flex items-center justify-center text-[#002147]">
-                  <FiUser size={40} />
-                </div>
+        <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden flex flex-col md:row min-h-[500px] md:flex-row">
+          
+          <div className="md:w-1/3 bg-[#002147] p-10 flex flex-col items-center justify-center text-white relative">
+            <div className="relative group mb-6">
+              <div className="h-40 w-40 rounded-[2.5rem] bg-white/10 border-4 border-white/20 overflow-hidden flex items-center justify-center backdrop-blur-sm">
+                {user.profile_img ? (
+                  <img src={user.profile_img} alt="Avatar" className="h-full w-full object-cover" />
+                ) : (
+                  <FiUser size={60} className="text-white/40" />
+                )}
               </div>
+              <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-[2.5rem] opacity-0 group-hover:opacity-100 cursor-pointer transition-all">
+                <FiCamera size={30} />
+                <input type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
+              </label>
+              {uploading && (
+                <div className="absolute inset-0 bg-black/60 rounded-[2.5rem] flex items-center justify-center">
+                  <div className="w-8 h-8 border-4 border-white border-t-transparent animate-spin rounded-full"></div>
+                </div>
+              )}
             </div>
+            <h3 className="text-xl font-bold text-center tracking-tight">{user.fullname}</h3>
+            <span className="bg-blue-500/20 text-blue-300 text-[10px] px-4 py-1 rounded-full mt-2 font-black tracking-widest uppercase">
+              {user.role}
+            </span>
           </div>
 
-          {/* User Info Content */}
-          <div className="pt-16 pb-8 px-8 text-center">
-            <h2 className="text-2xl font-extrabold text-[#002147] tracking-tight">
-              {user.fullname || user.name || "User Profile"}
-            </h2>
-            <p className="text-blue-600 font-semibold text-sm uppercase tracking-wider mt-1">
-              {user.role || "Academic Editor"}
-            </p>
-
-            <div className="mt-8 space-y-4 text-left">
-              {/* Email Row */}
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center text-slate-400 shadow-sm">
-                  <FiMail size={18} />
+          <div className="md:w-2/3 p-8 md:p-12 relative">
+            <div className="flex justify-between items-center mb-10">
+              <h1 className="text-2xl font-black text-[#002147]">Personal Information</h1>
+              {!isEditing ? (
+                <button 
+                  onClick={() => setIsEditing(true)} 
+                  className="flex items-center gap-2 text-blue-600 font-bold text-sm hover:bg-blue-50 px-4 py-2 rounded-xl transition-all"
+                >
+                  <FiEdit2 /> Edit Profile
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <button 
+                    onClick={handleProfileUpdate} 
+                    className="bg-emerald-500 text-white p-2 rounded-xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20"
+                  >
+                    <FiCheck size={20}/>
+                  </button>
+                  <button 
+                    onClick={() => setIsEditing(false)} 
+                    className="bg-rose-500 text-white p-2 rounded-xl hover:bg-rose-600 transition-all shadow-lg shadow-rose-500/20"
+                  >
+                    <FiX size={20}/>
+                  </button>
                 </div>
-                <div>
-                  <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wide">Email Address</p>
-                  <p className="text-slate-700 font-medium">{user.email}</p>
-                </div>
-              </div>
-
-              {/* Role Row */}
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center text-slate-400 shadow-sm">
-                  <FiShield size={18} />
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wide">Account Role</p>
-                  <p className="text-slate-700 font-medium capitalize">{user.role || "Editor"}</p>
-                </div>
-              </div>
+              )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="mt-8 grid grid-cols-1 gap-3">
-              <button
-                onClick={handleLogout}
-                className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl border-2 border-slate-100 text-slate-600 font-bold hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all active:scale-[0.98]"
-              >
-                <FiLogOut size={18} />
-                Sign Out
-              </button>
+            <div className="grid grid-cols-1 gap-6">
+              <EditableRow 
+                icon={<FiUser/>} 
+                label="Full Name" 
+                value={formData.fullname} 
+                isEditing={isEditing} 
+                onChange={(e) => setFormData({...formData, fullname: e.target.value})}
+              />
+              <EditableRow 
+                icon={<FiMail/>} 
+                label="Email Address" 
+                value={user.email} 
+                isEditing={false} 
+              />
+              <EditableRow 
+                icon={<FiPhone/>} 
+                label="Phone Number" 
+                value={formData.phone} 
+                isEditing={isEditing}
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              />
+              <EditableRow 
+                icon={<FiCalendar/>} 
+                label="Age" 
+                value={formData.age} 
+                isEditing={isEditing}
+                type="number"
+                onChange={(e) => setFormData({...formData, age: e.target.value})}
+              />
             </div>
+
+            <button 
+              onClick={handleLogout} 
+              className="mt-12 flex items-center justify-center gap-2 text-slate-400 hover:text-rose-600 font-bold transition-all mx-auto"
+            >
+              <FiLogOut /> Sign Out
+            </button>
           </div>
+
         </div>
-        
-        <p className="text-center mt-8 text-slate-400 text-xs">
-          Academic Journal Management System &bull; 2024
-        </p>
       </div>
     </div>
   );
 };
+
+const EditableRow = ({ icon, label, value, isEditing, onChange, type="text" }) => (
+  <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-50 border border-slate-100 transition-all">
+    <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center text-blue-600 shadow-sm">
+      {icon}
+    </div>
+    <div className="flex-1">
+      <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider mb-1">{label}</p>
+      {isEditing ? (
+        <input 
+          type={type}
+          value={value}
+          onChange={onChange}
+          className="w-full bg-white border border-blue-200 rounded-lg px-3 py-1 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+        />
+      ) : (
+        <p className="text-slate-700 font-bold">{value || "Not provided"}</p>
+      )}
+    </div>
+  </div>
+);
 
 export default Profile;

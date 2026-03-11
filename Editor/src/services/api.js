@@ -31,7 +31,9 @@ export const editorService = {
   login: (credentials) => axiosInstance.post("/editor/login", credentials),
   getAll: () => axiosInstance.get("/editor/getEditor"),
   getById: (id) => axiosInstance.get(`/editor/getEditorById/${id}`),
-  update: (id, data) => axiosInstance.put(`/editor/updateEditor/${id}`, data),
+  update: (id, data) => axiosInstance.put(`/editor/updateEditor/${id}`, data, {
+  headers: { "Content-Type": "multipart/form-data" }
+}),
   delete: (id) => axiosInstance.delete(`/editor/deleteEditor/${id}`),
 };
 
