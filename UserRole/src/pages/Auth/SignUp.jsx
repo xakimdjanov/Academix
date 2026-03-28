@@ -15,18 +15,16 @@ import {
   FiCamera,
   FiCheck,
   FiXCircle,
-  FiAtSign,
-  FiHash,
 } from "react-icons/fi";
 
 const COUNTRY_OPTIONS = [
-  "Uzbekistan",
-  "Kazakhstan",
-  "Kyrgyzstan",
-  "Tajikistan",
-  "Turkmenistan",
-  "United States",
-  "Others",
+  "O'zbekiston",
+  "Qozog'iston",
+  "Qirg'iziston",
+  "Tojikiston",
+  "Turkmaniston",
+  "AQSH",
+  "Boshqalar",
 ];
 
 const inputCls =
@@ -52,7 +50,6 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // ✅ endi username + telegram_id ham bor
   const [form, setForm] = useState({
     full_name: "",
     email: "",
@@ -60,13 +57,12 @@ const SignUp = () => {
     phone: "",
     orcid: "",
     affiliation: "",
-    country: "Uzbekistan",
+    country: "O'zbekiston",
     country_other: "",
   });
 
   const [avatarFile, setAvatarFile] = useState(null);
 
-  // ✅ preview (memory leak bo‘lmasin)
   const avatarPreview = useMemo(() => {
     if (!avatarFile) return null;
     return URL.createObjectURL(avatarFile);
@@ -90,7 +86,7 @@ const SignUp = () => {
   };
 
   const finalCountry = useMemo(() => {
-    return form.country === "Others"
+    return form.country === "Boshqalar"
       ? form.country_other.trim()
       : form.country;
   }, [form.country, form.country_other]);
@@ -111,12 +107,12 @@ const SignUp = () => {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Avatar must be an image (jpg/png/webp).");
+      toast.error("Avatar rasm (jpg/png/webp) bo'lishi kerak.");
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      toast.error("Avatar image must be under 2MB.");
+      toast.error("Avatar hajmi 2MB dan kam bo'lishi kerak.");
       return;
     }
 
@@ -128,7 +124,6 @@ const SignUp = () => {
     setLoading(true);
 
     try {
-      // ✅ required (xohlasangiz phone/orcid/affiliation ixtiyoriy qilamiz)
       const requiredKeys = [
         "full_name",
         "email",
@@ -140,29 +135,28 @@ const SignUp = () => {
 
       for (const k of requiredKeys) {
         if (!String(form[k] || "").trim()) {
-          toast.error("Please fill all required fields.");
+          toast.error("Iltimos, barcha majburiy maydonlarni to'ldiring.");
           return;
         }
       }
 
       if (!passwordValid) {
-        toast.error("Password must have 1 uppercase and be at least 6 chars.");
+        toast.error("Parolda kamida 1 ta bosh harf va 6 ta belgi bo'lishi kerak.");
         return;
       }
 
       if (!avatarFile) {
-        toast.error("Please choose an avatar image.");
+        toast.error("Iltimos, profil rasmini tanlang.");
         return;
       }
 
-      if (form.country === "Others" && !form.country_other.trim()) {
-        toast.error("Please enter your country.");
+      if (form.country === "Boshqalar" && !form.country_other.trim()) {
+        toast.error("Iltimos, davlatingizni kiriting.");
         return;
       }
 
       const fd = new FormData();
 
-      // ✅ swagger + DB fieldlar
       fd.append("full_name", form.full_name.trim());
       fd.append("email", form.email.trim());
       fd.append("password", form.password);
@@ -170,11 +164,7 @@ const SignUp = () => {
       fd.append("orcid", form.orcid.trim());
       fd.append("affiliation", form.affiliation.trim());
       fd.append("country", finalCountry);
-
-      // ✅ swagger: role
       fd.append("role", "user");
-
-      // ✅ swagger: avatar_url = binary file (ENG MUHIM)
       fd.append("avatar_url", avatarFile);
 
       const res = await userService.register(fd);
@@ -182,17 +172,14 @@ const SignUp = () => {
       const user = res?.data?.user || res?.user || res?.data;
       if (user) localStorage.setItem("user_data", JSON.stringify(user));
 
-      toast.success("Sign up successful!");
+      toast.success("Ro'yxatdan o'tish muvaffaqiyatli yakunlandi!");
       navigate("/signin");
     } catch (error) {
-      console.log("STATUS:", error?.response?.status);
-      console.log("DATA:", error?.response?.data);
-
       const msg =
         error?.response?.data?.message ||
         error?.response?.data?.error ||
         error?.message ||
-        "Something went wrong.";
+        "Xatolik yuz berdi.";
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -200,24 +187,24 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F8FB] flex items-center justify-center p-4">
+    <div className="py-12 md:py-20 bg-[#F6F8FB] flex items-center justify-center p-4">
       <div className="w-full max-w-6xl bg-white rounded-2xl shadow-lg overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-[#0B2A6D] to-[#1F4F8F] px-6 py-6 md:px-8 md:py-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-white text-center md:text-left">
-                Create Account
+                Hisob yaratish
               </h1>
               <p className="text-white/90 text-sm md:text-base text-center md:text-left mt-2">
-                Register as a user and create your profile
+                Foydalanuvchi sifatida ro'yxatdan o'ting va profilingizni yarating
               </p>
             </div>
 
             <div className="mt-4 md:mt-0 flex justify-center md:justify-end">
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
                 <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span className="text-white text-sm">Secure</span>
+                <span className="text-white text-sm">Xavfsiz</span>
               </div>
             </div>
           </div>
@@ -234,7 +221,7 @@ const SignUp = () => {
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-6">
                 <div className="flex items-center justify-between mb-4 md:mb-6">
                   <h3 className="text-base md:text-lg font-semibold text-[#1F2937]">
-                    Profile Picture
+                    Profil rasmi
                   </h3>
                   <FiCamera className="text-[#0B2A6D]" />
                 </div>
@@ -251,7 +238,7 @@ const SignUp = () => {
                       <div className="w-full h-full flex flex-col items-center justify-center">
                         <FiUser className="w-8 h-8 md:w-12 md:h-12 text-[#9CA3AF]" />
                         <span className="text-xs text-[#6B7280] mt-1 md:mt-2">
-                          No image
+                          Rasm yo'q
                         </span>
                       </div>
                     )}
@@ -266,7 +253,7 @@ const SignUp = () => {
                   <label className="mt-4 md:mt-6 cursor-pointer w-full">
                     <div className="flex items-center justify-center gap-2 md:gap-3 bg-gradient-to-r from-[#0B2A6D] to-[#1F4F8F] hover:from-[#1F4F8F] hover:to-blue-700 text-white px-4 py-2 md:px-6 md:py-3 rounded-xl font-medium transition-all duration-300 text-sm md:text-base">
                       <FiUpload className="text-lg" />
-                      Upload Photo
+                      Rasm yuklash
                     </div>
                     <input
                       type="file"
@@ -283,13 +270,13 @@ const SignUp = () => {
                       className="mt-3 md:mt-4 flex items-center gap-1 md:gap-2 text-xs md:text-sm text-red-500 hover:text-red-600 transition-colors"
                     >
                       <FiXCircle />
-                      Remove
+                      O'chirish
                     </button>
                   )}
 
                   <div className="mt-4 md:mt-6 w-full space-y-2 md:space-y-3">
                     <div className="flex items-center justify-between text-xs md:text-sm">
-                      <span className="text-[#4B5563]">Max size</span>
+                      <span className="text-[#4B5563]">Maks hajmi</span>
                       <span className="font-medium text-[#1F2937]">2MB</span>
                     </div>
                     <div className="flex items-center justify-between text-xs md:text-sm">
@@ -307,15 +294,15 @@ const SignUp = () => {
             <div className="lg:col-span-8">
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-6 lg:p-8">
                 <h3 className="text-lg md:text-xl font-bold text-[#1F2937] mb-1 md:mb-2">
-                  Personal Information
+                  Shaxsiy ma'lumotlar
                 </h3>
                 <p className="text-[#6B7280] text-sm mb-6 md:mb-8">
-                  Fill in your details below
+                  Ma'lumotlaringizni quyida to'ldiring
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <Field
-                    label="Full Name *"
+                    label="Ism-sharifingiz *"
                     icon={<FiUser className="text-[#0B2A6D]" />}
                     input={
                       <input
@@ -329,7 +316,7 @@ const SignUp = () => {
                   />
 
                   <Field
-                    label="Email *"
+                    label="Elektron pochta *"
                     icon={<FiMail className="text-[#0B2A6D]" />}
                     input={
                       <input
@@ -337,7 +324,7 @@ const SignUp = () => {
                         type="email"
                         value={form.email}
                         onChange={onChange}
-                        placeholder="string1@gmail.com"
+                        placeholder="email@manzil.com"
                         className={inputCls}
                       />
                     }
@@ -346,9 +333,9 @@ const SignUp = () => {
                   {/* Password */}
                   <div>
                     <label className="block text-sm font-medium text-[#1F2937] mb-2">
-                      Password *{" "}
+                      Parol *{" "}
                       <span className="text-xs font-normal text-[#6B7280]">
-                        (1 uppercase, min 6 chars)
+                        (1 ta bosh harf, kamida 6 ta belgi)
                       </span>
                     </label>
                     <div className="relative">
@@ -357,7 +344,7 @@ const SignUp = () => {
                         type={showPassword ? "text" : "password"}
                         value={form.password}
                         onChange={onChange}
-                        placeholder="Enter secure password"
+                        placeholder="Xavfsiz parol kiriting"
                         className={`${inputCls} pr-12`}
                       />
                       <div className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -367,6 +354,7 @@ const SignUp = () => {
                         type="button"
                         onClick={() => setShowPassword((p) => !p)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#1F2937] transition-colors"
+                        aria-label={showPassword ? "Parolni yashirish" : "Parolni ko'rsatish"}
                       >
                         {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                       </button>
@@ -374,14 +362,14 @@ const SignUp = () => {
                   </div>
 
                   <Field
-                    label="Phone *"
+                    label="Telefon *"
                     icon={<FiPhone className="text-[#0B2A6D]" />}
                     input={
                       <input
                         name="phone"
                         value={form.phone}
                         onChange={onChange}
-                        placeholder="911785791"
+                        placeholder="901234567"
                         className={inputCls}
                       />
                     }
@@ -395,21 +383,21 @@ const SignUp = () => {
                         name="orcid"
                         value={form.orcid}
                         onChange={onChange}
-                        placeholder="3535-3454-5454-5545"
+                        placeholder="0000-0000-0000-0000"
                         className={inputCls}
                       />
                     }
                   />
 
                   <Field
-                    label="Affiliation *"
+                    label="Muassasa *"
                     icon={<FiBriefcase className="text-[#0B2A6D]" />}
                     input={
                       <input
                         name="affiliation"
                         value={form.affiliation}
                         onChange={onChange}
-                        placeholder="University"
+                        placeholder="Universitet / Institut"
                         className={inputCls}
                       />
                     }
@@ -418,14 +406,14 @@ const SignUp = () => {
                   {/* Country */}
                   <div>
                     <label className="block text-sm font-medium text-[#1F2937] mb-2">
-                      Country *
+                      Davlat *
                     </label>
                     <div className="relative">
                       <select
                         name="country"
                         value={form.country}
                         onChange={onChange}
-                        className={`${inputCls} appearance-none pr-10`}
+                        className={`${inputCls} appearance-none pr-10 hover:cursor-pointer`}
                       >
                         {COUNTRY_OPTIONS.map((c) => (
                           <option key={c} value={c}>
@@ -453,12 +441,12 @@ const SignUp = () => {
                       </div>
                     </div>
 
-                    {form.country === "Others" && (
+                    {form.country === "Boshqalar" && (
                       <input
                         name="country_other"
                         value={form.country_other}
                         onChange={onChange}
-                        placeholder="Specify your country..."
+                        placeholder="Davlat nomini kiriting..."
                         className="mt-3 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#0B2A6D] focus:border-transparent"
                       />
                     )}
@@ -475,21 +463,21 @@ const SignUp = () => {
                       {loading ? (
                         <div className="flex items-center justify-center gap-2">
                           <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Creating...
+                          Yaratilmoqda...
                         </div>
                       ) : (
-                        "Sign Up"
+                        "Ro'yxatdan o'tish"
                       )}
                     </button>
 
                     <div className="text-center md:text-right">
                       <p className="text-[#4B5563] text-sm">
-                        Already have an account?{" "}
+                        Hisobingiz bormi?{" "}
                         <Link
                           to="/signin"
                           className="text-[#0B2A6D] font-semibold hover:text-blue-700 transition-colors"
                         >
-                          Sign In
+                          Tizimga kiring
                         </Link>
                       </p>
                     </div>

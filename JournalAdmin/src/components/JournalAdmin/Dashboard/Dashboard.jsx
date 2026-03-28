@@ -200,10 +200,10 @@ const Dashboard = () => {
       {/* Title */}
       <div className="space-y-1">
         <h1 className="text-xl sm:text-2xl font-bold text-[#1F2937]">
-          Journal Dashboard
+          Jurnal boshqaruv paneli
         </h1>
         <p className="text-xs sm:text-sm text-gray-500">
-          Only articles for journals you created
+          Faqat siz yaratgan jurnallar uchun maqolalar
         </p>
       </div>
 
@@ -214,21 +214,21 @@ const Dashboard = () => {
           onClick={loadArticles}
           className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 active:scale-[0.99]"
         >
-          Refresh
+          Yangilash
         </button>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         <StatCard
-          title="Total Submissions"
+          title="Jami arizalar"
           value={total}
           icon={<FiFileText />}
         />
-        <StatCard title="Under Review" value={underReview} icon={<FiClock />} />
-        <StatCard title="Accepted" value={accepted} icon={<FiCheckCircle />} />
+        <StatCard title="Taqrizda" value={underReview} icon={<FiClock />} />
+        <StatCard title="Qabul qilingan" value={accepted} icon={<FiCheckCircle />} />
         <StatCard
-          title="Revenue (APC)"
+          title="Tushum (APC)"
           value={`$${revenueFormatted}`}
           icon={<FiDollarSign />}
         />
@@ -236,19 +236,19 @@ const Dashboard = () => {
 
       {/* Extra status pills (optional) */}
       <div className="flex flex-wrap gap-2">
-        <MiniPill label="Submitted" value={submitted} tone="blue" />
-        <MiniPill label="Needs Revision" value={needsRevision} tone="amber" />
-        <MiniPill label="Rejected" value={rejected} tone="rose" />
+        <MiniPill label="Yuborilgan" value={submitted} tone="blue" />
+        <MiniPill label="Tahrir talab" value={needsRevision} tone="amber" />
+        <MiniPill label="Rad etilgan" value={rejected} tone="rose" />
       </div>
 
       {/* Recent Articles */}
       <div className="bg-white rounded-2xl shadow p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3 mb-4">
           <h2 className="text-base sm:text-lg font-semibold">
-            Recent Submissions
+            Oxirgi arizalar
           </h2>
           <span className="text-xs text-gray-500">
-            Showing {Math.min(5, articles.length)} of {articles.length}
+            {articles.length} tadan {Math.min(5, articles.length)} tasi ko'rsatilmoqda
           </span>
         </div>
 
@@ -300,7 +300,7 @@ const Dashboard = () => {
                     }}
                     className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-[#002147] hover:text-white transition"
                   >
-                    <FiEye /> View
+                    <FiEye /> Ko'rish
                   </button>
                 </div>
               </div>
@@ -317,11 +317,11 @@ const Dashboard = () => {
           <table className="w-full text-sm">
             <thead className="text-left text-gray-500 border-b">
               <tr>
-                <th className="py-2 pr-4">Title</th>
-                <th className="py-2 pr-4">Author</th>
-                <th className="py-2 pr-4">Language</th>
-                <th className="py-2 pr-4">Status</th>
-                <th className="py-2 text-right">View</th>
+                <th className="py-2 pr-4">Sarlavha</th>
+                <th className="py-2 pr-4">Muallif</th>
+                <th className="py-2 pr-4">Til</th>
+                <th className="py-2 pr-4">Holati</th>
+                <th className="py-2 text-right">Ko'rish</th>
               </tr>
             </thead>
 
@@ -367,9 +367,9 @@ const Dashboard = () => {
                         type="button"
                         onClick={() => goDetails(a)}
                         className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-[#002147] hover:text-white transition"
-                        title="View Details"
+                        title="Tafsilotlarni ko'rish"
                       >
-                        <FiEye /> View
+                        <FiEye /> Ko'rish
                       </button>
                     </td>
                   </tr>

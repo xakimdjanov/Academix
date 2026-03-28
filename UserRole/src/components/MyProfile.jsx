@@ -89,7 +89,7 @@ const MyProfile = () => {
 
   const loadProfile = useCallback(async () => {
     if (!myId) {
-      toast.error("Session not found (user ID missing)");
+      toast.error("Seans topilmadi (foydalanuvchi ID yo'q)");
       return;
     }
 
@@ -106,10 +106,9 @@ const MyProfile = () => {
       setCountry(u?.country || "");
       setEmail(u?.email || "");
 
-      setAvatarFile(null);
       setAvatarPreview("");
     } catch (e) {
-      toast.error("Failed to load profile");
+      toast.error("Profilni yuklashda xatolik yuz berdi");
     } finally {
       setLoading(false);
     }
@@ -151,12 +150,12 @@ const MyProfile = () => {
   const onPickAvatar = (file) => {
     if (!file) return;
     if (!file.type?.startsWith("image/")) {
-      toast.error("Only image files allowed (png/jpg/webp)");
+      toast.error("Faqat rasm fayllari ruxsat etiladi (png/jpg/webp)");
       return;
     }
     const mb = file.size / (1024 * 1024);
     if (mb > 5) {
-      toast.error("Avatar must be under 5MB");
+      toast.error("Rasm hajmi 5MB dan kam bo'lishi kerak");
       return;
     }
 
@@ -180,7 +179,7 @@ const MyProfile = () => {
     if (!user?.id) return;
 
     if (!fullName.trim()) {
-      toast.error("Full name is required");
+      toast.error("To'liq ism kiritilishi shart");
       return;
     }
 
@@ -209,9 +208,9 @@ const MyProfile = () => {
       }
 
       if (Object.keys(payload).length === 0 && !avatarFile) {
-        toast("No changes were made 🙂");
+        toast("Hech qanday o'zgarish qilinmadi 🙂");
       } else {
-        toast.success("Profile updated successfully");
+        toast.success("Profil muvaffaqiyatli yangilandi");
       }
 
       setEditing(false);
@@ -219,7 +218,7 @@ const MyProfile = () => {
     } catch (e) {
       console.log("STATUS:", e?.response?.status);
       console.log("DATA:", e?.response?.data);
-      toast.error("Failed to save profile");
+      toast.error("Profilni saqlashda xatolik yuz berdi");
     } finally {
       setSaving(false);
     }
@@ -236,9 +235,9 @@ const MyProfile = () => {
               <FiUser className="text-gray-700" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">My Profile</h1>
+              <h1 className="text-2xl font-semibold text-gray-900">Mening profilim</h1>
               <p className="mt-1 text-sm text-gray-600">
-                {loading ? "Loading..." : editing ? "Edit mode" : "View mode"}
+                {loading ? "Yuklanmoqda..." : editing ? "Tahrirlash rejimi" : "Ko'rish rejimi"}
               </p>
             </div>
           </div>
@@ -249,7 +248,7 @@ const MyProfile = () => {
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-black transition shadow-sm"
             >
               <FiEdit3 size={16} />
-              Edit Profile
+              Profilni tahrirlash
             </button>
           ) : (
             <div className="flex flex-wrap gap-3">
@@ -258,7 +257,7 @@ const MyProfile = () => {
                 className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition"
               >
                 <FiX size={16} />
-                Cancel
+                Bekor qilish
               </button>
               <button
                 onClick={save}
@@ -266,7 +265,7 @@ const MyProfile = () => {
                 className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-60 transition shadow-sm"
               >
                 <FiSave size={16} />
-                {saving ? "Saving..." : "Save Changes"}
+                {saving ? "Saqlanmoqda..." : "O'zgarishlarni saqlash"}
               </button>
             </div>
           )}
@@ -276,7 +275,7 @@ const MyProfile = () => {
           {/* Avatar Section */}
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold text-gray-900">Profile Picture</div>
+              <div className="text-sm font-semibold text-gray-900">Profil rasmi</div>
               <FiCamera className="text-gray-500" />
             </div>
 
@@ -290,7 +289,7 @@ const MyProfile = () => {
               {editing && (
                 <div className="w-full mt-4">
                   <label className="block text-sm font-semibold text-gray-800 mb-2">
-                    Upload new avatar
+                    Yangi rasm yuklash
                   </label>
 
                   <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
@@ -304,16 +303,16 @@ const MyProfile = () => {
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
-                            No image
+                            Rasm yo'q
                           </div>
                         )}
                       </div>
 
                       <div className="flex-1">
                         <p className="text-sm text-gray-700">
-                          Drag & drop or{" "}
+                          Faylni sudrab olib keling yoki{" "}
                           <label className="cursor-pointer font-medium text-gray-900 underline underline-offset-2 hover:text-gray-700">
-                            browse files
+                            fayllarni tanlang
                             <input
                               type="file"
                               accept="image/*"
@@ -327,12 +326,12 @@ const MyProfile = () => {
                         </p>
 
                         <p className="mt-1 text-xs text-gray-500">
-                          PNG, JPG, WebP • max 5MB
+                          PNG, JPG, WebP • maksimal 5MB
                         </p>
 
                         <div className="mt-4 flex flex-wrap gap-3">
                           <label className="cursor-pointer inline-flex items-center rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 transition">
-                            Choose File
+                            Faylni tanlang
                             <input
                               type="file"
                               accept="image/*"
@@ -350,7 +349,7 @@ const MyProfile = () => {
                               onClick={removePickedAvatar}
                               className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition"
                             >
-                              Remove
+                              O'chirish
                             </button>
                           )}
                         </div>
@@ -364,23 +363,23 @@ const MyProfile = () => {
 
           {/* Profile Details */}
           <div className="lg:col-span-2 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="text-sm font-semibold text-gray-900 mb-5">Profile Information</div>
+            <div className="text-sm font-semibold text-gray-900 mb-5">Profil ma'lumotlari</div>
 
             <div className="space-y-5">
-              <Row label="Full Name">
+              <Row label="To'liq ismi">
                 {editing ? (
                   <input
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-gray-300 transition"
-                    placeholder="Enter your full name"
+                    placeholder="To'liq ismingizni kiriting"
                   />
                 ) : (
                   user?.full_name || "—"
                 )}
               </Row>
 
-              <Row label="Email (cannot be changed)">
+              <Row label="Email (o'zgartirib bo'lmaydi)">
                 {editing ? (
                   <input
                     value={email}
@@ -392,7 +391,7 @@ const MyProfile = () => {
                 )}
               </Row>
 
-              <Row label="Phone Number">
+              <Row label="Telefon raqami">
                 {editing ? (
                   <input
                     value={phone}
@@ -419,7 +418,7 @@ const MyProfile = () => {
                 )}
               </Row>
 
-              <Row label="Affiliation / Institution">
+              <Row label="Tashkilot / Muassasa">
                 {editing ? (
                   <input
                     value={affiliation}
@@ -432,13 +431,13 @@ const MyProfile = () => {
                 )}
               </Row>
 
-              <Row label="Country">
+              <Row label="Davlat">
                 {editing ? (
                   <input
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
                     className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-gray-300 transition"
-                    placeholder="Country"
+                    placeholder="Davlat"
                   />
                 ) : (
                   country || "—"

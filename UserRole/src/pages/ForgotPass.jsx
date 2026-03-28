@@ -15,7 +15,7 @@ const ForgotPass = () => {
 
     try {
       if (!email.trim()) {
-        toast.error("Please enter your email.");
+        toast.error("Iltimos, elektron pochtangizni kiriting.");
         return;
       }
 
@@ -26,21 +26,21 @@ const ForgotPass = () => {
       const resetToken = res?.data?.resetToken;
 
       if (!resetToken) {
-        toast.error("No reset token received.");
+        toast.error("Tiklash tokeni olinmadi.");
         return;
       }
 
       // tokenni yashirib saqlaymiz
       sessionStorage.setItem("reset_token", resetToken);
 
-      toast.success("Redirecting...");
+      toast.success("Yo'naltirilmoqda...");
       navigate("/reset-password");
     } catch (error) {
       const msg =
         error?.response?.data?.message ||
         error?.response?.data?.error ||
         error?.message ||
-        "Something went wrong.";
+        "Xatolik yuz berdi.";
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -48,7 +48,7 @@ const ForgotPass = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F8FB] flex items-center justify-center p-4">
+    <div className="py-12 md:py-20 bg-[#F6F8FB] flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
 
         {/* Header */}
@@ -56,7 +56,7 @@ const ForgotPass = () => {
           <div className="flex items-center gap-3">
             <FiKey className="text-white text-xl" />
             <h1 className="text-white font-bold text-lg">
-              Forgot Password
+              Parolni tiklash
             </h1>
           </div>
         </div>
@@ -67,14 +67,14 @@ const ForgotPass = () => {
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-[#1F2937] mb-2">
-              Email
+              Elektron pochta
             </label>
             <div className="relative">
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                placeholder="email@manzil.com"
                 className="w-full rounded-xl border border-gray-300 pl-12 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1F4F8F]"
               />
               <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1F4F8F]" />
@@ -90,7 +90,7 @@ const ForgotPass = () => {
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl border border-gray-300 text-sm font-medium text-[#1F2937] hover:bg-gray-100 transition"
             >
               <FiArrowLeft />
-              Back
+              Orqaga
             </Link>
 
             {/* Next */}
@@ -99,7 +99,7 @@ const ForgotPass = () => {
               disabled={loading}
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#1F4F8F] to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm font-semibold transition disabled:opacity-60"
             >
-              {loading ? "Please wait..." : "Next"}
+              {loading ? "Iltimos, kuting..." : "Keyingisi"}
               {!loading && <FiArrowRight />}
             </button>
 

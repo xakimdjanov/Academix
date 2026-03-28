@@ -1,14 +1,6 @@
 import React from "react";
 import { Toaster } from "react-hot-toast";
-import { Route, Routes } from "react-router-dom";
-
-import Layout from "./components/Layouts/Loyout";
-
-// Public pages
-import Home from "./components/Home/Home";
-import Journals from "./components/Journals/Journals";
-import Articles from "./components/Articles/Articles";
-import Contact from "./components/Contact/Contact";
+import { Route, Routes, Navigate } from "react-router-dom";
 
 // Auth pages
 import JournalAdminSignIn from "./pages/Auth/JournalAdmin/SignIn";
@@ -45,21 +37,16 @@ const App = () => {
       />
 
       <Routes>
-        {/* ✅ PUBLIC ROUTES (Header + Footer) */}
-        <Route element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="/journals" element={<Journals />} />
-          <Route path="/articles" element={<Articles />} />
-          <Route path="/contact" element={<Contact />} />
+        {/* ✅ Default Redirect */}
+        <Route path="/" element={<Navigate to="/journal-signin" replace />} />
 
-          {/* Auth */}
-          <Route path="/journal-signin" element={<JournalAdminSignIn />} />
-          <Route path="/journal-signup" element={<JournalAdminSignUp />} />
-          <Route path="/articles-signin" element={<ArticlesSignIn />} />
-          <Route path="/articles-signup" element={<ArticlesSignUp />} />
-          <Route path="/journal-forgot-password" element={<ForgotPass />} />
-          <Route path="/journal-reset-password" element={<ResetPassword />} />
-        </Route>
+        {/* ✅ AUTH ROUTES (No Header/Footer) */}
+        <Route path="/journal-signin" element={<JournalAdminSignIn />} />
+        <Route path="/journal-signup" element={<JournalAdminSignUp />} />
+        <Route path="/articles-signin" element={<ArticlesSignIn />} />
+        <Route path="/articles-signup" element={<ArticlesSignUp />} />
+        <Route path="/journal-forgot-password" element={<ForgotPass />} />
+        <Route path="/journal-reset-password" element={<ResetPassword />} />
         
         <Route element={<DashboardLayout />}>
           <Route path="/journal-dashboard" element={<Dashboard />} />

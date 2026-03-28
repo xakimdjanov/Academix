@@ -16,14 +16,15 @@ import {
 } from "react-icons/fi";
 
 const links = [
-  { name: "Dashboard", path: "/dashboard", icon: <FiHome /> },
-  { name: "Users", path: "/users", icon: <FiUsers /> },
-  { name: "Journals", path: "/journals", icon: <FiBookOpen /> },
-  { name: "Editor", path: "/editor", icon: <FiEdit3 /> },
-  { name: "Logs", path: "/logs", icon: <FiFileText /> },
-  { name: "Settings", path: "/settings", icon: <FiSettings /> },
+  { name: "Asosiy panel", path: "/dashboard", icon: <FiHome /> },
+  { name: "Foydalanuvchilar", path: "/users", icon: <FiUsers /> },
+  { name: "Jurnallar", path: "/journals", icon: <FiBookOpen /> },
+  { name: "Maqolalar", path: "/articles", icon: <FiFileText /> },
+  { name: "Muharrirlar", path: "/editor", icon: <FiEdit3 /> },
+  { name: "Loglar", path: "/logs", icon: <FiFileText /> },
+  { name: "Sozlamalar", path: "/settings", icon: <FiSettings /> },
 ];
-
+ 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -143,7 +144,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             `}
           >
             <FiLogOut className="text-lg shrink-0" />
-            {!isCollapsed && <span>Sign Out</span>}
+            {!isCollapsed && <span>Chiqish</span>}
           </button>
         </div>
       </aside>
@@ -161,9 +162,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 <FiAlertTriangle />
               </div>
               <div className="min-w-0">
-                <h3 className="font-bold text-gray-800">Confirm Sign Out</h3>
+                <h3 className="font-bold text-gray-800">Chiqishni tasdiqlash</h3>
                 <p className="text-sm text-gray-500">
-                  Are you sure you want to sign out of your account?
+                  Haqiqatan ham hisobingizdan chiqmoqchimisiz?
                 </p>
               </div>
             </div>

@@ -17,12 +17,14 @@ import {
 import { userService, chatService, notificationService } from "../services/api";
 
 const menuItems = [
-  { path: "/dashboard", label: "Dashboard", icon: FiHome },
-  { path: "/my-profile", label: "My Profile", icon: FiUser },
-  { path: "/my-articles", label: "My Articles", icon: FiFileText },
-  { path: "/submit-article", label: "Submit Article", icon: FiSend },
-  { path: "/notifications", label: "Notifications", icon: FiBell },
-  { path: "/chat", label: "Chat", icon: FiMessageCircle },
+  { path: "/dashboard", label: "Asosiy panel", icon: FiHome },
+  { path: "/my-profile", label: "Profilim", icon: FiUser },
+  { path: "/my-articles", label: "Maqolalarim", icon: FiFileText },
+  { path: "/article-comments", label: "Maqola izohlari", icon: FiMessageCircle },
+  { path: "/my-comments", label: "Mening izohlarim", icon: FiMessageCircle },
+  { path: "/submit-article", label: "Maqola yuborish", icon: FiSend },
+  { path: "/notifications", label: "Bildirishnomalar", icon: FiBell },
+  { path: "/chat", label: "Xabarlar", icon: FiMessageCircle },
 ];
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
@@ -198,7 +200,7 @@ const Sidebar = () => {
 
                   {(!isCollapsed || isMobileOpen) && (
                     <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-bold truncate text-white">User</p>
+                      <p className="text-[14px] font-bold truncate text-white">Muallif</p>
                       <p className="text-[12px] text-white/50 truncate font-medium">{formattedName}</p>
                     </div>
                   )}
@@ -291,7 +293,7 @@ const Sidebar = () => {
               }`}
             >
               <FiLogOut className="text-xl shrink-0" />
-              {(!isCollapsed || isMobileOpen) && <span className="text-[14px] font-bold">Logout</span>}
+              {(!isCollapsed || isMobileOpen) && <span className="text-[14px] font-bold">Chiqish</span>}
             </button>
           </div>
         </div>
@@ -306,20 +308,20 @@ const Sidebar = () => {
               <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
                 <FiAlertTriangle className="text-red-500" size={32} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Logout</h3>
-              <p className="text-gray-500 mb-6">Are you sure you want to leave the profile?</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Chiqish</h3>
+              <p className="text-gray-500 mb-6">Profilni tark etmoqchimisiz?</p>
               <div className="flex gap-3 w-full">
                 <button
                   onClick={() => setIsLogoutModalOpen(false)}
                   className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
                 >
-                  Cancel
+                  Bekor qilish
                 </button>
                 <button
                   onClick={confirmLogout}
                   className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors shadow-lg shadow-red-200"
                 >
-                  Yes, log out
+                  Ha, chiqish
                 </button>
               </div>
             </div>

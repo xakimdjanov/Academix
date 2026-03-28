@@ -19,8 +19,13 @@ const StatusBadge = ({ status }) => {
     read: "bg-gray-50 text-gray-700 ring-gray-200",
   };
 
+  const statusMapUz = {
+    unread: "O'qilmagan",
+    read: "O'qilgan",
+  };
+
   const cls = map[status?.toLowerCase()] || "bg-gray-50 text-gray-700 ring-gray-200";
-  return <span className={`${base} ${cls}`}>{status || "Unknown"}</span>;
+  return <span className={`${base} ${cls}`}>{statusMapUz[status?.toLowerCase()] || status || "Noma'lum"}</span>;
 };
 
 const Avatar = ({ src, name, size = 48 }) => {
@@ -83,9 +88,9 @@ const Tabs = ({ value, onChange, counts }) => {
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Tab id="all" label="All" count={counts.all} />
-      <Tab id="unread" label="Unread" count={counts.unread} />
-      <Tab id="read" label="Read" count={counts.read} />
+      <Tab id="all" label="Hammasi" count={counts.all} />
+      <Tab id="unread" label="O'qilmagan" count={counts.unread} />
+      <Tab id="read" label="O'qilgan" count={counts.read} />
     </div>
   );
 };
@@ -102,7 +107,7 @@ const Notifications = () => {
     const myId = getUserIdFromToken();
     if (!myId) {
       setItems([]);
-      toast.error("Session not found or invalid token");
+      toast.error("Seans topilmadi yoki token yaroqsiz");
       return;
     }
 
@@ -115,9 +120,9 @@ const Notifications = () => {
       const mine = list.filter((n) => Number(n?.user_id) === Number(myId));
 
       setItems(mine);
-      if (showToast) toast.success("Notifications loaded");
+      if (showToast) toast.success("Bildirishnomalar yuklandi");
     } catch (e) {
-      toast.error("Failed to load notifications");
+      toast.error("Bildirishnomalarni yuklashda xatolik yuz berdi");
     } finally {
       setLoading(false);
     }
@@ -160,13 +165,13 @@ const Notifications = () => {
 
     try {
       await notificationService.update(n.id, { status: "read" });
-      toast.success("Marked as read");
+      toast.success("O'qilgan deb belgilandi");
     } catch (e) {
       // Rollback on error
       setItems((prev) =>
         prev.map((x) => (x.id === n.id ? { ...x, status: n.status } : x))
       );
-      toast.error("Failed to update status");
+      toast.error("Holatni yangilashda xatolik yuz berdi");
     }
   };
 
@@ -181,11 +186,11 @@ const Notifications = () => {
               <FiBell className="text-gray-700" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">Notifications</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Bildirishnomalar</h1>
               <p className="mt-1 text-sm text-gray-600">
-                All: <span className="font-semibold">{counts.all}</span> •
-                Unread: <span className="font-semibold">{counts.unread}</span> •
-                Read: <span className="font-semibold">{counts.read}</span>
+                Jami: <span className="font-semibold">{counts.all}</span> •
+                O'qilmagan: <span className="font-semibold">{counts.unread}</span> •
+                O'qilgan: <span className="font-semibold">{counts.read}</span>
               </p>
             </div>
           </div>
@@ -196,7 +201,7 @@ const Notifications = () => {
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-60 transition shadow-sm"
           >
             <FiRefreshCw className={loading ? "animate-spin" : ""} />
-            {loading ? "Loading..." : "Refresh"}
+            {loading ? "Yuklanmoqda..." : "Yangilash"}
           </button>
         </div>
 
@@ -208,7 +213,7 @@ const Notifications = () => {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by title or message..."
+              placeholder="Sarlavha yoki xabar bo'yicha qidirish..."
               className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-11 pr-4 text-sm outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition"
             />
           </div>
@@ -217,7 +222,7 @@ const Notifications = () => {
         <div className="mt-6 space-y-3">
           {!loading && filtered.length === 0 && (
             <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500 shadow-sm">
-              No notifications found
+              Bildirishnomalar topilmadi
             </div>
           )}
 
@@ -237,7 +242,7 @@ const Notifications = () => {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <div className="truncate text-sm font-semibold text-gray-900">
-                        {n?.title || "Notification"}
+                        {n?.title || "Bildirishnoma"}
                       </div>
                       <StatusBadge status={n?.status} />
                     </div>
@@ -247,7 +252,7 @@ const Notifications = () => {
                     </div>
 
                     <div className="mt-2 text-xs text-gray-500">
-                      Created: {formatDate(n?.createdAt)}
+                      Yaratilgan sana: {formatDate(n?.createdAt)}
                     </div>
                   </div>
                 </div>
@@ -257,7 +262,7 @@ const Notifications = () => {
                     onClick={() => setSelected(n)}
                     className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition"
                   >
-                    View
+                    Ko'rish
                   </button>
 
                   {n?.status?.toLowerCase() === "unread" && (
@@ -266,7 +271,7 @@ const Notifications = () => {
                       className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black transition"
                     >
                       <FiCheck size={16} />
-                      Mark as read
+                      O'qilgan deb belgilash
                     </button>
                   )}
                 </div>
@@ -288,7 +293,7 @@ const Notifications = () => {
           >
             <div className="flex items-start justify-between gap-4">
               <h2 className="text-xl font-semibold text-gray-900">
-                {selected?.title || "Notification"}
+                {selected?.title || "Bildirishnoma"}
               </h2>
 
               <button
@@ -302,7 +307,7 @@ const Notifications = () => {
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <div className="rounded-xl border border-gray-200 p-4">
                 <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Status
+                  Holati
                 </div>
                 <div className="mt-2">
                   <StatusBadge status={selected?.status} />
@@ -311,7 +316,7 @@ const Notifications = () => {
 
               <div className="rounded-xl border border-gray-200 p-4">
                 <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Created
+                  Yaratilgan sana
                 </div>
                 <div className="mt-2 text-sm text-gray-900">
                   {formatDate(selected?.createdAt)}
@@ -321,10 +326,10 @@ const Notifications = () => {
 
             <div className="mt-5 rounded-xl border border-gray-200 p-4">
               <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-                Message
+                Xabar
               </div>
               <p className="text-sm text-gray-800 whitespace-pre-wrap">
-                {selected?.message || "No message content"}
+                {selected?.message || "Xabar mazmuni yo'q"}
               </p>
             </div>
 
@@ -334,7 +339,7 @@ const Notifications = () => {
                 className="mt-6 w-full rounded-xl bg-gray-900 py-3 text-white font-semibold hover:bg-black transition flex items-center justify-center gap-2"
               >
                 <FiCheck size={18} />
-                Mark as Read
+                O'qilgan deb belgilash
               </button>
             )}
           </div>

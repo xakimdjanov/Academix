@@ -10,6 +10,7 @@ import Journals from "./components/Journals";
 import Logs from "./components/Logs";
 import Settings from "./components/Settings";
 import Users from "./components/Users";
+import Articles from "./components/Articles";
 
 import AdminLayout from "./Layout/AdminLayout";
 
@@ -36,6 +37,7 @@ const App = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/editor" element={<Editor />} />
           <Route path="/users" element={<Users />} />
+          <Route path="/articles" element={<Articles />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/logs" element={<Logs />} />
           <Route path="/journals" element={<Journals />} />

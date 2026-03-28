@@ -47,8 +47,17 @@ const StatusBadge = ({ status }) => {
     Published: "bg-purple-50 text-purple-700 ring-purple-200",
   };
 
+  const statusMapUz = {
+    Submitted: "Yuborilgan",
+    "Under Review": "Taqrizda",
+    "Needs Revision": "Tahrirda",
+    Accepted: "Qabul qilingan",
+    Rejected: "Rad etilgan",
+    Published: "Nashr etilgan",
+  };
+
   const cls = map[status] || "bg-gray-50 text-gray-700 ring-gray-200";
-  return <span className={`${base} ${cls}`}>{status || "Unknown"}</span>;
+  return <span className={`${base} ${cls}`}>{statusMapUz[status] || status || "Noma'lum"}</span>;
 };
 
 const MyArticles = () => {
@@ -62,7 +71,7 @@ const MyArticles = () => {
 
     if (!myId) {
       setArticles([]);
-      toast.error("Session not found or invalid token");
+      toast.error("Seans topilmadi yoki token yaroqsiz");
       return;
     }
 
@@ -76,9 +85,9 @@ const MyArticles = () => {
       );
 
       setArticles(myArticles);
-      if (showToast) toast.success("Your articles loaded");
+      if (showToast) toast.success("Maqolalaringiz yuklandi");
     } catch (e) {
-      toast.error("Failed to load articles");
+      toast.error("Maqolalarni yuklashda xatolik yuz berdi");
     } finally {
       setLoading(false);
     }
@@ -108,10 +117,10 @@ const MyArticles = () => {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">
-              My Articles
+              Mening maqolalarim
             </h1>
             <p className="mt-1 text-sm text-gray-600">
-              Total: <span className="font-semibold">{filtered.length}</span>
+              Jami: <span className="font-semibold">{filtered.length}</span>
             </p>
           </div>
 
@@ -121,7 +130,7 @@ const MyArticles = () => {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by title, journal or status..."
+                placeholder="Sarlavha, jurnal yoki holat bo'yicha qidirish..."
                 className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-11 pr-4 text-sm outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-200 transition"
               />
             </div>
@@ -132,7 +141,7 @@ const MyArticles = () => {
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-60 transition shadow-sm"
             >
               <FiRefreshCw className={loading ? "animate-spin" : ""} />
-              {loading ? "Loading..." : "Refresh"}
+              {loading ? "Yuklanmoqda..." : "Yangilash"}
             </button>
           </div>
         </div>
@@ -143,22 +152,22 @@ const MyArticles = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                    Article Title
+                    Maqola sarlavhasi
                   </th>
                   <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                    Journal
+                    Jurnal
                   </th>
                   <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                    Status
+                    Holati
                   </th>
                   <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                    Submitted
+                    Yuborilgan
                   </th>
                   <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                    Updated
+                    Yangilangan
                   </th>
                   <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                    Action
+                    Amallar
                   </th>
                 </tr>
               </thead>
@@ -170,7 +179,7 @@ const MyArticles = () => {
                       colSpan={6}
                       className="px-5 py-12 text-center text-gray-500"
                     >
-                      No articles found
+                      Maqolalar topilmadi
                     </td>
                   </tr>
                 )}
@@ -182,7 +191,7 @@ const MyArticles = () => {
                         {a?.title || "—"}
                       </div>
                       <div className="mt-1 text-xs text-gray-500">
-                        Category: {a?.category || "—"}
+                        Toifa: {a?.category || "—"}
                       </div>
                     </td>
 
@@ -209,7 +218,7 @@ const MyArticles = () => {
                           className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 transition"
                         >
                           <FiEye size={16} />
-                          View
+                          Ko'rish
                         </Link>
 
                         <button
@@ -217,7 +226,7 @@ const MyArticles = () => {
                           onClick={() => setSelected(a)}
                           className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-black transition"
                         >
-                          Quick View
+                          Tezkor ko'rish
                         </button>
                       </div>
                     </td>
@@ -228,8 +237,8 @@ const MyArticles = () => {
           </div>
 
           <div className="flex items-center justify-between border-t border-gray-100 px-5 py-3 text-xs text-gray-500">
-            <div>Showing {filtered.length} article(s)</div>
-            <div>{loading ? "Loading..." : "Ready"}</div>
+            <div>{filtered.length} ta maqola ko'rsatilmoqda</div>
+            <div>{loading ? "Yuklanmoqda..." : "Tayyor"}</div>
           </div>
         </div>
       </div>
@@ -249,7 +258,7 @@ const MyArticles = () => {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <h2 className="text-xl sm:text-2xl font-bold line-clamp-2">
-                    {selected?.title || "Article Details"}
+                    {selected?.title || "Maqola tafsilotlari"}
                   </h2>
                   <p className="mt-2 text-sm text-gray-300 opacity-90">
                     {selected?.journal?.name || "—"}
@@ -272,14 +281,14 @@ const MyArticles = () => {
                 <div className="space-y-6">
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-                      Status
+                      Holati
                     </div>
                     <StatusBadge status={selected?.status} />
                   </div>
 
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-                      Language
+                      Til
                     </div>
                     <div className="text-base font-medium text-gray-900">
                       {selected?.language || "—"}
@@ -288,7 +297,7 @@ const MyArticles = () => {
 
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-                      Submitted On
+                      Yuborilgan sana
                     </div>
                     <div className="text-base text-gray-700">
                       {formatDate(selected?.createdAt)}
@@ -297,7 +306,7 @@ const MyArticles = () => {
 
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-                      Last Updated
+                      So'nggi yangilanish
                     </div>
                     <div className="text-base text-gray-700">
                       {formatDate(selected?.updatedAt)}
@@ -309,21 +318,21 @@ const MyArticles = () => {
                 <div className="space-y-6">
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-                      Abstract
+                      Annotatsiya
                     </div>
                     <div className="max-h-56 overflow-y-auto rounded-xl bg-gray-50 p-5 text-sm text-gray-800 border border-gray-200 leading-relaxed">
-                      {selected?.abstract || "No abstract provided."}
+                      {selected?.abstract || "Annotatsiya berilmagan."}
                     </div>
                   </div>
 
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-                      Keywords
+                      Kalit so'zlar
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {normalizeKeywords(selected?.keywords).length === 0 ? (
                         <span className="text-sm text-gray-500 italic">
-                          No keywords added
+                          Kalit so'zlar qo'shilmagan
                         </span>
                       ) : (
                         normalizeKeywords(selected?.keywords).map((k, idx) => (
@@ -344,7 +353,7 @@ const MyArticles = () => {
               {selected?.file_url && (
                 <div className="mt-10 pt-6 border-t border-gray-200">
                   <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
-                    Manuscript File
+                    Qo'lyozma fayli
                   </div>
                   <a
                     href={selected.file_url}
@@ -353,7 +362,7 @@ const MyArticles = () => {
                     className="inline-flex items-center gap-3 rounded-xl bg-gray-100 px-6 py-4 text-base font-medium text-gray-800 hover:bg-gray-200 transition shadow-sm hover:shadow"
                   >
                     <FiEye size={20} />
-                    Open / Download Manuscript
+                    Qo'lyozmani ochish / yuklab olish
                   </a>
                 </div>
               )}
@@ -367,7 +376,7 @@ const MyArticles = () => {
                 onClick={() => setSelected(null)}
               >
                 <FiEye size={20} />
-                View Full Article Page
+                Maqolaning to'liq sahifasini ko'rish
               </Link>
             </div>
           </div>

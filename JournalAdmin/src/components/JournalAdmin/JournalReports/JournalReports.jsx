@@ -49,7 +49,8 @@ function monthKey(d) {
 function monthLabel(yyyyMM) {
   const [y, m] = yyyyMM.split("-");
   const date = new Date(Number(y), Number(m) - 1, 1);
-  return date.toLocaleString("en-US", { month: "short" });
+  const months = ["Yan", "Feb", "Mar", "Apr", "May", "Iyun", "Iyul", "Avg", "Sen", "Okt", "Noy", "Dek"];
+  return months[date.getMonth()];
 }
 
 /* ---------------- UI Components ---------------- */
@@ -144,7 +145,7 @@ const JournalReports = () => {
 
       setArticles(mine);
     } catch (e) {
-      toast.error("Failed to load analytics");
+      toast.error("Analitikani yuklashda xatolik");
       setArticles([]);
     } finally {
       setLoading(false);
@@ -221,10 +222,10 @@ const JournalReports = () => {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
           <div className="space-y-1 sm:space-y-2">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
-              Analytics Dashboard
+              Analitika paneli
             </h1>
             <p className="text-blue-100/80 text-xs sm:text-sm md:text-base font-medium">
-              Real-time statistics for your academic journals
+              Akademik jurnallaringiz uchun real vaqt rejimida statistika
             </p>
           </div>
 
@@ -233,25 +234,25 @@ const JournalReports = () => {
             type="button"
             className="w-full md:w-auto flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md px-5 sm:px-6 py-3 rounded-2xl transition-all font-black text-sm active:scale-[0.99]"
           >
-            <FiRefreshCw /> Refresh Data
+            <FiRefreshCw /> Ma'lumotlarni yangilash
           </button>
         </div>
 
         {/* ✅ Mobile: 2 cols, Desktop: 3 cols */}
         <div className="mt-6 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 relative z-10">
-          <MiniStat title="Total Manuscripts" value={total} tone="blue" />
-          <MiniStat title="APC Collected" value={paid} tone="green" />
-          <MiniStat title="Pending Payment" value={unpaid} tone="rose" className="col-span-2 sm:col-span-1" />
+          <MiniStat title="Jami qo'lyozmalar" value={total} tone="blue" />
+          <MiniStat title="Yig'ilgan APC" value={paid} tone="green" />
+          <MiniStat title="To'lov kutilmoqda" value={unpaid} tone="rose" className="col-span-2 sm:col-span-1" />
         </div>
       </div>
 
       {/* Mode Toggle */}
       <div className="flex gap-2">
         <ModeBtn active={mode === "weekly"} onClick={() => setMode("weekly")} icon={<FiCalendar />}>
-          Weekly
+          Haftalik
         </ModeBtn>
         <ModeBtn active={mode === "monthly"} onClick={() => setMode("monthly")} icon={<FiBarChart2 />}>
-          Monthly
+          Oylik
         </ModeBtn>
       </div>
 
@@ -259,12 +260,12 @@ const JournalReports = () => {
       <div className="rounded-3xl md:rounded-[32px] border border-slate-100 bg-white p-4 sm:p-6 md:p-8 shadow-sm">
         <div className="mb-4 sm:mb-8">
           <h2 className="text-lg sm:text-xl font-black text-slate-800">
-            Submission Trends
+            Arizalar tendentsiyasi
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 font-semibold">
             {mode === "weekly"
-              ? "Daily breakdown of the last 7 days"
-              : "Monthly breakdown for the past year"}
+              ? "Oxirgi 7 kundagi kundalik ko'rsatkichlar"
+              : "O'tgan yil davomidagi oylik ko'rsatkichlar"}
           </p>
         </div>
 
@@ -334,9 +335,9 @@ const JournalReports = () => {
 
       {/* Detailed Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        <StatCard title="Activity Peak" value={peak} sub="Highest in period" icon={FiTrendingUp} />
-        <StatCard title="Avg. Submissions" value={avg} sub="Per unit time" icon={FiClock} />
-        <StatCard title="Payment Rate" value={payRate} sub="Successful APC" icon={FiCheckCircle} />
+        <StatCard title="Faollik cho'qqisi" value={peak} sub="Davr ichidagi eng yuqori" icon={FiTrendingUp} />
+        <StatCard title="O'rtacha arizalar" value={avg} sub="Vaqt birligiga" icon={FiClock} />
+        <StatCard title="To'lov darajasi" value={payRate} sub="Muvaffaqiyatli APC" icon={FiCheckCircle} />
       </div>
     </div>
   );

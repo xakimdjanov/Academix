@@ -10,14 +10,17 @@ import {
   FiFileText,
   FiInfo,
   FiLayers,
+  FiGlobe,
+  FiCheckCircle,
 } from "react-icons/fi";
 
 const STATUSES = [
   "Submitted",
   "Under Review",
-  "Needs Revision",
+  "Revision Required",
   "Accepted",
   "Rejected",
+  "Published",
 ];
 
 const JournalArticles = () => {
@@ -135,7 +138,7 @@ const JournalArticles = () => {
                 "",
           )
           .filter(Boolean)
-          .join(", ") || "Not specified"
+          .join(", ") || "Ko'rsatilmagan"
       );
     }
 
@@ -146,7 +149,7 @@ const JournalArticles = () => {
         v?.email ||
         v?.phone ||
         v?.orcidId ||
-        "Not specified"
+        "Ko'rsatilmagan"
       );
     }
 
@@ -178,12 +181,24 @@ const JournalArticles = () => {
       setArticles((prev) =>
         prev.map((a) => (getId(a) === id ? { ...a, ...payload } : a)),
       );
-      toast.success("Successfully updated");
+      toast.success("Muvaffaqiyatli yangilandi");
       setEditOpen(false);
     } catch (err) {
-      toast.error("Update failed");
+      toast.error("Yangilashda xatolik");
     } finally {
       setEditSaving(false);
+    }
+  };
+
+  const handleUpdateStatus = async (articleId, newStatus) => {
+    try {
+      await articleService.update(articleId, { status: newStatus });
+      setArticles((prev) =>
+        prev.map((a) => (getId(a) === articleId ? { ...a, status: newStatus } : a))
+      );
+      toast.success(`Maqola holati ${newStatus} ga o'zgartirildi`);
+    } catch (err) {
+      toast.error("Holatni yangilashda xatolik");
     }
   };
 
@@ -200,10 +215,10 @@ const JournalArticles = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Article Management
+            Maqolalarni boshqarish
           </h1>
           <p className="text-slate-500 mt-1 italic text-xs sm:text-sm">
-            Reviewing submissions for your journals
+            Jurnallaringizga yuborilgan arizalarni ko'rib chiqish
           </p>
         </div>
         <button
@@ -211,7 +226,7 @@ const JournalArticles = () => {
           type="button"
           className="w-full md:w-auto flex items-center justify-center gap-2 bg-white border border-slate-200 px-5 sm:px-6 py-2.5 rounded-2xl shadow-sm hover:bg-slate-50 transition-all font-semibold text-slate-700 active:scale-[0.99]"
         >
-          <FiRefreshCw /> Refresh Data
+          <FiRefreshCw /> Ma'lumotlarni yangilash
         </button>
       </div>
 
@@ -246,7 +261,7 @@ const JournalArticles = () => {
                   filter === s ? "text-blue-100" : "text-slate-400",
                 ].join(" ")}
               >
-                {myArticles.filter((a) => getStatus(a) === s).length} Articles
+                {myArticles.filter((a) => getStatus(a) === s).length} Maqolalar
               </div>
             </button>
           ))}
@@ -295,6 +310,15 @@ const JournalArticles = () => {
                   >
                     <FiEdit2 size={18} />
                   </button>
+                  {status === "Accepted" && (
+                    <button
+                      onClick={() => handleUpdateStatus(id, "Published")}
+                      className="p-2.5 rounded-2xl bg-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all font-bold"
+                      title="Publish Now"
+                    >
+                      <FiGlobe size={18} />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -317,10 +341,10 @@ const JournalArticles = () => {
       <div className="hidden sm:block bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden">
         <div className="px-5 sm:px-8 py-5 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
           <h2 className="font-bold text-slate-800 flex items-center gap-2 text-lg">
-            <FiLayers className="text-blue-600" /> {filter} Queue
+            <FiLayers className="text-blue-600" /> {filter} navbati
           </h2>
           <span className="bg-white px-4 py-1.5 rounded-full border text-xs font-bold text-slate-500 shadow-sm">
-            Total: {filtered.length}
+            Jami: {filtered.length}
           </span>
         </div>
 
@@ -328,10 +352,10 @@ const JournalArticles = () => {
           <table className="w-full">
             <thead>
               <tr className="text-left text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-50">
-                <th className="py-5 px-8">Article Title</th>
-                <th className="py-5 px-8">Main Author</th>
-                <th className="py-5 px-8 text-center">Status</th>
-                <th className="py-5 px-8 text-right">Actions</th>
+                <th className="py-5 px-8">Maqola sarlavhasi</th>
+                <th className="py-5 px-8">Asosiy muallif</th>
+                <th className="py-5 px-8 text-center">Holati</th>
+                <th className="py-5 px-8 text-right">Amallar</th>
               </tr>
             </thead>
 
@@ -380,6 +404,15 @@ const JournalArticles = () => {
                         >
                           <FiEdit2 size={18} />
                         </button>
+                        {status === "Accepted" && (
+                          <button
+                            onClick={() => handleUpdateStatus(getId(a), "Published")}
+                            className="p-2.5 rounded-xl bg-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                            title="Publish Now"
+                          >
+                            <FiGlobe size={18} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -405,11 +438,11 @@ const JournalArticles = () => {
       <Modal
         open={editOpen}
         onClose={() => !editSaving && setEditOpen(false)}
-        title="Edit Manuscript"
+        title="Qo'lyozmani tahrirlash"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <CustomInput
-            label="Article Title"
+            label="Maqola sarlavhasi"
             value={editForm.title}
             onChange={(e) =>
               setEditForm({ ...editForm, title: e.target.value })
@@ -417,21 +450,21 @@ const JournalArticles = () => {
             full
           />
           <CustomInput
-            label="Category"
+            label="Kategoriya"
             value={editForm.category}
             onChange={(e) =>
               setEditForm({ ...editForm, category: e.target.value })
             }
           />
           <CustomInput
-            label="Language"
+            label="Til"
             value={editForm.language}
             onChange={(e) =>
               setEditForm({ ...editForm, language: e.target.value })
             }
           />
           <CustomInput
-            label="Authors (comma separated)"
+            label="Mualliflar (vergul bilan ajrating)"
             value={editForm.authors}
             onChange={(e) =>
               setEditForm({ ...editForm, authors: e.target.value })
@@ -448,7 +481,7 @@ const JournalArticles = () => {
 
           <div className="md:col-span-2">
             <label className="text-[11px] font-black text-slate-500 mb-2 block ml-1 uppercase">
-              Abstract
+              Annotatsiya (Abstract)
             </label>
             <textarea
               className="w-full rounded-2xl border border-slate-200 p-4 focus:ring-4 focus:ring-blue-50 outline-none min-h-[140px] transition-all text-sm leading-relaxed"
@@ -460,7 +493,7 @@ const JournalArticles = () => {
           </div>
 
           <CustomInput
-            label="Keywords (comma separated)"
+            label="Kalit so'zlar (vergul bilan ajrating)"
             value={editForm.keywordsText}
             onChange={(e) =>
               setEditForm({ ...editForm, keywordsText: e.target.value })
@@ -470,7 +503,7 @@ const JournalArticles = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:col-span-2">
             <CustomInput
-              label="File Size"
+              label="Fayl hajmi"
               type="number"
               value={editForm.file_size}
               onChange={(e) =>
@@ -479,7 +512,7 @@ const JournalArticles = () => {
             />
 
             <label className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-3.5">
-              <span className="text-sm font-bold text-slate-700">APC Paid</span>
+              <span className="text-sm font-bold text-slate-700">APC To'langan</span>
               <input
                 type="checkbox"
                 checked={editForm.apc_paid}
@@ -498,7 +531,7 @@ const JournalArticles = () => {
             onClick={() => setEditOpen(false)}
             className="w-full sm:w-auto px-6 py-3 rounded-2xl text-slate-500 font-bold hover:bg-slate-100 transition-colors"
           >
-            Cancel
+            Bekor qilish
           </button>
 
           <button
@@ -507,7 +540,7 @@ const JournalArticles = () => {
             disabled={editSaving}
             className="w-full sm:w-auto bg-[#002147] text-white px-6 sm:px-10 py-3 rounded-2xl font-bold shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 hover:bg-blue-900 transition-all disabled:opacity-50 active:scale-[0.99]"
           >
-            {editSaving ? "Saving..." : <>Save Changes</>}
+            {editSaving ? "Saqlanmoqda..." : <>Saqlash</>}
           </button>
         </div>
       </Modal>
@@ -525,6 +558,7 @@ const StatusBadge = ({ status }) => {
     Rejected: "bg-rose-50 text-rose-600 border-rose-100",
     "Needs Revision": "bg-amber-50 text-amber-600 border-amber-100",
     "Under Review": "bg-blue-50 text-blue-600 border-blue-100",
+    Published: "bg-purple-50 text-purple-600 border-purple-100",
     Submitted: "bg-slate-100 text-slate-600 border-slate-200",
   };
   return (

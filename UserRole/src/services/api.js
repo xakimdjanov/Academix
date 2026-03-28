@@ -53,6 +53,8 @@ export const journalService = {
   create: (data) => axiosInstance.post("/journal/create", data),
   getAll: () => axiosInstance.get("/journal/getAll"),
   getById: (id) => axiosInstance.get(`/journal/getById/${id}`),
+  getBySlug: (slug) => axiosInstance.get(`/journal/getBySlug/${slug}`),
+  getStats: () => axiosInstance.get("/journal/stats"),
   update: (id, data) => axiosInstance.put(`/journal/update/${id}`, data),
   delete: (id) => axiosInstance.delete(`/journal/delete/${id}`),
 };

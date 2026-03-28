@@ -14,10 +14,10 @@ import { chatService, ReviewAssignments } from "../services/api";
 import { getEditorIdFromToken } from "../utils/getEditorIdFromToken";
 
 const editorLinks = [
-  { name: "Dashboard", path: "/dashboard", icon: <FiGrid /> },
-  { name: "Assigned Articles", path: "/assigned", icon: <FiFileText /> },
-  { name: "Profile", path: "/profile", icon: <FiUser /> },
-  { name: "Messages", path: "/chat", icon: <FiMessageCircle /> },
+  { name: "Asosiy panel", path: "/dashboard", icon: <FiGrid /> },
+  { name: "Biriktirilgan maqolalar", path: "/assigned", icon: <FiFileText /> },
+  { name: "Profil", path: "/profile", icon: <FiUser /> },
+  { name: "Xabarlar", path: "/chat", icon: <FiMessageCircle /> },
 ];
 
 const EditorSidebar = ({ isOpen, toggleSidebar }) => {

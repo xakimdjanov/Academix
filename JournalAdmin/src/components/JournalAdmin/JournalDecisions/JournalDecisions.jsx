@@ -3,8 +3,8 @@ import toast from "react-hot-toast";
 import { articleService, commentService } from "../../../services/api";
 import { FiSend, FiMessageSquare, FiTrash2 } from "react-icons/fi";
 
-const DECISIONS = ["Accept", "Reject", "Needs Revision"];
-const VISIBILITY = ["Author", "Editor", "Private"];
+const DECISIONS = ["Qabul qilish", "Rad etish", "Tahrir talab"];
+const VISIBILITY = ["Muallif", "Muharrir", "Shaxsiy"];
 
 function getId(x) {
   return x?.id || x?._id || x?.comment_id;
@@ -20,8 +20,8 @@ const JournalDecisions = () => {
   const [comments, setComments] = useState([]);
 
   const [articleId, setArticleId] = useState("");
-  const [decision, setDecision] = useState("Accept");
-  const [visibility, setVisibility] = useState("Author");
+  const [decision, setDecision] = useState("Qabul qilish");
+  const [visibility, setVisibility] = useState("Muallif");
   const [comment, setComment] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -88,12 +88,12 @@ const JournalDecisions = () => {
         article_id: Number(articleId) || articleId,
         user_id: userId,
         visibility,
-        comment: `[DECISION: ${decision}] ${comment.trim()}`,
+        comment: `[QAROR: ${decision}] ${comment.trim()}`,
       };
 
       await commentService.create(payload);
 
-      toast.success("Decision sent");
+      toast.success("Qaror yuborildi");
 
       // refresh comments
       const res = await commentService.getAll();
@@ -103,7 +103,7 @@ const JournalDecisions = () => {
       // clear comment box
       setComment("");
     } catch {
-      toast.error("Send failed");
+      toast.error("Yuborishda xatolik");
     } finally {
       setSending(false);
     }
@@ -129,16 +129,16 @@ const JournalDecisions = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-[#1F2937]">Decisions</h1>
+        <h1 className="text-2xl font-bold text-[#1F2937]">Qarorlar</h1>
         <p className="text-sm text-gray-500">
-          Send decision with review comments
+          Taqriz izohlari bilan birga qaror yuborish
         </p>
       </div>
 
       {/* Top: Select Article */}
       <div className="bg-white rounded-2xl shadow p-5">
         <label className="block text-sm font-medium text-[#1F2937] mb-2">
-          Select article
+          Maqolani tanlang
         </label>
 
         <select
@@ -162,7 +162,7 @@ const JournalDecisions = () => {
               {selectedArticle.title || "Untitled"}
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              Author: {selectedArticle.authors || "-"} • Language:{" "}
+              Muallif: {selectedArticle.authors || "-"} • Til:{" "}
               {selectedArticle.language || "-"}
             </p>
           </div>
@@ -173,14 +173,14 @@ const JournalDecisions = () => {
       <div className="bg-white rounded-2xl shadow p-5">
         <div className="flex items-center gap-2 mb-4">
           <FiMessageSquare className="text-[#002147]" />
-          <h2 className="text-lg font-semibold">Review comments</h2>
+          <h2 className="text-lg font-semibold">Taqriz izohlari</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Decision */}
           <div>
             <label className="block text-sm font-medium text-[#1F2937] mb-2">
-              Decision
+              Qaror
             </label>
             <select
               value={decision}
@@ -198,7 +198,7 @@ const JournalDecisions = () => {
           {/* Visibility */}
           <div>
             <label className="block text-sm font-medium text-[#1F2937] mb-2">
-              Visibility
+              Ko'rinish (Visibility)
             </label>
             <select
               value={visibility}
@@ -221,7 +221,7 @@ const JournalDecisions = () => {
               className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#002147] text-white font-semibold hover:opacity-95 disabled:opacity-60"
             >
               <FiSend />
-              {sending ? "Sending..." : "Send decision"}
+              {sending ? "Yuborilmoqda..." : "Qarorni yuborish"}
             </button>
           </div>
         </div>
@@ -229,7 +229,7 @@ const JournalDecisions = () => {
         {/* Comment box */}
         <div className="mt-4">
           <label className="block text-sm font-medium text-[#1F2937] mb-2">
-            Comment
+            Izoh (Comment)
           </label>
           <textarea
             rows={6}
@@ -243,10 +243,10 @@ const JournalDecisions = () => {
 
       {/* Comments history */}
       <div className="bg-white rounded-2xl shadow p-5">
-        <h2 className="text-lg font-semibold mb-4">Decision history</h2>
+        <h2 className="text-lg font-semibold mb-4">Qarorlar tarixi</h2>
 
         {articleComments.length === 0 ? (
-          <p className="text-gray-400 text-sm">No comments for this article.</p>
+          <p className="text-gray-400 text-sm">Ushbu maqola uchun izohlar mavjud emas.</p>
         ) : (
           <div className="space-y-3">
             {articleComments
@@ -260,7 +260,7 @@ const JournalDecisions = () => {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-xs text-gray-500">
-                        Visibility:{" "}
+                        Ko'rinish:{" "}
                         <span className="font-semibold">{c.visibility}</span>
                       </p>
                       <p className="mt-2 text-sm text-[#1F2937] whitespace-pre-wrap">
@@ -273,7 +273,7 @@ const JournalDecisions = () => {
                       className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
                     >
                       <FiTrash2 />
-                      Delete
+                      O'chirish
                     </button>
                   </div>
                 </div>
