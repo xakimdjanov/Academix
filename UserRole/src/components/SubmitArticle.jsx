@@ -56,7 +56,7 @@ const SubmitArticle = () => {
         const res = await journalService.getAll();
         setJournals(res?.data || []);
       } catch {
-        toast.error("Failed to load journals");
+        toast.error("Jurnallarni yuklashda xatolik yuz berdi");
       } finally {
         setLoadingJournals(false);
       }
@@ -74,7 +74,7 @@ const SubmitArticle = () => {
     const v = keywordInput.trim();
     if (!v) return;
     if (keywords.some((k) => k.toLowerCase() === v.toLowerCase())) {
-      toast.error("This keyword already added");
+      toast.error("Ushbu kalit so'z allaqachon qo'shilgan");
       return;
     }
     setKeywords((p) => [...p, v]);
@@ -86,7 +86,7 @@ const SubmitArticle = () => {
   const addAuthor = () => setAuthors((p) => [...p, { ...emptyAuthor }]);
 
   const removeAuthor = (idx) => {
-    if (authors.length === 1) return toast.error("At least one author is required");
+    if (authors.length === 1) return toast.error("Kamida bitta muallif bo'lishi shart");
     setAuthors((p) => p.filter((_, i) => i !== idx));
     setAuthorImages((prev) => {
       const next = { ...prev };
@@ -100,8 +100,8 @@ const SubmitArticle = () => {
 
   const handleAuthorImage = (idx, file) => {
     if (!file) return;
-    if (!file.type.startsWith("image/")) return toast.error("Only image files allowed");
-    if (file.size / (1024 * 1024) > 5) return toast.error("Image must be under 5MB");
+    if (!file.type.startsWith("image/")) return toast.error("Faqat rasm fayllari ruxsat etiladi");
+    if (file.size / (1024 * 1024) > 5) return toast.error("Rasm hajmi 5MB dan kam bo'lishi kerak");
     setAuthorImages((prev) => ({ ...prev, [idx]: file }));
   };
 
@@ -120,30 +120,30 @@ const SubmitArticle = () => {
 
   const handleArticleFile = (file) => {
     if (!file) return;
-    if (!ACCEPTED_MIME.includes(file.type)) return toast.error("Only PDF / DOC / DOCX allowed");
-    if (file.size / (1024 * 1024) > MAX_FILE_MB) return toast.error(`Max ${MAX_FILE_MB}MB`);
+    if (!ACCEPTED_MIME.includes(file.type)) return toast.error("Faqat PDF / DOC / DOCX formatlari ruxsat etiladi");
+    if (file.size / (1024 * 1024) > MAX_FILE_MB) return toast.error(`Maksimal ${MAX_FILE_MB}MB`);
     setArticleFile(file);
   };
 
   const validateStep = (s) => {
-    if (s === 1 && !selectedJournalId) return "Please select a journal";
+    if (s === 1 && !selectedJournalId) return "Iltimos, jurnalni tanlang";
     if (s === 2) {
-      if (!title.trim()) return "Title is required";
-      if (!abstract.trim()) return "Abstract is required";
-      if (!keywords.length) return "At least one keyword required";
-      if (!category.trim()) return "Category is required";
-      if (!language.trim()) return "Language is required";
+      if (!title.trim()) return "Sarlavha majburiy";
+      if (!abstract.trim()) return "Annotatsiya majburiy";
+      if (!keywords.length) return "Kamida bitta kalit so'z bo'lishi shart";
+      if (!category.trim()) return "Toifa majburiy";
+      if (!language.trim()) return "Til majburiy";
     }
     if (s === 3) {
       for (let i = 0; i < authors.length; i++) {
         const a = authors[i];
-        if (!a.fullName?.trim()) return `Author ${i + 1}: Full name required`;
-        if ((a.phone?.replace(/\D/g, "") || "").length < 9) return `Author ${i + 1}: Invalid phone number`;
-        if (!/^\d{4}-\d{4}-\d{4}-\d{4}$/.test(a.orcidId || "")) return `Author ${i + 1}: Invalid ORCID format`;
-        if (!authorImages[i]) return `Author ${i + 1}: Photo required`;
+        if (!a.fullName?.trim()) return `${i + 1}-muallif: To'liq ism majburiy`;
+        if ((a.phone?.replace(/\D/g, "") || "").length < 9) return `${i + 1}-muallif: Telefon raqami noto'g'ri`;
+        if (!/^\d{4}-\d{4}-\d{4}-\d{4}$/.test(a.orcidId || "")) return `${i + 1}-muallif: ORCID formati noto'g'ri`;
+        if (!authorImages[i]) return `${i + 1}-muallif: Rasm majburiy`;
       }
     }
-    if (s === 4 && !articleFile) return "Article file is required";
+    if (s === 4 && !articleFile) return "Maqola fayli majburiy";
     return null;
   };
 
@@ -160,7 +160,7 @@ const SubmitArticle = () => {
     if (err) return toast.error(err);
 
     const userId = getUserIdFromToken();
-    if (!userId) return toast.error("Session not found");
+    if (!userId) return toast.error("Seans topilmadi");
 
     setSubmitting(true);
 
@@ -192,7 +192,7 @@ const SubmitArticle = () => {
       const id = res?.data?.article?.id ?? res?.data?.id;
       setCreatedArticleId(id);
 
-      toast.success("Article submitted successfully!", { duration: 5000 });
+      toast.success("Maqola muvaffaqiyatli yuborildi!", { duration: 5000 });
 
       setTimeout(() => {
         setStep(1);
@@ -207,7 +207,7 @@ const SubmitArticle = () => {
         setArticleFile(null);
       }, 2800);
     } catch (err) {
-      const msg = err?.response?.data?.message || "An error occurred";
+      const msg = err?.response?.data?.message || "Xato yuz berdi";
       toast.error(msg);
       console.error(err);
     } finally {
@@ -224,9 +224,9 @@ const SubmitArticle = () => {
 
           {/* Header + Progress Steps */}
           <div className="bg-[#002147] px-6 py-6 text-white">
-            <h1 className="text-2xl sm:text-3xl font-bold text-center">Submit Your Article</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-center">Maqolani yuborish</h1>
             <p className="mt-2 text-blue-100 text-center opacity-90">
-              Fill in the details step by step
+              Ma'lumotlarni bosqichma-bosqich to'ldiring
             </p>
 
             <div className="mt-6 flex justify-center gap-4 sm:gap-8 flex-wrap">
@@ -244,7 +244,7 @@ const SubmitArticle = () => {
                     {step > n ? <FiCheck /> : n}
                   </div>
                   <span className="mt-2 text-xs font-medium hidden sm:block">
-                    {n === 1 ? "Journal" : n === 2 ? "Details" : n === 3 ? "Authors" : "File"}
+                    {n === 1 ? "Jurnal" : n === 2 ? "Ma'lumotlar" : n === 3 ? "Mualliflar" : "Fayl"}
                   </span>
                 </div>
               ))}
@@ -257,14 +257,14 @@ const SubmitArticle = () => {
             {/* Step 1 */}
             {step === 1 && (
               <div className="space-y-6 max-w-xl mx-auto">
-                <h2 className="text-2xl font-bold text-gray-800 text-center">Step 1: Select Journal</h2>
+                <h2 className="text-2xl font-bold text-gray-800 text-center">1-bosqich: Jurnalni tanlang</h2>
                 <select
                   value={selectedJournalId}
                   onChange={(e) => setSelectedJournalId(e.target.value)}
                   disabled={loadingJournals}
                   className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition disabled:opacity-60"
                 >
-                  <option value="">Choose a journal...</option>
+                  <option value="">Jurnalni tanlang...</option>
                   {journals.map((j) => (
                     <option key={j.id} value={j.id}>
                       {j.name} {j.issn && `(ISSN: ${j.issn})`}
@@ -276,7 +276,7 @@ const SubmitArticle = () => {
                   <div className="bg-[#e6f0ff] border border-blue-100 rounded-xl p-6 space-y-2">
                     <h3 className="font-bold text-[#002147]">{selectedJournal.name}</h3>
                     <p className="text-[#002147]">ISSN: {selectedJournal.issn || "—"}</p>
-                    <p className="text-[#002147]">Field: {selectedJournal.subject_area || "—"}</p>
+                    <p className="text-[#002147]">Sohasi: {selectedJournal.subject_area || "—"}</p>
                   </div>
                 )}
               </div>
@@ -285,44 +285,44 @@ const SubmitArticle = () => {
             {/* Step 2 */}
             {step === 2 && (
               <div className="space-y-6 max-w-2xl mx-auto">
-                <h2 className="text-2xl font-bold text-gray-800 text-center">Step 2: Article Details</h2>
+                <h2 className="text-2xl font-bold text-gray-800 text-center">2-bosqich: Maqola ma'lumotlari</h2>
 
                 <div className="space-y-2">
-                  <label className="block font-medium text-gray-700">Title *</label>
+                  <label className="block font-medium text-gray-700">Sarlavha *</label>
                   <input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition"
-                    placeholder="Enter article title..."
+                    placeholder="Maqola sarlavhasini kiriting..."
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block font-medium text-gray-700">Abstract *</label>
+                  <label className="block font-medium text-gray-700">Annotatsiya *</label>
                   <textarea
                     value={abstract}
                     onChange={(e) => setAbstract(e.target.value)}
                     rows={5}
                     className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition resize-y"
-                    placeholder="Enter abstract..."
+                    placeholder="Annotatsiyani kiriting..."
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block font-medium text-gray-700">Keywords *</label>
+                  <label className="block font-medium text-gray-700">Kalit so'zlar *</label>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <input
                       value={keywordInput}
                       onChange={(e) => setKeywordInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addKeyword())}
                       className="flex-1 rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none"
-                      placeholder="Type keyword and press Enter"
+                      placeholder="Kalit so'zni yozing va Enter tugmasini bosing"
                     />
                     <button
                       onClick={addKeyword}
                       className="rounded-xl bg-[#002147] px-6 py-3 text-white font-medium hover:bg-[#001a3a] transition"
                     >
-                      Add
+                      Qo'shish
                     </button>
                   </div>
                   {keywords.length > 0 && (
@@ -342,21 +342,21 @@ const SubmitArticle = () => {
 
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="block font-medium text-gray-700">Category *</label>
+                    <label className="block font-medium text-gray-700">Toifa *</label>
                     <input
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
                       className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition"
-                      placeholder="e.g. Research Article"
+                      placeholder="Masalan: Tadqiqot maqolasi"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="block font-medium text-gray-700">Language *</label>
+                    <label className="block font-medium text-gray-700">Til *</label>
                     <input
                       value={language}
                       onChange={(e) => setLanguage(e.target.value)}
                       className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition"
-                      placeholder="e.g. English"
+                      placeholder="Masalan: Ingliz tili"
                     />
                   </div>
                 </div>
@@ -367,12 +367,12 @@ const SubmitArticle = () => {
             {step === 3 && (
               <div className="space-y-8">
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                  <h2 className="text-2xl font-bold text-gray-800">Step 3: Authors</h2>
+                  <h2 className="text-2xl font-bold text-gray-800">3-bosqich: Mualliflar</h2>
                   <button
                     onClick={addAuthor}
                     className="inline-flex items-center gap-2 bg-[#002147] text-white px-5 py-2.5 rounded-xl hover:bg-[#001a3a] transition font-medium"
                   >
-                    <FiPlus /> Add Author
+                    <FiPlus /> Muallif qo'shish
                   </button>
                 </div>
 
@@ -380,10 +380,10 @@ const SubmitArticle = () => {
                   <div key={idx} className="border border-gray-200 rounded-xl p-6 bg-white shadow-sm">
                     <div className="flex justify-between items-center mb-5">
                       <h3 className="text-lg font-bold text-gray-800">
-                        Author {idx + 1}
+                        Muallif {idx + 1}
                         {idx === 0 && (
                           <span className="ml-3 text-xs bg-[#e6f0ff] text-[#002147] px-3 py-1 rounded-full">
-                            Corresponding
+                            Mas'ul muallif
                           </span>
                         )}
                       </h3>
@@ -396,14 +396,14 @@ const SubmitArticle = () => {
 
                     <div className="grid sm:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-600">Full Name *</label>
+                        <label className="block text-sm font-medium text-gray-600">To'liq ismi *</label>
                         <div className="relative">
                           <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                           <input
                             value={author.fullName}
                             onChange={(e) => updateAuthor(idx, "fullName", e.target.value)}
                             className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none"
-                            placeholder="John Doe"
+                            placeholder="Ism Familiya"
                           />
                         </div>
                       </div>
@@ -436,7 +436,7 @@ const SubmitArticle = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-600">Photo *</label>
+                        <label className="block text-sm font-medium text-gray-600">Rasm *</label>
                         <input
                           type="file"
                           accept="image/*"
@@ -444,9 +444,9 @@ const SubmitArticle = () => {
                           className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-[#002147] file:text-white hover:file:bg-[#001a3a] file:transition file:cursor-pointer cursor-pointer"
                         />
                         {authorImages[idx] ? (
-                          <p className="text-green-600 text-sm mt-1">Uploaded: {authorImages[idx].name}</p>
+                          <p className="text-green-600 text-sm mt-1">Yuklandi: {authorImages[idx].name}</p>
                         ) : (
-                          <p className="text-red-500 text-sm mt-1">* Required</p>
+                          <p className="text-red-500 text-sm mt-1">* Majburiy</p>
                         )}
                       </div>
                     </div>
@@ -458,7 +458,7 @@ const SubmitArticle = () => {
             {/* Step 4 */}
             {step === 4 && (
               <div className="space-y-8 max-w-xl mx-auto">
-                <h2 className="text-2xl font-bold text-gray-800 text-center">Step 4: Upload Article File</h2>
+                <h2 className="text-2xl font-bold text-gray-800 text-center">4-bosqich: Maqola faylini yuklash</h2>
 
                 <div className="border-2 border-dashed border-gray-300 rounded-2xl p-10 text-center hover:border-blue-400 transition">
                   <FiUpload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
@@ -466,7 +466,7 @@ const SubmitArticle = () => {
                     htmlFor="file-upload"
                     className="cursor-pointer inline-block bg-[#002147] text-white px-8 py-4 rounded-xl font-medium hover:bg-[#001a3a] transition"
                   >
-                    Choose File
+                    Faylni tanlang
                   </label>
                   <input
                     id="file-upload"
@@ -476,7 +476,7 @@ const SubmitArticle = () => {
                     className="hidden"
                   />
                   <p className="mt-4 text-gray-500 text-sm">
-                    PDF, DOC, DOCX • max {MAX_FILE_MB} MB
+                    PDF, DOC, DOCX • maksimal {MAX_FILE_MB} MB
                   </p>
                 </div>
 
@@ -501,7 +501,7 @@ const SubmitArticle = () => {
                     disabled={submitting}
                     className="w-full bg-[#002147] text-white py-4 rounded-xl font-bold hover:bg-[#001a3a] disabled:opacity-60 transition shadow-md"
                   >
-                    {submitting ? "Submitting..." : "Submit Article"}
+                    {submitting ? "Yuborilmoqda..." : "Maqolani yuborish"}
                   </button>
 
                 </div>
@@ -516,7 +516,7 @@ const SubmitArticle = () => {
               disabled={step === 1 || submitting}
               className="flex-1 max-w-xs flex items-center justify-center gap-2 py-3 px-6 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 disabled:opacity-50 transition"
             >
-              <FiArrowLeft /> Back
+              <FiArrowLeft /> Orqaga
             </button>
 
             <button
@@ -524,7 +524,7 @@ const SubmitArticle = () => {
               disabled={submitting}
               className="flex-1 max-w-xs flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-[#002147] text-white font-medium hover:bg-[#001a3a] disabled:opacity-60 transition shadow-md"
             >
-              {step === 4 ? "Submit" : "Next"} <FiArrowRight />
+              {step === 4 ? "Yuborish" : "Keyingisi"} <FiArrowRight />
             </button>
           </div>
         </div>

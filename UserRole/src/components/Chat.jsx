@@ -31,8 +31,8 @@ const formatDayLabel = (date) => {
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
-  if (isSameDay(d, today)) return "Today";
-  if (isSameDay(d, yesterday)) return "Yesterday";
+  if (isSameDay(d, today)) return "Bugun";
+  if (isSameDay(d, yesterday)) return "Kecha";
   return d.toLocaleDateString();
 };
 
@@ -100,7 +100,7 @@ const ArticleListModal = ({ articles, isOpen, onClose }) => {
         <div className="p-4 bg-[#002147] text-white flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FiFileText size={20} />
-            <h4 className="font-semibold">Articles ({articles.length})</h4>
+            <h4 className="font-semibold">Maqolalar ({articles.length})</h4>
           </div>
           <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-full">
             <FiX size={20} />
@@ -147,7 +147,7 @@ const MessageContextMenu = ({ x, y, onClose, onCopy, onDelete, isMine }) => {
         className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-gray-700"
       >
         <FiCopy size={14} className="text-gray-500" />
-        Copy Message
+        Xabarni nusxalash
       </button>
       {isMine && (
         <button
@@ -158,7 +158,7 @@ const MessageContextMenu = ({ x, y, onClose, onCopy, onDelete, isMine }) => {
           className="w-full px-4 py-2.5 text-left text-sm hover:bg-red-50 flex items-center gap-2 text-red-600"
         >
           <FiTrash2 size={14} />
-          Delete Message
+          Xabarni o'chirish
         </button>
       )}
     </div>
@@ -281,7 +281,7 @@ const Chat = () => {
 
     } catch (e) {
       console.error(e);
-      if (!isSilent) toast.error("Failed to load chats");
+      if (!isSilent) toast.error("Chatlarni yuklashda xatolik yuz berdi");
     }
   };
 
@@ -320,7 +320,7 @@ const Chat = () => {
           articleTitles,
           hasMultiple,
           articlesCount: articlesList.length,
-          lastMessage: last?.message || (last?.image_url ? "📷 Image" : "No messages yet"),
+          lastMessage: last?.message || (last?.image_url ? "📷 Rasm" : "Hozircha xabarlar yo'q"),
           lastAt: last?.createdAt || group.latestDate,
           unreadCount: msgs.filter((m) => !m.is_from_user && !isReadMessage(m)).length,
           messages: msgs,
@@ -454,7 +454,7 @@ const Chat = () => {
       loadAll(true);
     } catch (e) {
       console.error(e);
-      toast.error("Failed to send message");
+      toast.error("Xabarni yuborishda xatolik yuz berdi");
       setAllMessages(prev => prev.filter(m => !m.temp));
       setText(messageText);
       setImageFile(currentImageFile);
@@ -465,13 +465,13 @@ const Chat = () => {
   // Copy message
   const copyMessage = (text) => {
     navigator.clipboard.writeText(text);
-    toast.success("Message copied to clipboard");
+    toast.success("Xabar nusxalandi");
   };
 
   // Delete message
   const deleteMessage = async (m) => {
     if (!m.is_from_user) {
-      toast.error("You can only delete your own messages");
+      toast.error("Faqat o'zingizning xabarlaringizni o'chirishingiz mumkin");
       return;
     }
 
@@ -482,7 +482,7 @@ const Chat = () => {
 
     try {
       await chatService.delete(id);
-      toast.success("Message deleted");
+      toast.success("Xabar o'chirildi");
     } catch (e) {
       console.error(e);
       toast.error("Failed to delete message");
@@ -508,7 +508,7 @@ const Chat = () => {
   // Select toggle
   const toggleSelect = (m) => {
     if (!m.is_from_user) {
-      toast.error("You can only select your own messages");
+      toast.error("Faqat o'zingizning xabarlaringizni tanlashingiz mumkin");
       return;
     }
 
@@ -534,7 +534,7 @@ const Chat = () => {
 
     try {
       await Promise.all(ids.map((id) => chatService.delete(id)));
-      toast.success(`${ids.length} messages deleted`);
+      toast.success(`${ids.length} ta xabar o'chirildi`);
     } catch (e) {
       console.error(e);
       toast.error("Some messages could not be deleted");
@@ -559,7 +559,7 @@ const Chat = () => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast.error("Image size should be less than 5MB");
+        toast.error("Rasm hajmi 5MB dan kam bo'lishi kerak");
         return;
       }
       setImageFile(file);
@@ -591,14 +591,14 @@ const Chat = () => {
             } w-full flex-col border-r border-gray-200 bg-white md:flex md:w-[380px]`}
           >
             <div className="border-b border-gray-200 p-5">
-              <h2 className="text-xl font-bold text-[#002147]">My Editors</h2>
-              <p className="mt-1 text-xs text-gray-500">Chat with your editors</p>
+              <h2 className="text-xl font-bold text-[#002147]">Mening muharrirlarim</h2>
+              <p className="mt-1 text-xs text-gray-500">Muharrirlaringiz bilan muloqot qiling</p>
               
               {/* Search */}
               <div className="mt-4 relative">
                 <input
                   type="text"
-                  placeholder="Search by article title..."
+                  placeholder="Maqola sarlavhasi bo'yicha qidirish..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-4 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#002147] focus:border-transparent"
@@ -610,9 +610,9 @@ const Chat = () => {
               {filteredThreads.length === 0 ? (
                 <div className="p-8 text-center">
                   <div className="text-6xl mb-4 text-gray-300">📭</div>
-                  <p className="text-gray-600 font-medium">No conversations found</p>
+                  <p className="text-gray-600 font-medium">Suhbatlar topilmadi</p>
                   <p className="text-sm text-gray-400 mt-2">
-                    {searchTerm ? 'Try a different search term' : 'Articles with editors will appear here'}
+                    {searchTerm ? 'Boshqa qidiruv so\'zini sinab ko\'ring' : 'Muharrirlar tayinlangan maqolalar bu yerda ko\'rinadi'}
                   </p>
                 </div>
               ) : (
@@ -643,7 +643,7 @@ const Chat = () => {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline justify-between">
                         <h3 className="truncate text-base font-bold text-gray-800">
-                          {t.hasMultiple ? `${t.articlesCount} Articles` : t.mainTitle}
+                          {t.hasMultiple ? `${t.articlesCount} ta maqola` : t.mainTitle}
                         </h3>
                         <span className="text-xs text-gray-400">
                           {t.lastAt ? formatTime(t.lastAt) : ""}
@@ -659,7 +659,7 @@ const Chat = () => {
                           className="mt-1 inline-flex items-center gap-1 text-xs bg-gray-100 text-[#002147] px-2 py-0.5 rounded-full hover:bg-gray-200"
                         >
                           <FiFileText size={12} />
-                          <span>View {t.articlesCount} articles</span>
+                          <span>{t.articlesCount} ta maqolani ko'rish</span>
                           <FiChevronDown size={12} />
                         </button>
                       )}
@@ -694,7 +694,7 @@ const Chat = () => {
                     
                     <div>
                       <h3 className="text-base font-bold text-gray-800">
-                        {activeThread.hasMultiple ? `${activeThread.articlesCount} Articles` : activeThread.mainTitle}
+                        {activeThread.hasMultiple ? `${activeThread.articlesCount} ta maqola` : activeThread.mainTitle}
                       </h3>
                       {activeThread.hasMultiple && (
                         <button
@@ -702,7 +702,7 @@ const Chat = () => {
                           className="text-xs text-[#002147] hover:underline flex items-center gap-1"
                         >
                           <FiFileText size={12} />
-                          View all articles
+                          Barcha maqolalarni ko'rish
                         </button>
                       )}
                     </div>
@@ -728,7 +728,7 @@ const Chat = () => {
                         onClick={selectAllMyMessages}
                         className="rounded-xl bg-gray-100 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-200"
                       >
-                        Select All
+                        Hammasini tanlash
                       </button>
                     )}
 
@@ -747,8 +747,8 @@ const Chat = () => {
                     <div className="flex h-full items-center justify-center">
                       <div className="text-center">
                         <div className="text-6xl mb-4 text-gray-300">💬</div>
-                        <p className="text-gray-600 font-medium">No messages yet</p>
-                        <p className="text-sm text-gray-400 mt-2">Send a message to your editor</p>
+                        <p className="text-gray-600 font-medium">Hozircha xabarlar yo'q</p>
+                        <p className="text-sm text-gray-400 mt-2">Muharriringizga xabar yuboring</p>
                       </div>
                     </div>
                   ) : (
@@ -825,11 +825,11 @@ const Chat = () => {
                     <div className="mx-auto flex max-w-4xl items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-600">
-                          Selected: <span className="font-bold text-[#002147]">{selectedIds.size}</span>
+                          Tanlandi: <span className="font-bold text-[#002147]">{selectedIds.size}</span>
                         </span>
                         {selectedIds.size > 0 && (
                           <span className="text-xs text-gray-400">
-                            (only your messages)
+                            (faqat o'zingizning xabarlaringiz)
                           </span>
                         )}
                       </div>
@@ -842,7 +842,7 @@ const Chat = () => {
                           }}
                           className="rounded-xl bg-gray-100 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-200 transition"
                         >
-                          Cancel
+                          Bekor qilish
                         </button>
 
                         <button
@@ -851,7 +851,7 @@ const Chat = () => {
                           className="inline-flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
                         >
                           <FiTrash2 size={16} />
-                          Delete ({selectedIds.size})
+                          O'chirish ({selectedIds.size})
                         </button>
                       </div>
                     </div>
@@ -904,7 +904,7 @@ const Chat = () => {
                               send();
                             }
                           }}
-                          placeholder="Type a message..."
+                          placeholder="Xabar yozing..."
                           className="w-full resize-none bg-transparent text-sm outline-none placeholder:text-gray-400"
                           style={{ minHeight: '24px' }}
                         />
@@ -929,9 +929,9 @@ const Chat = () => {
               <div className="flex flex-1 flex-col items-center justify-center">
                 <div className="text-center p-8">
                   <div className="text-7xl mb-4 text-gray-300">💬</div>
-                  <p className="text-xl font-semibold text-gray-700 mb-2">No editor selected</p>
+                  <p className="text-xl font-semibold text-gray-700 mb-2">Muharrir tanlanmagan</p>
                   <p className="text-gray-500 max-w-md">
-                    Choose an editor from the sidebar to start chatting
+                    Suhbatni boshlash uchun yon paneldan muharrirni tanlang
                   </p>
                 </div>
               </div>

@@ -47,7 +47,7 @@ const Profile = () => {
         window.dispatchEvent(new Event("storage"));
       }
     } catch (err) {
-      alert("Error: " + (err.response?.data?.message || err.message));
+      alert("Xatolik: " + (err.response?.data?.message || err.message));
     } finally {
       setUploading(false);
     }
@@ -72,7 +72,7 @@ const Profile = () => {
         window.dispatchEvent(new Event("storage"));
       }
     } catch (err) {
-      alert("Error uploading image");
+      alert("Rasmni yuklashda xatolik");
     } finally {
       setUploading(false);
     }
@@ -96,7 +96,7 @@ const Profile = () => {
           onClick={() => navigate("/dashboard")} 
           className="mb-6 flex items-center gap-2 text-slate-500 hover:text-[#002147] transition-all font-medium group"
         >
-          <FiArrowLeft className="group-hover:-translate-x-1" /> Back to Dashboard
+          <FiArrowLeft className="group-hover:-translate-x-1" /> Boshqaruv paneliga qaytish
         </button>
 
         <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden flex flex-col md:row min-h-[500px] md:flex-row">
@@ -128,13 +128,13 @@ const Profile = () => {
 
           <div className="md:w-2/3 p-8 md:p-12 relative">
             <div className="flex justify-between items-center mb-10">
-              <h1 className="text-2xl font-black text-[#002147]">Personal Information</h1>
+              <h1 className="text-2xl font-black text-[#002147]">Shaxsiy ma'lumotlar</h1>
               {!isEditing ? (
                 <button 
                   onClick={() => setIsEditing(true)} 
                   className="flex items-center gap-2 text-blue-600 font-bold text-sm hover:bg-blue-50 px-4 py-2 rounded-xl transition-all"
                 >
-                  <FiEdit2 /> Edit Profile
+                  <FiEdit2 /> Profilni tahrirlash
                 </button>
               ) : (
                 <div className="flex gap-2">
@@ -157,27 +157,27 @@ const Profile = () => {
             <div className="grid grid-cols-1 gap-6">
               <EditableRow 
                 icon={<FiUser/>} 
-                label="Full Name" 
+                label="F.I.Sh" 
                 value={formData.fullname} 
                 isEditing={isEditing} 
                 onChange={(e) => setFormData({...formData, fullname: e.target.value})}
               />
               <EditableRow 
                 icon={<FiMail/>} 
-                label="Email Address" 
+                label="Email manzili" 
                 value={user.email} 
                 isEditing={false} 
               />
               <EditableRow 
                 icon={<FiPhone/>} 
-                label="Phone Number" 
+                label="Telefon raqami" 
                 value={formData.phone} 
                 isEditing={isEditing}
                 onChange={(e) => setFormData({...formData, phone: e.target.value})}
               />
               <EditableRow 
                 icon={<FiCalendar/>} 
-                label="Age" 
+                label="Yosh" 
                 value={formData.age} 
                 isEditing={isEditing}
                 type="number"
@@ -189,7 +189,7 @@ const Profile = () => {
               onClick={handleLogout} 
               className="mt-12 flex items-center justify-center gap-2 text-slate-400 hover:text-rose-600 font-bold transition-all mx-auto"
             >
-              <FiLogOut /> Sign Out
+              <FiLogOut /> Tizimdan chiqish
             </button>
           </div>
 
@@ -214,7 +214,7 @@ const EditableRow = ({ icon, label, value, isEditing, onChange, type="text" }) =
           className="w-full bg-white border border-blue-200 rounded-lg px-3 py-1 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20"
         />
       ) : (
-        <p className="text-slate-700 font-bold">{value || "Not provided"}</p>
+        <p className="text-slate-700 font-bold">{value || "Ma'lumot berilmagan"}</p>
       )}
     </div>
   </div>

@@ -9,14 +9,14 @@ import {
 import { journalAdminService } from "../../../services/api";
 
 const menuItems = [
-  { path: "/journal-dashboard", label: "Dashboard", icon: FiHome },
-  { path: "/journal-list", label: "Add Journals", icon: FiPlusCircle },
-  { path: "/journal-settings", label: "Settings", icon: FiSettings },
-  { path: "/journal-articles", label: "Articles", icon: FiFileText },
-  { path: "/journal-editors", label: "Assign Editors", icon: FiUsers },
-  // { path: "/journal-decisions", label: "Decisions", icon: FiCheckCircle },
-  // { path: "/journal-payments", label: "Payments", icon: FiCreditCard },
-  { path: "/journal-reports", label: "Reports", icon: FiBarChart2 },
+  { path: "/journal-dashboard", label: "Asosiy panel", icon: FiHome },
+  { path: "/journal-list", label: "Jurnallar qo'shish", icon: FiPlusCircle },
+  { path: "/journal-settings", label: "Sozlamalar", icon: FiSettings },
+  { path: "/journal-articles", label: "Maqolalar", icon: FiFileText },
+  { path: "/journal-editors", label: "Muharrirlarni biriktirish", icon: FiUsers },
+  // { path: "/journal-decisions", label: "Qarorlar", icon: FiCheckCircle },
+  // { path: "/journal-payments", label: "To'lovlar", icon: FiCreditCard },
+  { path: "/journal-reports", label: "Hisobotlar", icon: FiBarChart2 },
 ];
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
@@ -129,7 +129,7 @@ const Sidebar = () => {
 
                   {(!isCollapsed || isMobileOpen) && (
                     <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-bold truncate text-white">Journal Admin</p>
+                      <p className="text-[14px] font-bold truncate text-white">Jurnal Admin</p>
                       <p className="text-[12px] text-white/50 truncate font-medium">{formattedName}</p>
                     </div>
                   )}
@@ -219,10 +219,10 @@ const Sidebar = () => {
               </div>
               
               <h3 className="text-xl font-bold text-gray-900 mb-2">
-                Sign out
+                Tizimdan chiqish
               </h3>
               <p className="text-gray-500 mb-6">
-                Are you sure you want to leave the profile?
+                Chindan ham profilni tark etishni xohlaysizmi?
               </p>
 
               <div className="flex gap-3 w-full">
@@ -230,13 +230,13 @@ const Sidebar = () => {
                   onClick={() => setIsLogoutModalOpen(false)}
                   className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
                 >
-                  Cancel
+                  Bekor qilish
                 </button>
                 <button
                   onClick={confirmLogout}
                   className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors shadow-lg shadow-red-200"
                 >
-                  Yes, log out
+                  Ha, chiqish
                 </button>
               </div>
             </div>

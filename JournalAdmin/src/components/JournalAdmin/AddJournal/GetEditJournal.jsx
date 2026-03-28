@@ -42,7 +42,7 @@ const JournalList = () => {
       setJournals(myJournals);
       setProfile(myJournals[0]?.admin || null);
     } catch (err) {
-      toast.error("Failed to load journals");
+      toast.error("Jurnallarni yuklashda xatolik");
     } finally {
       setLoading(false);
     }
@@ -50,7 +50,7 @@ const JournalList = () => {
 
   useEffect(() => {
     if (!currentAdminId) {
-      toast.error("Admin ID not found. Please login again.");
+      toast.error("Admin ID topilmadi. Iltimos, qayta kiring.");
       setLoading(false);
       return;
     }
@@ -67,12 +67,12 @@ const JournalList = () => {
     try {
       setDeleting(true);
       await journalService.delete(selectedJournal.id);
-      toast.success("Journal deleted successfully");
+      toast.success("Jurnal muvaffaqiyatli o'chirildi");
       setDeleteOpen(false);
       setSelectedJournal(null);
       fetchJournals();
     } catch {
-      toast.error("Failed to delete journal");
+      toast.error("Jurnalni o'chirishda xatolik");
     } finally {
       setDeleting(false);
     }
@@ -112,7 +112,7 @@ const JournalList = () => {
                 </span>
               </div>
               <p className="text-slate-500 font-medium flex items-center gap-2 mt-1 italic">
-                {profile.affiliation || "Academic Research Member"}
+                {profile.affiliation || "Akademik tadqiqot kengashi a'zosi"}
               </p>
             </div>
 
@@ -138,15 +138,15 @@ const JournalList = () => {
       <div className="space-y-6 mt-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">My Journals</h1>
-            <p className="text-slate-500">Manage and monitor your publications effectively.</p>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Mening jurnallarim</h1>
+            <p className="text-slate-500">Nashrlaringizni samarali boshqaring va kuzatib boring.</p>
           </div>
 
           <button
             onClick={() => navigate("/journal-list/addjournal")}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-bold transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 active:scale-95"
           >
-            <FiPlus size={20} /> Add New Journal
+            <FiPlus size={20} /> Yangi jurnal qo'shish
           </button>
         </div>
 
@@ -155,8 +155,8 @@ const JournalList = () => {
             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300">
               <FiBookOpen size={40} />
             </div>
-            <h3 className="text-xl font-bold text-slate-800">No journals found</h3>
-            <p className="text-slate-400 max-w-xs mx-auto text-sm italic">You haven't added any journals yet. Start by clicking the "Add New Journal" button.</p>
+            <h3 className="text-xl font-bold text-slate-800">Jurnallar topilmadi</h3>
+            <p className="text-slate-400 max-w-xs mx-auto text-sm italic">Siz hali hech qanday jurnal qo'shmagansiz. "Yangi jurnal qo'shish" tugmasini bosish orqali boshlang.</p>
           </div>
         ) : (
           <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-[0_5px_15px_rgb(0,0,0,0.02)]">
@@ -164,10 +164,10 @@ const JournalList = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-slate-100">
-                    <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-[0.1em]">Journal Name</th>
-                    <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-[0.1em]">ISSN Number</th>
-                    <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-[0.1em]">Current Status</th>
-                    <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] text-right">Actions</th>
+                    <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-[0.1em]">Jurnal nomi</th>
+                    <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-[0.1em]">ISSN raqami</th>
+                    <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-[0.1em]">Joriy holat</th>
+                    <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] text-right">Amallar</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
@@ -197,14 +197,14 @@ const JournalList = () => {
                           <button
                             onClick={() => navigate(`/journal-list/editjournal/${j.id}`, { state: { journal: j } })}
                             className="p-2.5 text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white rounded-xl transition-all"
-                            title="Edit"
+                            title="Tahrirlash"
                           >
                             <FiEdit2 size={16} />
                           </button>
                           <button
                             onClick={() => openDeleteModal(j)}
                             className="p-2.5 text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white rounded-xl transition-all"
-                            title="Delete"
+                            title="O'chirish"
                           >
                             <FiTrash2 size={16} />
                           </button>
@@ -234,10 +234,10 @@ const JournalList = () => {
         <FiAlertCircle size={32} />
       </div>
 
-      <h3 className="text-2xl font-black text-slate-900 mb-2 leading-tight tracking-tight">Confirm Deletion</h3>
+      <h3 className="text-2xl font-black text-slate-900 mb-2 leading-tight tracking-tight">O'chirishni tasdiqlang</h3>
       <p className="text-slate-500 mb-8 leading-relaxed">
-        Are you sure you want to delete <span className="font-bold text-slate-800 italic underline decoration-rose-200 underline-offset-4 tracking-tight">"{selectedJournal?.name}"</span>? 
-        This process is permanent and data cannot be recovered.
+        Haqiqatan ham <span className="font-bold text-slate-800 italic underline decoration-rose-200 underline-offset-4 tracking-tight">"{selectedJournal?.name}"</span> jurnalini o'chirib tashlamoqchimisiz? 
+        Bu jarayonni qaytarib bo'lmaydi va ma'lumotlarni tiklab bo'lmaydi.
       </p>
 
       <div className="flex gap-3">
@@ -245,14 +245,14 @@ const JournalList = () => {
           onClick={() => setDeleteOpen(false)}
           className="flex-1 px-6 py-4 rounded-2xl border-2 border-slate-100 text-slate-600 font-bold hover:bg-slate-50 transition-all"
         >
-          Keep it
+          Qoldirish
         </button>
         <button
           onClick={confirmDelete}
           disabled={deleting}
           className="flex-[1.5] px-6 py-4 rounded-2xl bg-rose-600 text-white font-bold hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {deleting ? "Processing..." : "Yes, Delete Now"}
+          {deleting ? "Bajarilmoqda..." : "Ha, hozir o'chirilsin"}
         </button>
       </div>
     </div>

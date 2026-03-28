@@ -207,7 +207,7 @@ const JournalEditors = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900">Review Assignments</h1>
+          <h1 className="text-2xl font-extrabold text-slate-900">Taqrizlarni biriktirish</h1>
         </div>
 
         <button
@@ -215,7 +215,7 @@ const JournalEditors = () => {
           onClick={loadAll}
           className="inline-flex items-center justify-center gap-2 bg-white border border-slate-200 px-5 py-2.5 rounded-2xl shadow-sm hover:bg-slate-50 font-semibold text-slate-700"
         >
-          <FiRefreshCw /> Refresh
+          <FiRefreshCw /> Yangilash
         </button>
       </div>
 
@@ -228,7 +228,7 @@ const JournalEditors = () => {
       {/* Assign Form */}
       <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b bg-slate-50/60 font-extrabold text-slate-800">
-          Assign Review
+          Taqrizchini biriktirish
         </div>
 
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -242,7 +242,7 @@ const JournalEditors = () => {
               onChange={handleArticleChange}
               className="w-full rounded-2xl border border-slate-200 px-4 py-3 focus:ring-4 focus:ring-blue-50 outline-none text-sm font-semibold text-slate-700"
             >
-              <option value="">Select article...</option>
+              <option value="">Maqolani tanlang...</option>
               {myArticles.map((a) => {
                 const id = getId(a);
                 return (
@@ -257,7 +257,7 @@ const JournalEditors = () => {
           {/* Assigned By (UI) = Article owner full name, read-only */}
           <div className="md:col-span-2">
             <label className="text-[11px] font-black text-slate-500 mb-2 block ml-1 uppercase">
-              Assigned By
+              Biriktiruvchi (Muallif)
             </label>
             <input
               value={formatNameWithLastInitial(authorFullName)}
@@ -276,7 +276,7 @@ const JournalEditors = () => {
               onChange={(e) => setForm((p) => ({ ...p, editor_id: e.target.value }))}
               className="w-full rounded-2xl border border-slate-200 px-4 py-3 focus:ring-4 focus:ring-blue-50 outline-none text-sm font-semibold text-slate-700"
             >
-              <option value="">Select editor...</option>
+              <option value="">Muharrirni tanlang...</option>
               {editors.map((ed) => {
                 const id = getId(ed);
                 return (
@@ -291,7 +291,7 @@ const JournalEditors = () => {
           {/* Due date */}
           <div>
             <label className="text-[11px] font-black text-slate-500 mb-2 block ml-1 uppercase">
-              Due date
+              Muddat (Due date)
             </label>
             <input
               type="date"
@@ -305,13 +305,13 @@ const JournalEditors = () => {
           {/* Message optional */}
           <div className="md:col-span-2">
             <label className="text-[11px] font-black text-slate-500 mb-2 block ml-1 uppercase">
-              Message (optional)
+              Xabar (ixtiyoriy)
             </label>
             <textarea
               value={form.message}
               onChange={(e) => setForm((p) => ({ ...p, message: e.target.value }))}
               className="w-full rounded-2xl border border-slate-200 p-4 focus:ring-4 focus:ring-blue-50 outline-none min-h-[110px] text-sm leading-relaxed"
-              placeholder="Editor uchun izoh (ixtiyoriy)..."
+              placeholder="Muharrir uchun izoh (ixtiyoriy)..."
             />
           </div>
 
@@ -322,7 +322,7 @@ const JournalEditors = () => {
               onClick={submitAssignment}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#002147] text-white font-extrabold shadow-lg shadow-blue-900/20 hover:bg-blue-900 transition disabled:opacity-60"
             >
-              <FiSend /> {assignLoading ? "Sending..." : "Create Assignment"}
+              <FiSend /> {assignLoading ? "Yuborilmoqda..." : "Topshiriq yaratish"}
             </button>
           </div>
         </div>
@@ -331,7 +331,7 @@ const JournalEditors = () => {
       {/* Editors Table */}
       <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b bg-slate-50/60 font-extrabold text-slate-800">
-          Editors (All)
+          Muharrirlar (Jami)
         </div>
 
         <div className="overflow-x-auto">
@@ -339,9 +339,9 @@ const JournalEditors = () => {
             <thead className="text-left text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-50">
               <tr>
                 <th className="py-4 px-6">ID</th>
-                <th className="py-4 px-6">Full Name</th>
+                <th className="py-4 px-6">F.I.Sh</th>
                 <th className="py-4 px-6">Email</th>
-                <th className="py-4 px-6">Phone</th>
+                <th className="py-4 px-6">Telefon</th>
               </tr>
             </thead>
 

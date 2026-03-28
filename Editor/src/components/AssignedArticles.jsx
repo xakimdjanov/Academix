@@ -25,11 +25,11 @@ const AssignedArticles = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   
   const statusOptions = [
-    { value: 'all', label: 'All Statuses' },
-    { value: 'submitted', label: 'Submitted' },
-    { value: 'revision', label: 'Revision' },
-    { value: 'rejected', label: 'Rejected' },
-    { value: 'accepted', label: 'Accepted' },
+    { value: 'all', label: 'Barcha holatlar' },
+    { value: 'submitted', label: 'Yuborilgan' },
+    { value: 'revision', label: 'Tahrirda' },
+    { value: 'rejected', label: 'Rad etilgan' },
+    { value: 'accepted', label: 'Qabul qilingan' },
   ];
 
   const loadAssignments = async () => {
@@ -44,7 +44,7 @@ const AssignedArticles = () => {
       setFilteredAssignments(myAssignments);
     } catch (error) {
       console.error('Error loading assignments:', error);
-      toast.error('Failed to load assignments');
+      toast.error('Topshiriqlarni yuklashda xatolik');
     } finally {
       setLoading(false);
     }
@@ -82,11 +82,9 @@ const AssignedArticles = () => {
 
   const formatDate = (date) => {
     if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+    const d = new Date(date);
+    const months = ["Yan", "Feb", "Mar", "Apr", "May", "Iyun", "Iyul", "Avg", "Sen", "Okt", "Noy", "Dek"];
+    return `${d.getDate()}-${months[d.getMonth()]}, ${d.getFullYear()}`;
   };
 
   if (loading) {
@@ -104,10 +102,10 @@ const AssignedArticles = () => {
         {/* Header Section */}
         <div className="mb-6 md:mb-10">
           <h1 className="text-2xl md:text-3xl font-extrabold text-[#002147] tracking-tight">
-            Assigned Articles
+            Biriktirilgan maqolalar
           </h1>
           <p className="text-slate-500 text-sm md:text-base mt-1">
-            Manage and evaluate your pending review tasks
+            Kelib tushgan taqriz topshiriqlarini boshqaring va baholang
           </p>
         </div>
 
@@ -117,7 +115,7 @@ const AssignedArticles = () => {
             <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search papers..."
+              placeholder="Maqolalarni qidirish..."
               className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 bg-white outline-none transition-all shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -155,7 +153,11 @@ const AssignedArticles = () => {
                     <div className="min-w-0 flex-grow">
                       <div className="flex flex-wrap items-center gap-2 mb-2">
                         <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${getStatusBadgeClass(item.article?.status)}`}>
-                          {item.article?.status || 'Submitted'}
+                          {item.article?.status === 'submitted' ? 'Yuborilgan' : 
+                           item.article?.status === 'revision' ? 'Tahrirda' :
+                           item.article?.status === 'rejected' ? 'Rad etilgan' :
+                           item.article?.status === 'accepted' ? 'Qabul qilingan' :
+                           item.article?.status || 'Yuborilgan'}
                         </span>
                         <h3 className="text-base md:text-lg font-bold text-slate-800 truncate pr-2">
                           {item.article?.title}
@@ -163,10 +165,10 @@ const AssignedArticles = () => {
                       </div>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs md:text-sm text-slate-500">
                         <span className="flex items-center gap-1.5 min-w-fit">
-                          <FiUser className="shrink-0" /> {item.article?.authors?.[0]?.fullName || 'Unknown Author'}
+                          <FiUser className="shrink-0" /> {item.article?.authors?.[0]?.fullName || 'Noma\'lum muallif'}
                         </span>
                         <span className="flex items-center gap-1.5 min-w-fit">
-                          <FiCalendar className="shrink-0" /> Assigned: {formatDate(item.assigned_at)}
+                          <FiCalendar className="shrink-0" /> Biriktirilgan: {formatDate(item.assigned_at)}
                         </span>
                       </div>
                     </div>
@@ -175,7 +177,7 @@ const AssignedArticles = () => {
                   {/* Actions Section */}
                   <div className="flex items-center justify-between md:justify-end gap-4 md:gap-8 pt-4 md:pt-0 border-t md:border-t-0 border-slate-50">
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-400 uppercase font-bold mb-0.5">Due Date</span>
+                      <span className="text-[10px] text-slate-400 uppercase font-bold mb-0.5">Topshirish muddati</span>
                       <div className="flex items-center gap-1.5 text-sm font-semibold text-orange-600">
                         <FiClock size={14} />
                         {formatDate(item.due_date)}
@@ -185,7 +187,7 @@ const AssignedArticles = () => {
                       onClick={() => navigate(`/review/${item.id}`)}
                       className="bg-[#002147] text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-blue-900 active:scale-95 transition-all flex items-center gap-2 shadow-sm"
                     >
-                      View <FiChevronRight className="hidden md:block" />
+                      Ko'rish <FiChevronRight className="hidden md:block" />
                     </button>
                   </div>
 
@@ -197,8 +199,8 @@ const AssignedArticles = () => {
               <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FiInbox className="text-slate-300 text-3xl" />
               </div>
-              <h3 className="text-slate-800 font-bold text-lg">No assignments found</h3>
-              <p className="text-slate-400 text-sm mt-1">Try adjusting your search or filter criteria.</p>
+              <h3 className="text-slate-800 font-bold text-lg">Topshiriqlar topilmadi</h3>
+              <p className="text-slate-400 text-sm mt-1">Qidiruv yoki filtr parametrlarini o'zgartirib ko'ring.</p>
             </div>
           )}
         </div>

@@ -29,8 +29,17 @@ const StatusBadge = ({ status }) => {
     Published: "bg-purple-50 text-purple-700 ring-purple-200",
   };
 
+  const statusMapUz = {
+    Submitted: "Yuborilgan",
+    "Under Review": "Taqrizda",
+    "Needs Revision": "Tahrirda",
+    Accepted: "Qabul qilingan",
+    Rejected: "Rad etilgan",
+    Published: "Nashr etilgan",
+  };
+
   const cls = map[status] || "bg-gray-50 text-gray-700 ring-gray-200";
-  return <span className={`${base} ${cls}`}>{status || "Unknown"}</span>;
+  return <span className={`${base} ${cls}`}>{statusMapUz[status] || status || "Noma'lum"}</span>;
 };
 
 const StatCard = ({ title, value, icon, hint }) => (
@@ -63,7 +72,7 @@ const Dashboard = () => {
 
   const fetchData = async () => {
     if (!userId) {
-      toast.error("User not found");
+      toast.error("Foydalanuvchi topilmadi");
       return;
     }
 
@@ -89,7 +98,7 @@ const Dashboard = () => {
       setArticles(myArticles);
       setNotifications(myNotifications);
     } catch (e) {
-      toast.error("Failed to load dashboard data");
+      toast.error("Ma'lumotlarni yuklashda xatolik yuz berdi");
     } finally {
       setLoading(false);
     }
@@ -140,19 +149,19 @@ const Dashboard = () => {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h1 className="truncate text-xl sm:text-2xl font-bold text-gray-900">
-                  My Dashboard
+                  Mening boshqaruv panelim
                 </h1>
 
                 {unreadNotifCount > 0 && (
                   <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 ring-1 ring-blue-200">
                     <FiBell />
-                    {formatBadge(unreadNotifCount)} unread
+                    {formatBadge(unreadNotifCount)} ta o'qilmagan
                   </span>
                 )}
               </div>
 
               <p className="mt-1 text-sm text-gray-500">
-                Track your article status and latest updates
+                Maqolalaringiz holati va so'nggi yangilanishlarni kuzatib boring
               </p>
             </div>
 
@@ -162,7 +171,7 @@ const Dashboard = () => {
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
               >
                 <FiBell />
-                Notifications
+                Bildirishnomalar
                 <FiArrowUpRight />
               </button>
 
@@ -172,7 +181,7 @@ const Dashboard = () => {
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-60"
               >
                 <FiRefreshCw className={loading ? "animate-spin" : ""} />
-                Refresh
+                Yangilash
               </button>
             </div>
           </div>
@@ -183,40 +192,40 @@ const Dashboard = () => {
         {/* STATISTICS GRID */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard
-            title="Total Submitted"
+            title="Jami yuborilgan"
             value={stats.total}
             icon={<FiFileText />}
-            hint="All your submissions"
+            hint="Barcha yuborilgan maqolalar"
           />
           <StatCard
-            title="Under Review"
+            title="Taqrizda"
             value={stats.review}
             icon={<FiClock />}
-            hint="Currently being reviewed"
+            hint="Hozirda taqriz jarayonida"
           />
           <StatCard
-            title="Needs Revision"
+            title="Tahrirda"
             value={stats.revision}
             icon={<FiUpload />}
-            hint="Requires updates"
+            hint="Tahrir qilish lozim"
           />
           <StatCard
-            title="Accepted"
+            title="Qabul qilingan"
             value={stats.accepted}
             icon={<FiCheckCircle />}
-            hint="Approved articles"
+            hint="Qabul qilingan maqolalar"
           />
           <StatCard
-            title="Rejected"
+            title="Rad etilgan"
             value={stats.rejected}
             icon={<FiXCircle />}
-            hint="Not accepted"
+            hint="Rad etilgan maqolalar"
           />
           <StatCard
-            title="Published"
+            title="Nashr etilgan"
             value={stats.published}
             icon={<FiCheckCircle />}
-            hint="Published articles"
+            hint="Nashr etilgan maqolalar"
           />
         </div>
 
@@ -226,20 +235,20 @@ const Dashboard = () => {
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div className="text-sm font-bold text-gray-900">
-                Recent Articles
+                So'nggi maqolalar
               </div>
               <button
                 onClick={() => navigate("/my-articles")}
                 className="text-xs font-semibold text-gray-600 hover:text-gray-900"
               >
-                View all
+                Hammasini ko'rish
               </button>
             </div>
 
             <div className="mt-4 space-y-3">
               {recentArticles.length === 0 && (
                 <div className="rounded-xl border border-dashed border-gray-200 p-4 text-sm text-gray-600">
-                  No articles found
+                  Maqolalar topilmadi
                 </div>
               )}
 
@@ -267,20 +276,20 @@ const Dashboard = () => {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-sm font-bold text-gray-900">
                 <FiBell />
-                Recent Notifications
+                So'nggi bildirishnomalar
               </div>
               <button
                 onClick={() => navigate("/notifications")}
                 className="text-xs font-semibold text-gray-600 hover:text-gray-900"
               >
-                View all
+                Hammasini ko'rish
               </button>
             </div>
 
             <div className="mt-4 space-y-3">
               {recentNotifications.length === 0 && (
                 <div className="rounded-xl border border-dashed border-gray-200 p-4 text-sm text-gray-600">
-                  No notifications yet
+                  Hozircha bildirishnomalar yo'q
                 </div>
               )}
 
@@ -312,7 +321,7 @@ const Dashboard = () => {
                           </div>
                           {isUnread && (
                             <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">
-                              UNREAD
+                              OʻQILMAGAN
                             </span>
                           )}
                         </div>
@@ -335,7 +344,7 @@ const Dashboard = () => {
 
         {/* Mobile helper text */}
         <div className="mt-6 text-center text-xs text-gray-500 sm:hidden">
-          Tip: Click “Refresh” to update • Unread notifications appear as a badge
+          Maslahat: Yangilash uchun "Yangilash" tugmasini bosing • O'qilmagan bildirishnomalar belgi shaklida ko'rinadi
         </div>
       </div>
     </div>

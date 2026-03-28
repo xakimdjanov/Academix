@@ -188,10 +188,10 @@ const AddJournal = () => {
           <div className="grid gap-4 sm:grid-cols-2">
             <Input icon={FiGlobe} label="Veb-sayt URL" name="website_url" value={form.website_url} onChange={onChange} />
             <Input icon={FiImage} label="Muqova rasmi (URL)" name="cover_image_url" value={form.cover_image_url} onChange={onChange} />
-            <Select icon={FiInfo} label="Status" name="status" value={form.status} onChange={onChange}>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-              <option value="Draft">Draft</option>
+            <Select icon={FiInfo} label="Holati (Status)" name="status" value={form.status} onChange={onChange}>
+              <option value="Active">Faol (Active)</option>
+              <option value="Inactive">Nofaol (Inactive)</option>
+              <option value="Draft">Qoralama (Draft)</option>
             </Select>
           </div>
 

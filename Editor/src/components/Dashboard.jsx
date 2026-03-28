@@ -43,7 +43,7 @@ const Dashboard = () => {
           pending: myData.filter(a => ['Under Review', 'submitted'].includes(a.article?.status)).length,
         });
       } catch (error) {
-        toast.error("Failed to fetch analytics data");
+        toast.error("Analitika ma'lumotlarini yuklashda xatolik");
       } finally {
         setLoading(false);
       }
@@ -60,7 +60,9 @@ const Dashboard = () => {
         d.setDate(d.getDate() - i);
         const dateStr = d.toISOString().split('T')[0];
         const count = rawAssignments.filter(a => a.createdAt?.startsWith(dateStr)).length;
-        return { name: d.toLocaleDateString('en-US', { weekday: 'short' }), reviews: count };
+        const days = { Mon: 'Dush', Tue: 'Sesh', Wed: 'Chor', Thu: 'Pay', Fri: 'Jum', Sat: 'Shan', Sun: 'Yak' };
+        const enDay = d.toLocaleDateString('en-US', { weekday: 'short' });
+        return { name: days[enDay] || enDay, reviews: count };
       }).reverse();
     } else {
       // Oxirgi 4 hafta (Oylik ko'rinish)
@@ -75,7 +77,7 @@ const Dashboard = () => {
           return createDate >= start && createDate <= end;
         }).length;
         
-        return { name: `Week ${4 - i}`, reviews: count };
+        return { name: `${4 - i}-hafta`, reviews: count };
       }).reverse();
     }
   }, [rawAssignments, viewType]);
@@ -93,30 +95,30 @@ const Dashboard = () => {
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-4xl font-black text-[#002147] tracking-tight">Analytics Dashboard</h1>
+            <h1 className="text-4xl font-black text-[#002147] tracking-tight">Analitika paneli</h1>
           </div>
           <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-200">
             <button 
               onClick={() => setViewType('weekly')}
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewType === 'weekly' ? 'bg-[#002147] text-white' : 'text-slate-400'}`}
             >
-              Weekly
+              Haftalik
             </button>
             <button 
               onClick={() => setViewType('monthly')}
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewType === 'monthly' ? 'bg-[#002147] text-white' : 'text-slate-400'}`}
             >
-              Monthly
+              Oylik
             </button>
           </div>
         </header>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard title="Total Assignments" value={stats.total} icon={<FiFileText />} color="blue" />
-          <StatCard title="Accepted" value={stats.accepted} icon={<FiCheckCircle />} color="green" />
-          <StatCard title="In Revision" value={stats.revision} icon={<FiClock />} color="yellow" />
-          <StatCard title="Rejected" value={stats.rejected} icon={<FiXCircle />} color="red" />
+          <StatCard title="Jami topshiriqlar" value={stats.total} icon={<FiFileText />} color="blue" />
+          <StatCard title="Qabul qilingan" value={stats.accepted} icon={<FiCheckCircle />} color="green" />
+          <StatCard title="Tahrirda" value={stats.revision} icon={<FiClock />} color="yellow" />
+          <StatCard title="Rad etilgan" value={stats.rejected} icon={<FiXCircle />} color="red" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -124,7 +126,7 @@ const Dashboard = () => {
           <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
             <div className="flex justify-between items-center mb-8">
               <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                <FiTrendingUp className="text-blue-600" /> Review Activity ({viewType})
+                <FiTrendingUp className="text-blue-600" /> Taqriz faolligi ({viewType === 'weekly' ? 'Haftalik' : 'Oylik'})
               </h3>
             </div>
             <div className="h-[350px] w-full">
@@ -151,7 +153,7 @@ const Dashboard = () => {
 
           {/* Donut Chart */}
           <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 flex flex-col items-center">
-            <h3 className="font-bold text-slate-800 text-lg mb-6 self-start">Distribution</h3>
+            <h3 className="font-bold text-slate-800 text-lg mb-6 self-start">Taqsimot</h3>
             <div className="h-[250px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -174,10 +176,15 @@ const Dashboard = () => {
               </ResponsiveContainer>
             </div>
             <div className="grid grid-cols-2 gap-4 w-full mt-8">
-              {['Accepted', 'Rejected', 'Revision', 'Pending'].map((label, i) => (
-                <div key={label} className="flex items-center gap-2">
+              {[
+                { label: 'Qabul qilingan', key: 'Accepted' },
+                { label: 'Rad etilgan', key: 'Rejected' },
+                { label: 'Tahrirda', key: 'Revision' },
+                { label: 'Kutilmoqda', key: 'Pending' }
+              ].map((item, i) => (
+                <div key={item.key} className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full" style={{backgroundColor: COLORS[i]}}></div>
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">{label}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{item.label}</span>
                 </div>
               ))}
             </div>
