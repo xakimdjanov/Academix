@@ -13,11 +13,14 @@ import {
   FiChevronRight,
   FiAlertTriangle,
   FiCheck,
+  FiPlus,
+  FiShield,
 } from "react-icons/fi";
 
 const links = [
   { name: "Asosiy panel", path: "/dashboard", icon: <FiHome /> },
   { name: "Foydalanuvchilar", path: "/users", icon: <FiUsers /> },
+  { name: "Journal Adminlar", path: "/journal-admins", icon: <FiShield /> },
   { name: "Jurnallar", path: "/journals", icon: <FiBookOpen /> },
   { name: "Maqolalar", path: "/articles", icon: <FiFileText /> },
   { name: "Muharrirlar", path: "/editor", icon: <FiEdit3 /> },
@@ -149,43 +152,36 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         </div>
       </aside>
 
-      {/* ✅ Confirm Logout Modal (English) */}
+      {/* ✅ Confirm Logout Modal */}
       {confirmOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/50" onClick={() => setConfirmOpen(false)} />
-
-          {/* Modal */}
-          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
-            <div className="p-5 border-b border-gray-100 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
-                <FiAlertTriangle />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setConfirmOpen(false)} />
+          <div className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden animate-in zoom-in-95">
+            <div className="p-8 text-center">
+              <div className="w-20 h-20 rounded-3xl bg-red-50 text-red-600 flex items-center justify-center border border-red-100 mx-auto mb-6">
+                <FiLogOut size={40} />
               </div>
-              <div className="min-w-0">
-                <h3 className="font-bold text-gray-800">Chiqishni tasdiqlash</h3>
-                <p className="text-sm text-gray-500">
-                  Haqiqatan ham hisobingizdan chiqmoqchimisiz?
-                </p>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">Chiqish</h3>
+              <p className="text-gray-500 leading-relaxed mb-8">
+                Haqiqatan ham tizimdan chiqishni xohlaysizmi?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setConfirmOpen(false);
+                    doLogout();
+                  }}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-red-600 text-white font-bold hover:bg-red-700 transition shadow-lg shadow-red-100"
+                >
+                  <FiCheck /> Chiqish
+                </button>
+                <button
+                  onClick={() => setConfirmOpen(false)}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition"
+                >
+                  <FiX /> Bekor qilish
+                </button>
               </div>
-            </div>
-
-            <div className="p-5 flex gap-3">
-              <button
-                onClick={() => {
-                  setConfirmOpen(false);
-                  doLogout();
-                }}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition"
-              >
-                <FiCheck /> Yes, Sign Out
-              </button>
-
-              <button
-                onClick={() => setConfirmOpen(false)}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 transition"
-              >
-                <FiX /> Cancel
-              </button>
             </div>
           </div>
         </div>

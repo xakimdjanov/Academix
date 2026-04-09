@@ -11,6 +11,7 @@ import Logs from "./components/Logs";
 import Settings from "./components/Settings";
 import Users from "./components/Users";
 import Articles from "./components/Articles";
+import JournalAdmins from "./components/JournalAdmins";
 
 import AdminLayout from "./Layout/AdminLayout";
 
@@ -41,6 +42,7 @@ const App = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/logs" element={<Logs />} />
           <Route path="/journals" element={<Journals />} />
+          <Route path="/journal-admins" element={<JournalAdmins />} />
         </Route>
 
         {/* Not found */}

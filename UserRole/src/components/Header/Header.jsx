@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { userService } from "../../services/api";
+import RoleSelectionModal from "../RoleSelectionModal";
 
 const NAV_ITEMS = [
   { to: "/", label: "Bosh sahifa" },
@@ -30,6 +31,7 @@ function buildAvatarUrl(raw) {
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [user, setUser] = useState(null);
 
   const location = useLocation();
@@ -139,12 +141,12 @@ const Header = () => {
           <div className="hidden md:flex items-center gap-3 lg:gap-4">
             {!isLoggedIn ? (
               <>
-                <Link
-                  to="/signin"
+                <button
+                  onClick={() => setIsRoleModalOpen(true)}
                   className="text-gray-300 hover:text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition"
                 >
                   Kirish
-                </Link>
+                </button>
 
                 <Link
                   to="/signup"
@@ -193,12 +195,12 @@ const Header = () => {
           {/* Mobile Menu Toggle */}
           <div className="md:hidden flex items-center gap-2">
             {!isLoggedIn ? (
-              <Link
-                to="/signin"
+              <button
+                onClick={() => setIsRoleModalOpen(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all active:scale-95"
               >
                 Kirish
-              </Link>
+              </button>
             ) : (
               <Link
                 to="/dashboard"
@@ -326,13 +328,15 @@ const Header = () => {
             <div className="mt-6 pt-5 border-t border-white/10 space-y-3">
               {!isLoggedIn ? (
                 <>
-                  <Link
-                    to="/signin"
-                    onClick={closeMenu}
+                  <button
+                    onClick={() => {
+                      closeMenu();
+                      setIsRoleModalOpen(true);
+                    }}
                     className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-bold transition shadow-lg active:scale-[0.99]"
                   >
                     Kirish
-                  </Link>
+                  </button>
 
                   <Link
                     to="/signup"
@@ -370,6 +374,10 @@ const Header = () => {
           </div>
         </div>
       </div>
+      <RoleSelectionModal 
+        isOpen={isRoleModalOpen} 
+        onClose={() => setIsRoleModalOpen(false)} 
+      />
     </header>
   );
 };

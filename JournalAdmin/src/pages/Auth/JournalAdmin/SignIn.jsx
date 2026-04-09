@@ -151,15 +151,6 @@ const SignIn = () => {
             {loading ? "Signing in..." : "Sign In"}
           </button>
 
-          <p className="text-sm text-center text-[#6B7280]">
-            Don’t have an account?{" "}
-            <Link
-              to="/journal-signup"
-              className="text-[#1F4F8F] font-semibold hover:underline"
-            >
-              Sign Up
-            </Link>
-          </p>
         </form>
       </div>
     </div>
