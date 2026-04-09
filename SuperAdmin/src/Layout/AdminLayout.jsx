@@ -27,14 +27,14 @@ const AdminLayout = () => {
           </div>
           <button 
             onClick={toggleSidebar}
-            className="p-2 bg-gray-50 text-gray-600 rounded-lg border border-gray-100"
+            className="p-2 bg-white text-gray-600 rounded-lg border border-gray-100"
           >
             <FiMenu size={20} />
           </button>
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto bg-gray-50/50 relative">
+        <main className="flex-1 overflow-y-auto bg-white relative">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>
