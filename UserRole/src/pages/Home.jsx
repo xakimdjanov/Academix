@@ -66,17 +66,17 @@ const Home = () => {
     <div className="bg-white overflow-hidden">
       {/* 🚀 1. HERO SECTION */}
       <section className="relative pt-20 pb-20 md:pt-32 md:pb-32 bg-gradient-to-br from-[#002147] via-[#003366] to-[#001a33] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="text-center lg:text-left animate-in fade-in slide-in-from-left duration-1000">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+          <div className="flex flex-col items-center gap-12">
+            <div className="max-w-4xl animate-in fade-in slide-in-from-bottom duration-1000">
               <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
                 Akademik <span className="text-blue-400">Jurnallarni</span> bitta platformada nashr eting va boshqaring
               </h1>
-              <p className="mt-6 text-lg md:text-xl text-blue-100/80 max-w-2xl mx-auto lg:mx-0">
+              <p className="mt-6 text-lg md:text-xl text-blue-100/80 max-w-2xl mx-auto">
                 Ilmiy maqolalarni to'liq shaffoflik bilan yuboring, taqrizdan o'tkazing va nashr eting. 
                 Bizning zamonaviy boshqaruv tizimimiz bilan tahririyat ish jarayonini soddalashtiring.
               </p>
-              <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   to="/submit-article"
                   className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg transition-all shadow-xl shadow-blue-500/20 active:scale-95 flex items-center justify-center gap-2"
@@ -90,26 +90,11 @@ const Home = () => {
                   Jurnallarni ko'rish <FiSearch />
                 </Link>
               </div>
-              <div className="mt-8 flex items-center justify-center lg:justify-start gap-4 text-sm text-blue-200/60">
+              <div className="mt-8 flex items-center justify-center gap-4 text-sm text-blue-200/60">
                 <span className="flex items-center gap-1"><FiCheckCircle className="text-blue-400" /> taqriz qilinadigan</span>
                 <span className="flex items-center gap-1"><FiCheckCircle className="text-blue-400" /> ochiq kirish</span>
                 <span className="flex items-center gap-1"><FiCheckCircle className="text-blue-400" /> xavfsiz</span>
               </div>
-            </div>
-
-            <div className="relative animate-in fade-in slide-in-from-right duration-1000">
-              <div className="relative z-10 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-2 shadow-2xl">
-                <div className="bg-[#001a33] rounded-xl overflow-hidden border border-white/5 aspect-video flex items-center justify-center text-blue-400 font-mono text-xs md:text-sm">
-                  {/* Placeholder for real dashboard screenshot */}
-                  <div className="flex flex-col items-center gap-4 opacity-50">
-                    <FiActivity size={48} />
-                    <span>[ Dashboard interaktiv ko'rinishi ]</span>
-                  </div>
-                </div>
-              </div>
-              {/* Decorative Glow */}
-              <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-500/20 rounded-full blur-[100px] pointer-events-none"></div>
-              <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-indigo-500/20 rounded-full blur-[100px] pointer-events-none"></div>
             </div>
           </div>
         </div>
