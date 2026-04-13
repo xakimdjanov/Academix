@@ -6,6 +6,7 @@ import RoleSelectionModal from "../RoleSelectionModal";
 const NAV_ITEMS = [
   { to: "/", label: "Bosh sahifa" },
   { to: "/journals", label: "Jurnallar" },
+  { to: "/articles", label: "Maqolalar" },
   { to: "/pricing", label: "Tariflar" },
   { to: "/about", label: "Haqida" },
   { to: "/contact", label: "Bog'lanish" },

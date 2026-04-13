@@ -29,12 +29,14 @@ const Journals = () => {
     return ["Barchasi", ...Array.from(cats)];
   }, [journals]);
 
-  const filtered = journals.filter(j => {
-    const matchesSearch = (j.name || j.journal_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (j.description || j.short_description || "").toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "Barchasi" || (j.category || "Kategoriyasiz") === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filtered = journals
+    .filter(j => {
+      const matchesSearch = (j.name || j.journal_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            (j.description || j.short_description || "").toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === "Barchasi" || (j.category || "Kategoriyasiz") === selectedCategory;
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
 
   return (
     <div className="bg-[#F6F8FB] min-h-screen">

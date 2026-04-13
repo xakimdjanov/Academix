@@ -25,6 +25,7 @@ import SignIn from "./pages/Auth/SignIn";
 import ForgotPass from "./pages/ForgotPass";
 import ResetPass from "./pages/ResetPass";
 import ArticleDetails from "./pages/ArticleDetails";
+import MyArticleDetail from "./pages/MyArticleDetail";
 import Chat from "./components/Chat";
 import MyArticleComments from "./components/MyArticleComments";
 import MyComments from "./components/MyComments";
@@ -75,6 +76,7 @@ const App = () => {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="my-profile" element={<MyProfile />} />
           <Route path="my-articles" element={<MyArticles />} />
+          <Route path="my-articles/:id" element={<MyArticleDetail />} />
           <Route path="article-comments" element={<MyArticleComments />} />
           <Route path="my-comments" element={<MyComments />} />
           <Route path="notifications" element={<Notifications />} />

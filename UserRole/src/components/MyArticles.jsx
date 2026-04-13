@@ -1,9 +1,47 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { FiEye, FiRefreshCw, FiSearch, FiX } from "react-icons/fi";
+import { FiEye, FiRefreshCw, FiSearch, FiX, FiCheckCircle, FiClock, FiMessageSquare } from "react-icons/fi";
 import toast, { Toaster } from "react-hot-toast";
 import { articleService } from "../services/api";
 import { getUserIdFromToken } from "../utils/getUserIdFromToken";
+
+const Timeline = ({ status }) => {
+  const steps = [
+    { key: "Submitted", label: "Yuborilgan" },
+    { key: "Under Review", label: "Taqriz jarayonida" },
+    { key: "Needs Revision", label: "Tuzatish kiritilishi kerak" },
+    { key: "Accepted", label: "Qabul qilingan" },
+    { key: "Published", label: "Nashr etilgan" },
+  ];
+  const rejected = status === "Rejected";
+  const indexOf = (k) => steps.findIndex((s) => s.key === k);
+  const currentIndex = rejected ? indexOf("Under Review") : indexOf(status);
+
+  return (
+    <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-6">
+      <div className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6">Holat xronologiyasi</div>
+      <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
+        {steps.map((s, idx) => {
+          const done = !rejected && currentIndex >= idx;
+          const active = !rejected && status === s.key;
+          return (
+            <div key={s.key} className="flex flex-col items-center text-center gap-2">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${
+                  done ? "bg-gray-900 border-gray-900 text-white shadow-lg" : 
+                  active ? "border-gray-900 text-gray-900 animate-pulse" : "border-gray-200 text-gray-300"
+                }`}>
+                {done ? <FiCheckCircle size={18} /> : <FiClock size={18} />}
+              </div>
+              <div>
+                <div className={`text-[10px] font-bold uppercase tracking-tighter ${done || active ? 'text-gray-900' : 'text-gray-400'}`}>{s.label}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 const formatDate = (iso) => {
   if (!iso) return "—";
@@ -349,9 +387,26 @@ const MyArticles = () => {
                 </div>
               </div>
 
+              {/* Timeline Section */}
+              <div className="mt-8 pt-6 border-t border-gray-100">
+                 <Timeline status={selected?.status} />
+              </div>
+
+              {/* Editor Comments Section */}
+              {selected?.editor_comment && (
+                <div className="mt-8 pt-6 border-t border-gray-100">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3 flex items-center gap-2">
+                    <FiMessageSquare className="text-amber-500" /> Tahririyat izohlari
+                  </div>
+                  <div className="rounded-xl bg-amber-50 p-5 text-sm text-amber-900 border border-amber-100 leading-relaxed italic">
+                    {selected.editor_comment}
+                  </div>
+                </div>
+              )}
+
               {/* File Section */}
               {selected?.file_url && (
-                <div className="mt-10 pt-6 border-t border-gray-200">
+                <div className="mt-8 pt-6 border-t border-gray-200">
                   <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
                     Qo'lyozma fayli
                   </div>
@@ -371,7 +426,7 @@ const MyArticles = () => {
             {/* Footer */}
             <div className="border-t border-gray-200 bg-gray-50 px-6 py-5 flex justify-end">
               <Link
-                to={`/articles/${selected.id}`}
+                to={`/dashboard/my-articles/${selected.id}`}
                 className="inline-flex items-center gap-3 rounded-xl bg-gray-900 px-8 py-4 text-base font-semibold text-white hover:bg-black transition shadow-md"
                 onClick={() => setSelected(null)}
               >

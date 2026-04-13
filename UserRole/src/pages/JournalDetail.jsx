@@ -9,7 +9,8 @@ import {
   FiAward,
   FiEye,
   FiLayers,
-  FiChevronRight
+  FiChevronRight,
+  FiMessageSquare
 } from "react-icons/fi";
 import { journalService, articleService, settingsService } from "../services/api";
 
@@ -20,6 +21,7 @@ const JournalDetail = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("about");
+  const isLoggedIn = !!localStorage.getItem("token");
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -154,6 +156,7 @@ const JournalDetail = () => {
                   </div>
                </div>
             )}
+
 
             {activeTab === 'articles' && (
                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">

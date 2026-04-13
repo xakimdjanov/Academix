@@ -26,49 +26,7 @@ const formatDate = (iso) => {
   return d.toLocaleString();
 };
 
-const Timeline = ({ status }) => {
-  const steps = [
-    { key: "Submitted", label: "Yuborilgan" },
-    { key: "Under Review", label: "Taqriz jarayonida" },
-    { key: "Needs Revision", label: "Tuzatish kiritilishi kerak" },
-    { key: "Accepted", label: "Qabul qilingan" },
-    { key: "Published", label: "Nashr etilgan" },
-  ];
-  const rejected = status === "Rejected";
-  const indexOf = (k) => steps.findIndex((s) => s.key === k);
-  const currentIndex = rejected ? indexOf("Under Review") : indexOf(status);
 
-  return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-      <div className="text-sm font-black text-[#002147] uppercase tracking-widest mb-6">Holat xronologiyasi</div>
-      <div className="space-y-6">
-        {steps.map((s, idx) => {
-          const done = !rejected && currentIndex >= idx;
-          const active = !rejected && status === s.key;
-          return (
-            <div key={s.key} className="flex items-center gap-4 relative">
-              {idx < steps.length - 1 && (
-                 <div className={`absolute left-[17px] top-9 w-0.5 h-6 ${done ? 'bg-gray-900' : 'bg-gray-100'}`}></div>
-              )}
-              <div className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all ${
-                  done ? "bg-[#002147] border-[#002147] text-white shadow-lg shadow-blue-900/20" : 
-                  active ? "border-[#002147] text-[#002147] animate-pulse" : "border-gray-100 text-gray-300"
-                }`}>
-                {done ? <FiCheckCircle size={16} /> : <FiClock size={16} />}
-              </div>
-              <div>
-                <div className={`text-sm font-bold ${done || active ? 'text-[#002147]' : 'text-gray-400'}`}>{s.label}</div>
-                <div className="text-[10px] font-medium text-gray-400 uppercase tracking-tighter">
-                  {active ? "Joriy bosqich" : done ? "Yakunlangan" : "Kutilmoqda"}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
 
 const ArticleDetails = () => {
   const { id } = useParams();
@@ -190,19 +148,7 @@ const ArticleDetails = () => {
                 <h1 className="text-2xl md:text-4xl font-black mb-4 leading-tight">{article.title}</h1>
                 <div className="flex flex-wrap gap-4 text-sm text-blue-200/60 font-medium">
                    <span>Nashr etilgan: {formatDate(article.createdAt)}</span>
-                   <span>•</span>
-                   <span>Holati: {article.status}</span>
                 </div>
-             </div>
-             <div className="mt-4 md:mt-0">
-                <a 
-                  href={article.file_url} 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="px-8 py-4 bg-white text-[#002147] rounded-2xl font-black text-sm transition-all shadow-xl hover:-translate-y-1 active:scale-95 flex items-center gap-2"
-                >
-                   PDF YUKLASH <FiExternalLink />
-                </a>
              </div>
           </div>
         </div>
@@ -212,6 +158,18 @@ const ArticleDetails = () => {
       {/* 📄 Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20 grid grid-cols-1 lg:grid-cols-12 gap-8">
          <div className="lg:col-span-8 space-y-8">
+            {/* Editor Comments (Visible only to Author) */}
+            {isAuthor && article.editor_comment && (
+              <div className="bg-amber-50 rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-amber-100 animate-in fade-in duration-700">
+                <h2 className="text-2xl font-black text-[#002147] mb-6 flex items-center gap-3">
+                   <FiMessageSquare className="text-amber-600" /> Tahririyat izohlari
+                </h2>
+                <div className="text-amber-900 leading-relaxed text-lg whitespace-pre-wrap italic">
+                   {article.editor_comment}
+                </div>
+              </div>
+            )}
+
             {/* Abstract */}
             <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-gray-50">
                <h2 className="text-2xl font-black text-[#002147] mb-6 flex items-center gap-3">
@@ -310,8 +268,6 @@ const ArticleDetails = () => {
 
          {/* 🪜 Sidebar */}
          <aside className="lg:col-span-4 space-y-8">
-            {isAuthor && <Timeline status={article.status} />}
-            
             <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-50">
                <h3 className="text-lg font-black text-[#002147] mb-6 uppercase tracking-widest text-sm">Kalit so'zlar</h3>
                <div className="flex flex-wrap gap-2">
@@ -323,18 +279,7 @@ const ArticleDetails = () => {
                </div>
             </div>
 
-            <div className="bg-[#002147] rounded-[2.5rem] p-8 shadow-sm text-white relative overflow-hidden">
-               <div className="relative z-10">
-                  <h3 className="text-xl font-bold mb-4 italic text-sm uppercase tracking-widest text-blue-200">Meta-ma'lumotlar</h3>
-                  <div className="space-y-3 text-xs opacity-70">
-                     <p>Fayl hajmi: {(article.file_size / 1024 / 1024).toFixed(2)} MB</p>
-                     <p>Jurnal: {article.journal?.name || "Global Science Journal"}</p>
-                     <p>Til: {article.language || "O'zbek"}</p>
-                     <p>To'lov qilingan: {article.apc_paid ? "✅ Ha" : "❌ Yo'q"}</p>
-                  </div>
-               </div>
-               <FiExternalLink className="absolute -bottom-4 -right-4 text-white/5 size-32" />
-            </div>
+
          </aside>
       </main>
     </div>
