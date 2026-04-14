@@ -149,8 +149,16 @@ const SignIn = () => {
             className="w-full bg-gradient-to-r from-[#1F4F8F] to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl py-3 font-semibold text-sm transition disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loading ? "Signing in..." : "Sign In"}
-          </button>
-
+          </button> 
+          
+          <div className="text-center pt-4">
+            <p className="text-sm text-gray-500">
+              Don't have an account?{" "}
+              <Link to="/journal-signup" className="text-[#1F4F8F] font-bold hover:underline">
+                Register
+              </Link>
+            </p>
+          </div>
         </form>
       </div>
     </div>

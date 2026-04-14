@@ -82,6 +82,7 @@ const App = () => {
           <Route path="notifications" element={<Notifications />} />
           <Route path="payments" element={<Payments />} />
           <Route path="submit-article" element={<SubmitArticle />} />
+          <Route path="edit-article/:id" element={<SubmitArticle />} />
           <Route path="chat" element={<Chat />} />
         </Route>
 
