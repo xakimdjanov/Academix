@@ -4,6 +4,7 @@ import { Route, Routes, Navigate } from "react-router-dom";
 
 // Auth pages
 import JournalAdminSignIn from "./pages/Auth/JournalAdmin/SignIn";
+import JournalAdminSignUp from "./pages/Auth/JournalAdmin/SignUp";
 import ArticlesSignIn from "./pages/Auth/Articles/SignIn";
 import ForgotPass from "./pages/JournalAdmin/ForgotPass/ForgotPass";
 import ResetPassword from "./pages/JournalAdmin/ForgotPass/ResetPassword";
@@ -40,6 +41,7 @@ const App = () => {
 
         {/* ✅ AUTH ROUTES (No Header/Footer) */}
         <Route path="/journal-signin" element={<JournalAdminSignIn />} />
+        <Route path="/journal-signup" element={<JournalAdminSignUp />} />
         <Route path="/articles-signin" element={<ArticlesSignIn />} />
         <Route path="/journal-forgot-password" element={<ForgotPass />} />
         <Route path="/journal-reset-password" element={<ResetPassword />} />

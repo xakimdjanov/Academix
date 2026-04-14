@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   FiArrowLeft,
   FiArrowRight,
@@ -48,6 +49,51 @@ const SubmitArticle = () => {
 
   const [submitting, setSubmitting] = useState(false);
   const [createdArticleId, setCreatedArticleId] = useState(null);
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isEdit = !!id;
+
+  useEffect(() => {
+    if (isEdit) {
+      const loadArticle = async () => {
+        try {
+          const res = await articleService.getById(id);
+          const a = res.data;
+          if (a) {
+            setSelectedJournalId(a.journal_id);
+            setTitle(a.title || "");
+            setAbstract(a.abstract || "");
+            
+            let kw = [];
+            if (a.keywords) {
+              try {
+                kw = typeof a.keywords === 'string' ? JSON.parse(a.keywords) : a.keywords;
+              } catch {
+                kw = a.keywords.split(',').map(k => k.trim());
+              }
+            }
+            setKeywords(Array.isArray(kw) ? kw : []);
+            
+            setCategory(a.category || "");
+            setLanguage(a.language || "");
+            
+            if (a.authors) {
+              const parsedAuthors = typeof a.authors === 'string' ? JSON.parse(a.authors) : a.authors;
+              setAuthors(parsedAuthors.map(auth => ({
+                fullName: auth.fullName || auth.full_name || "",
+                phone: auth.phone || "",
+                orcidId: auth.orcidId || auth.orcid_id || "",
+              })));
+            }
+          }
+        } catch (error) {
+          toast.error("Maqola ma'lumotlarini yuklashda xatolik");
+          console.error(error);
+        }
+      };
+      loadArticle();
+    }
+  }, [id, isEdit]);
 
   useEffect(() => {
     const loadJournals = async () => {
@@ -140,10 +186,10 @@ const SubmitArticle = () => {
         if (!a.fullName?.trim()) return `${i + 1}-muallif: To'liq ism majburiy`;
         if ((a.phone?.replace(/\D/g, "") || "").length < 9) return `${i + 1}-muallif: Telefon raqami noto'g'ri`;
         if (!/^\d{4}-\d{4}-\d{4}-\d{4}$/.test(a.orcidId || "")) return `${i + 1}-muallif: ORCID formati noto'g'ri`;
-        if (!authorImages[i]) return `${i + 1}-muallif: Rasm majburiy`;
+        if (!authorImages[i] && !isEdit) return `${i + 1}-muallif: Rasm majburiy`;
       }
     }
-    if (s === 4 && !articleFile) return "Maqola fayli majburiy";
+    if (s === 4 && !articleFile && !isEdit) return "Maqola fayli majburiy";
     return null;
   };
 
@@ -188,24 +234,32 @@ const SubmitArticle = () => {
         formData.append("author_images", file);
       });
 
-      const res = await articleService.create(formData);
-      const id = res?.data?.article?.id ?? res?.data?.id;
-      setCreatedArticleId(id);
-
-      toast.success("Maqola muvaffaqiyatli yuborildi!", { duration: 5000 });
+      if (isEdit) {
+        await articleService.update(id, formData);
+        toast.success("Maqola muvaffaqiyatli yangilandi!");
+      } else {
+        const res = await articleService.create(formData);
+        const idRes = res?.data?.article?.id ?? res?.data?.id;
+        setCreatedArticleId(idRes);
+        toast.success("Maqola muvaffaqiyatli yuborildi!", { duration: 5000 });
+      }
 
       setTimeout(() => {
-        setStep(1);
-        setSelectedJournalId("");
-        setTitle("");
-        setAbstract("");
-        setKeywords([]);
-        setCategory("");
-        setLanguage("");
-        setAuthors([{ ...emptyAuthor }]);
-        setAuthorImages({});
-        setArticleFile(null);
-      }, 2800);
+        if (isEdit) {
+          navigate("/dashboard/my-articles");
+        } else {
+          setStep(1);
+          setSelectedJournalId("");
+          setTitle("");
+          setAbstract("");
+          setKeywords([]);
+          setCategory("");
+          setLanguage("");
+          setAuthors([{ ...emptyAuthor }]);
+          setAuthorImages({});
+          setArticleFile(null);
+        }
+      }, 2000);
     } catch (err) {
       const msg = err?.response?.data?.message || "Xato yuz berdi";
       toast.error(msg);
@@ -224,7 +278,9 @@ const SubmitArticle = () => {
 
           {/* Header + Progress Steps */}
           <div className="bg-[#002147] px-6 py-6 text-white">
-            <h1 className="text-2xl sm:text-3xl font-bold text-center">Maqolani yuborish</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-center">
+              {isEdit ? "Maqolani tahrirlash" : "Maqolani yuborish"}
+            </h1>
             <p className="mt-2 text-blue-100 text-center opacity-90">
               Ma'lumotlarni bosqichma-bosqich to'ldiring
             </p>
@@ -501,7 +557,7 @@ const SubmitArticle = () => {
                     disabled={submitting}
                     className="w-full bg-[#002147] text-white py-4 rounded-xl font-bold hover:bg-[#001a3a] disabled:opacity-60 transition shadow-md"
                   >
-                    {submitting ? "Yuborilmoqda..." : "Maqolani yuborish"}
+                    {submitting ? "Yuborilmoqda..." : isEdit ? "Saqlash" : "Maqolani yuborish"}
                   </button>
 
                 </div>

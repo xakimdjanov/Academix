@@ -31,7 +31,7 @@ const RoleSelectionModal = ({ isOpen, onClose }) => {
       title: "Jurnal Admin",
       desc: "Jurnalni boshqarish va taqrizlar",
       icon: <FiSettings className="w-8 h-8" />,
-      url: "https://journal.akadmix.uz",
+      url: "https://journal.akademix.uz/",
       bgColor: "bg-indigo-500/10",
       iconColor: "text-indigo-500",
       external: true,
@@ -41,7 +41,7 @@ const RoleSelectionModal = ({ isOpen, onClose }) => {
       title: "Muharrir",
       desc: "Maqolalarni tahrirlash",
       icon: <FiEdit className="w-8 h-8" />,
-      url: "https://editor.akadmix.uz",
+      url: "https://editor.akademix.uz/",
       bgColor: "bg-emerald-500/10",
       iconColor: "text-emerald-500",
       external: true,
@@ -50,11 +50,7 @@ const RoleSelectionModal = ({ isOpen, onClose }) => {
 
   const handleSelect = (role) => {
     onClose();
-    if (role.external) {
-      window.location.href = role.url;
-    } else {
-      window.location.href = role.url; // Or use useNavigate if passed
-    }
+    window.open(role.url, "_blank", "noopener,noreferrer");
   };
 
   return (

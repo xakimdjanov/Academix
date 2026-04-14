@@ -7,6 +7,7 @@ import {
   articleService,
   journalService,
   userService,
+  journalAdminService,
 } from "../../../services/api";
 
 const safeArr = (x) => (Array.isArray(x) ? x : []);
@@ -26,6 +27,8 @@ const getId = (x) => x?.id ?? x?._id ?? x?.editor_id ?? x?.article_id ?? x?.jour
 
 const getEditorName = (e) =>
   e?.full_name ||
+  e?.fullName ||
+  e?.fullname ||
   e?.name ||
   [e?.first_name, e?.last_name].filter(Boolean).join(" ") ||
   e?.email ||
@@ -66,6 +69,10 @@ const JournalEditors = () => {
   const [authorFullName, setAuthorFullName] = useState("");
   const [authorUserId, setAuthorUserId] = useState(null);
 
+  // Journal Admin info
+  const [adminName, setAdminName] = useState("");
+  const [assignments, setAssignments] = useState([]);
+
   const [assignLoading, setAssignLoading] = useState(false);
   const [form, setForm] = useState({
     article_id: "",
@@ -74,7 +81,6 @@ const JournalEditors = () => {
     message: "",
   });
 
-  // faqat article filtr uchun (sizda oldin ham shunday)
   const myAdminId = useMemo(() => localStorage.getItem("journal_admin_id"), []);
 
   const myJournalIds = useMemo(() => {
@@ -94,21 +100,31 @@ const JournalEditors = () => {
     try {
       setLoading(true);
 
-      const [edRes, jrRes, arRes] = await Promise.all([
+      const [edRes, jrRes, arRes, asRes] = await Promise.all([
         editorService.getAll(),
         journalService.getAll(),
         articleService.getAll(),
+        ReviewAssignments.getAll(),
       ]);
 
       setEditors(parseList(edRes));
       setJournals(parseList(jrRes));
       setArticles(parseList(arRes));
+      setAssignments(parseList(asRes));
+
+      if (myAdminId) {
+        journalAdminService.getById(myAdminId).then((res) => {
+          const ad = res?.data?.data || res?.data?.user || res?.data || null;
+          setAdminName(ad?.full_name || ad?.name || `Admin #${myAdminId}`);
+        });
+      }
     } catch (e) {
       console.error(e);
       toast.error("Ma'lumotlarni yuklashda xatolik");
       setEditors([]);
       setJournals([]);
       setArticles([]);
+      setAssignments([]);
     } finally {
       setLoading(false);
     }
@@ -254,15 +270,26 @@ const JournalEditors = () => {
             </select>
           </div>
 
-          {/* Assigned By (UI) = Article owner full name, read-only */}
-          <div className="md:col-span-2">
+          {/* Biriktiruvchi (Journal Admin) */}
+          <div className="md:col-span-1">
             <label className="text-[11px] font-black text-slate-500 mb-2 block ml-1 uppercase">
-              Biriktiruvchi (Muallif)
+              Biriktiruvchi (Admin)
+            </label>
+            <input
+              value={adminName || "Yuklanmoqda..."}
+              disabled
+              className="w-full rounded-2xl border border-slate-200 px-4 py-3 bg-slate-100 text-slate-800 font-extrabold text-sm cursor-not-allowed"
+            />
+          </div>
+
+          <div className="md:col-span-1">
+            <label className="text-[11px] font-black text-slate-500 mb-2 block ml-1 uppercase">
+              Muallif ismi
             </label>
             <input
               value={formatNameWithLastInitial(authorFullName)}
               disabled
-              className="w-full rounded-2xl border border-slate-200 px-4 py-3 bg-slate-100 text-slate-800 font-extrabold text-sm cursor-not-allowed"
+              className="w-full rounded-2xl border border-slate-200 px-4 py-3 bg-slate-100 text-slate-600 font-medium text-sm cursor-not-allowed"
             />
           </div>
 
@@ -325,6 +352,52 @@ const JournalEditors = () => {
               <FiSend /> {assignLoading ? "Yuborilmoqda..." : "Topshiriq yaratish"}
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Assignments list */}
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b bg-slate-50/60 font-extrabold text-[#002147] flex justify-between items-center">
+          <span>Biriktirilgan Taqrizlar (Assignments)</span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-left text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-50">
+              <tr>
+                <th className="py-4 px-6">Maqola</th>
+                <th className="py-4 px-6">Muharrir (Editor)</th>
+                <th className="py-4 px-6">Muddat</th>
+                <th className="py-4 px-6">Xabar</th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-slate-50">
+              {assignments.map((as, idx) => {
+                const article = articles.find(ar => String(getId(ar)) === String(as.article_id));
+                const editor = editors.find(ed => String(getId(ed)) === String(as.editor_id));
+
+                return (
+                  <tr key={String(getId(as) || idx)} className="hover:bg-blue-50/30 transition-colors">
+                    <td className="py-4 px-6 font-bold text-slate-700">{article?.title || `Article #${as.article_id}`}</td>
+                    <td className="py-4 px-6">
+                      <div className="font-extrabold text-[#0B2A6D]">{editor ? getEditorName(editor) : `Editor #${as.editor_id}`}</div>
+                    </td>
+                    <td className="py-4 px-6 text-slate-600 font-medium">{as.due_date || "—"}</td>
+                    <td className="py-4 px-6 text-slate-400 text-xs truncate max-w-[200px]">{as.message || "—"}</td>
+                  </tr>
+                );
+              })}
+
+              {assignments.length === 0 && (
+                <tr>
+                  <td className="py-10 px-6 text-center text-slate-400" colSpan={4}>
+                    Biriktirilgan taqrizlar mavjud emas.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 

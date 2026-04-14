@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { FiEye, FiRefreshCw, FiSearch, FiX, FiCheckCircle, FiClock, FiMessageSquare } from "react-icons/fi";
+import { FiEye, FiRefreshCw, FiSearch, FiX, FiCheckCircle, FiClock, FiMessageSquare, FiEdit } from "react-icons/fi";
 import toast, { Toaster } from "react-hot-toast";
 import { articleService } from "../services/api";
 import { getUserIdFromToken } from "../utils/getUserIdFromToken";
@@ -266,6 +266,13 @@ const MyArticles = () => {
                         >
                           Tezkor ko'rish
                         </button>
+                        <Link
+                          to={`/edit-article/${a.id}`}
+                          className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 transition"
+                        >
+                          <FiEdit size={16} />
+                          Tahrirlash
+                        </Link>
                       </div>
                     </td>
                   </tr>
@@ -426,12 +433,20 @@ const MyArticles = () => {
             {/* Footer */}
             <div className="border-t border-gray-200 bg-gray-50 px-6 py-5 flex justify-end">
               <Link
-                to={`/dashboard/my-articles/${selected.id}`}
+                to={`/my-articles/${selected.id}`}
                 className="inline-flex items-center gap-3 rounded-xl bg-gray-900 px-8 py-4 text-base font-semibold text-white hover:bg-black transition shadow-md"
                 onClick={() => setSelected(null)}
               >
                 <FiEye size={20} />
                 Maqolaning to'liq sahifasini ko'rish
+              </Link>
+              <Link
+                to={`/edit-article/${selected.id}`}
+                className="inline-flex items-center gap-3 rounded-xl bg-blue-600 px-8 py-4 text-base font-semibold text-white hover:bg-blue-700 transition shadow-md"
+                onClick={() => setSelected(null)}
+              >
+                <FiEdit size={20} />
+                Tahrirlash
               </Link>
             </div>
           </div>
