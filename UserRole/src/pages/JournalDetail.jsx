@@ -106,7 +106,7 @@ const JournalDetail = () => {
                 </p>
              </div>
              <div className="mt-4 md:mt-0">
-                <Link to="/submit-article" className="px-8 py-4 bg-white text-[#002147] rounded-2xl font-black text-sm transition-all shadow-xl hover:-translate-y-1 active:scale-95 flex items-center gap-2">
+                <Link to={`/submit-article?journalId=${journal.id || journal._id}`} className="px-8 py-4 bg-white text-[#002147] rounded-2xl font-black text-sm transition-all shadow-xl hover:-translate-y-1 active:scale-95 flex items-center gap-2">
                    MAQOLA YUBORISH <FiSend />
                 </Link>
              </div>
@@ -121,6 +121,7 @@ const JournalDetail = () => {
          <div className="bg-white rounded-2xl shadow-xl p-2 flex overflow-x-auto no-scrollbar gap-2 border border-gray-100">
             <TabButton active={activeTab === 'about'} onClick={() => setActiveTab('about')} icon={<FiInfo/>} label="Haqida" />
             <TabButton active={activeTab === 'scope'} onClick={() => setActiveTab('scope')} icon={<FiAward/>} label="Maqsad va yo'nalishlar" />
+            <TabButton active={activeTab === 'shablon'} onClick={() => setActiveTab('shablon')} icon={<FiLayers/>} label="Maqola shabloni" />
             <TabButton active={activeTab === 'articles'} onClick={() => setActiveTab('articles')} icon={<FiFileText/>} label={`Maqolalar (${articles.length})`} />
             
             {/* 💎 Dynamic Tabs from Backend Settings (Site Pages) */}
@@ -153,6 +154,48 @@ const JournalDetail = () => {
                   <h2 className="text-2xl font-black text-[#002147] mb-6">Maqsad va yo'nalishlar</h2>
                   <div className="prose prose-blue max-w-none text-[#4B5563] leading-relaxed space-y-4 whitespace-pre-wrap text-justify">
                      {journal.aims_scope || "Ushbu jurnalning maqsad va yo'nalishlari yangilanmoqda."}
+                  </div>
+               </div>
+            )}
+
+            {activeTab === 'shablon' && (
+               <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <h2 className="text-2xl font-black text-[#002147] mb-6">Maqola yuborish shabloni va talablar</h2>
+                  <div className="prose prose-blue max-w-none text-[#4B5563] leading-relaxed space-y-4 text-justify">
+                     <p>Maqolani muvaffaqiyatli yuborish uchun quyidagi ma'lumotlar va hujjatlar talab etiladi. Iltimos, maqolani tizimga yuklashdan oldin barchasini tayyorlab qo'ying:</p>
+                     
+                     <div className="mt-6 space-y-4">
+                        <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                           <h3 className="font-bold text-[#002147] text-lg mb-2">1. Maqola ma'lumotlari</h3>
+                           <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                              <li><b>Sarlavha:</b> Maqolaning to'liq va aniq sarlavhasi.</li>
+                              <li><b>Annotatsiya:</b> Maqolaning qisqacha mazmuni va natijalari (Abstract).</li>
+                              <li><b>Kalit so'zlar:</b> Maqola mazmunini ochib beruvchi kamida bitta kalit so'z.</li>
+                              <li><b>Toifa:</b> Maqola turi (masalan, Tadqiqot maqolasi, Sharh va h.k.).</li>
+                              <li><b>Til:</b> Maqola yozilgan til (masalan, O'zbek tili, Ingliz tili).</li>
+                           </ul>
+                        </div>
+
+                        <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                           <h3 className="font-bold text-[#002147] text-lg mb-2">2. Mualliflar ma'lumotlari</h3>
+                           <p className="text-sm text-gray-600 mb-2">Barcha mualliflar uchun quyidagi ma'lumotlar kiritilishi shart (birinchi muallif asosiy hisoblanadi):</p>
+                           <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                              <li><b>To'liq ismi:</b> Muallifning ism va familiyasi.</li>
+                              <li><b>Telefon raqami:</b> Bog'lanish uchun ishlaydigan telefon raqam.</li>
+                              <li><b>ORCID ID:</b> Xalqaro olimlar identifikatsiya raqami (masalan: 0000-0000-0000-0000).</li>
+                              <li><b>Muallif rasmi:</b> Har bir muallifning 5MB gacha bo'lgan sifatli rasmi.</li>
+                           </ul>
+                        </div>
+
+                        <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                           <h3 className="font-bold text-[#002147] text-lg mb-2">3. Maqola fayli</h3>
+                           <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                              <li><b>Format:</b> Faqat PDF, DOC, yoki DOCX formatlari qabul qilinadi.</li>
+                              <li><b>Hajm:</b> Fayl hajmi 20MB dan oshmasligi kerak.</li>
+                              <li>Fayl jurnal talablari (shrift, hoshiya, adabiyotlar ro'yxati) asosida shakllantirilgan bo'lishi lozim.</li>
+                           </ul>
+                        </div>
+                     </div>
                   </div>
                </div>
             )}
@@ -223,7 +266,7 @@ const JournalDetail = () => {
                <div className="relative z-10">
                   <h3 className="text-xl font-bold mb-4">Nashr qilishga tayyormisiz?</h3>
                   <p className="text-blue-200/60 text-sm mb-6 leading-relaxed">Bugun tadqiqotingizni yuboring va jahon darajasidagi olimlar jamoasiga qo'shiling.</p>
-                  <Link to="/submit-article" className="block w-full text-center py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-lg active:scale-95">
+                  <Link to={`/submit-article?journalId=${journal.id || journal._id}`} className="block w-full text-center py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-lg active:scale-95">
                      Qo'lyozmani yuborish
                   </Link>
                </div>

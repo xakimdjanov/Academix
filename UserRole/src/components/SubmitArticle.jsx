@@ -11,7 +11,9 @@ import {
   FiUser,
   FiPhone,
   FiGlobe,
+  FiInfo
 } from "react-icons/fi";
+import { useLocation } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { articleService, journalService } from "../services/api";
 import { getUserIdFromToken } from "../utils/getUserIdFromToken";
@@ -30,10 +32,13 @@ const emptyAuthor = {
 };
 
 const SubmitArticle = () => {
-  const [step, setStep] = useState(1);
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialJournalId = queryParams.get("journalId") || "";
+
   const [journals, setJournals] = useState([]);
   const [loadingJournals, setLoadingJournals] = useState(false);
-  const [selectedJournalId, setSelectedJournalId] = useState("");
+  const [selectedJournalId, setSelectedJournalId] = useState(initialJournalId);
 
   const [title, setTitle] = useState("");
   const [abstract, setAbstract] = useState("");
@@ -100,7 +105,14 @@ const SubmitArticle = () => {
       setLoadingJournals(true);
       try {
         const res = await journalService.getAll();
-        setJournals(res?.data || []);
+        const jList = res?.data || [];
+        setJournals(jList);
+        
+        // If initialJournalId is provided, try to find it
+        if (initialJournalId && !isEdit) {
+           const found = jList.find(j => String(j.id) === String(initialJournalId));
+           if (found) setSelectedJournalId(initialJournalId);
+        }
       } catch {
         toast.error("Jurnallarni yuklashda xatolik yuz berdi");
       } finally {
@@ -108,7 +120,7 @@ const SubmitArticle = () => {
       }
     };
     loadJournals();
-  }, []);
+  }, [initialJournalId, isEdit]);
 
   const selectedJournal = useMemo(
     () => journals.find((j) => String(j.id) === String(selectedJournalId)),
@@ -171,38 +183,26 @@ const SubmitArticle = () => {
     setArticleFile(file);
   };
 
-  const validateStep = (s) => {
-    if (s === 1 && !selectedJournalId) return "Iltimos, jurnalni tanlang";
-    if (s === 2) {
-      if (!title.trim()) return "Sarlavha majburiy";
-      if (!abstract.trim()) return "Annotatsiya majburiy";
-      if (!keywords.length) return "Kamida bitta kalit so'z bo'lishi shart";
-      if (!category.trim()) return "Toifa majburiy";
-      if (!language.trim()) return "Til majburiy";
+  const validateForm = () => {
+    if (!selectedJournalId) return "Iltimos, jurnalni tanlang";
+    if (!title.trim()) return "Sarlavha majburiy";
+    if (!abstract.trim()) return "Annotatsiya majburiy";
+    if (!keywords.length) return "Kamida bitta kalit so'z bo'lishi shart";
+    if (!category.trim()) return "Toifa majburiy";
+    if (!language.trim()) return "Til majburiy";
+    for (let i = 0; i < authors.length; i++) {
+      const a = authors[i];
+      if (!a.fullName?.trim()) return `${i + 1}-muallif: To'liq ism majburiy`;
+      if ((a.phone?.replace(/\D/g, "") || "").length < 9) return `${i + 1}-muallif: Telefon raqami noto'g'ri`;
+      if (!/^\d{4}-\d{4}-\d{4}-\d{4}$/.test(a.orcidId || "")) return `${i + 1}-muallif: ORCID formati noto'g'ri`;
+      if (!authorImages[i] && !isEdit) return `${i + 1}-muallif: Rasm majburiy`;
     }
-    if (s === 3) {
-      for (let i = 0; i < authors.length; i++) {
-        const a = authors[i];
-        if (!a.fullName?.trim()) return `${i + 1}-muallif: To'liq ism majburiy`;
-        if ((a.phone?.replace(/\D/g, "") || "").length < 9) return `${i + 1}-muallif: Telefon raqami noto'g'ri`;
-        if (!/^\d{4}-\d{4}-\d{4}-\d{4}$/.test(a.orcidId || "")) return `${i + 1}-muallif: ORCID formati noto'g'ri`;
-        if (!authorImages[i] && !isEdit) return `${i + 1}-muallif: Rasm majburiy`;
-      }
-    }
-    if (s === 4 && !articleFile && !isEdit) return "Maqola fayli majburiy";
+    if (!articleFile && !isEdit) return "Maqola fayli majburiy";
     return null;
   };
 
-  const next = () => {
-    const err = validateStep(step);
-    if (err) return toast.error(err);
-    setStep((p) => Math.min(4, p + 1));
-  };
-
-  const prev = () => setStep((p) => Math.max(1, p - 1));
-
   const submit = async () => {
-    const err = validateStep(4);
+    const err = validateForm();
     if (err) return toast.error(err);
 
     const userId = getUserIdFromToken();
@@ -248,7 +248,6 @@ const SubmitArticle = () => {
         if (isEdit) {
           navigate("/dashboard/my-articles");
         } else {
-          setStep(1);
           setSelectedJournalId("");
           setTitle("");
           setAbstract("");
@@ -276,176 +275,167 @@ const SubmitArticle = () => {
       <div className="max-w-4xl mx-auto">
         <div className="bg-white shadow-lg rounded-2xl border border-gray-200 overflow-hidden">
 
-          {/* Header + Progress Steps */}
-          <div className="bg-[#002147] px-6 py-6 text-white">
-            <h1 className="text-2xl sm:text-3xl font-bold text-center">
+          {/* Header */}
+          <div className="bg-[#002147] px-6 py-8 text-white text-center">
+            <h1 className="text-2xl sm:text-3xl font-bold">
               {isEdit ? "Maqolani tahrirlash" : "Maqolani yuborish"}
             </h1>
-            <p className="mt-2 text-blue-100 text-center opacity-90">
-              Ma'lumotlarni bosqichma-bosqich to'ldiring
+            <p className="mt-2 text-blue-100 opacity-90 max-w-2xl mx-auto">
+              Iltimos, maqolangizni yuborish uchun barcha kerakli ma'lumotlarni aniq to'ldiring.
             </p>
-
-            <div className="mt-6 flex justify-center gap-4 sm:gap-8 flex-wrap">
-              {[1, 2, 3, 4].map((n) => (
-                <div key={n} className="flex flex-col items-center">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold border-2 transition-all ${
-                      step > n
-                        ? "bg-white text-[#002147] border-white"
-                        : step === n
-                        ? "bg-white text-[#002147] border-white ring-4 ring-blue-300/40"
-                        : "bg-[#002147]/40 text-white border-blue-300/60"
-                    }`}
-                  >
-                    {step > n ? <FiCheck /> : n}
-                  </div>
-                  <span className="mt-2 text-xs font-medium hidden sm:block">
-                    {n === 1 ? "Jurnal" : n === 2 ? "Ma'lumotlar" : n === 3 ? "Mualliflar" : "Fayl"}
-                  </span>
-                </div>
-              ))}
-            </div>
           </div>
 
-          {/* Form Content */}
-          <div className="p-6 sm:p-8 lg:p-10">
+          <div className="p-6 sm:p-8 lg:p-10 space-y-12">
+            
+            {/* Instructions Section */}
+            {!isEdit && (
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 text-blue-900 shadow-sm">
+                <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
+                  <FiInfo className="text-blue-600" size={24} /> Qanday maqola yuboriladi?
+                </h3>
+                <ul className="list-disc list-inside space-y-2 text-sm md:text-base opacity-90">
+                  <li>Avval <b>jurnalni tanlang</b>. Jurnal talablariga mos maqola tayyorlaganingizga ishonch hosil qiling.</li>
+                  <li>Maqola sarlavhasi, annotatsiyasi va kamida bitta kalit so'zni kiriting.</li>
+                  <li>Barcha mualliflarni kiriting. Har bir muallifning <b>ORCID ID</b>si va <b>Rasmi</b> talab qilinadi.</li>
+                  <li>Maqola faylini (<b>.pdf, .doc, .docx</b>) formatlaridan birida yuklang. Maksimal hajm: {MAX_FILE_MB}MB.</li>
+                  <li>Barcha maydonlarni tekshirib chiqqach, "Maqolani yuborish" tugmasini bosing.</li>
+                </ul>
+              </div>
+            )}
 
-            {/* Step 1 */}
-            {step === 1 && (
-              <div className="space-y-6 max-w-xl mx-auto">
-                <h2 className="text-2xl font-bold text-gray-800 text-center">1-bosqich: Jurnalni tanlang</h2>
-                <select
-                  value={selectedJournalId}
-                  onChange={(e) => setSelectedJournalId(e.target.value)}
-                  disabled={loadingJournals}
-                  className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition disabled:opacity-60"
-                >
-                  <option value="">Jurnalni tanlang...</option>
-                  {journals.map((j) => (
-                    <option key={j.id} value={j.id}>
-                      {j.name} {j.issn && `(ISSN: ${j.issn})`}
-                    </option>
-                  ))}
-                </select>
+            {/* Step 1: Journal */}
+            <div className="space-y-6">
+              <h2 className="text-xl font-bold text-[#002147] pb-2 border-b border-gray-200">1. Jurnalni tanlang</h2>
+              <select
+                value={selectedJournalId}
+                onChange={(e) => setSelectedJournalId(e.target.value)}
+                disabled={loadingJournals || !!initialJournalId}
+                className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition disabled:opacity-60 bg-white"
+              >
+                <option value="">Jurnalni tanlang...</option>
+                {journals.map((j) => (
+                  <option key={j.id} value={j.id}>
+                    {j.name} {j.issn && `(ISSN: ${j.issn})`}
+                  </option>
+                ))}
+              </select>
 
-                {selectedJournal && (
-                  <div className="bg-[#e6f0ff] border border-blue-100 rounded-xl p-6 space-y-2">
-                    <h3 className="font-bold text-[#002147]">{selectedJournal.name}</h3>
-                    <p className="text-[#002147]">ISSN: {selectedJournal.issn || "—"}</p>
-                    <p className="text-[#002147]">Sohasi: {selectedJournal.subject_area || "—"}</p>
+              {selectedJournal && (
+                <div className="bg-[#e6f0ff] border border-blue-100 rounded-xl p-6 space-y-2">
+                  <h3 className="font-bold text-[#002147]">{selectedJournal.name}</h3>
+                  <p className="text-[#002147] text-sm">ISSN: {selectedJournal.issn || "—"}</p>
+                  <p className="text-[#002147] text-sm">Sohasi: {selectedJournal.subject_area || "—"}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Step 2: Article Info */}
+            <div className="space-y-6">
+              <h2 className="text-xl font-bold text-[#002147] pb-2 border-b border-gray-200">2. Maqola ma'lumotlari</h2>
+
+              <div className="space-y-2">
+                <label className="block font-medium text-gray-700">Sarlavha *</label>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition bg-white"
+                  placeholder="Maqola sarlavhasini kiriting..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block font-medium text-gray-700">Annotatsiya *</label>
+                <textarea
+                  value={abstract}
+                  onChange={(e) => setAbstract(e.target.value)}
+                  rows={5}
+                  className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition resize-y bg-white"
+                  placeholder="Annotatsiyani kiriting..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block font-medium text-gray-700">Kalit so'zlar *</label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    value={keywordInput}
+                    onChange={(e) => setKeywordInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addKeyword())}
+                    className="flex-1 rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none bg-white"
+                    placeholder="Kalit so'zni yozing va Enter tugmasini bosing"
+                  />
+                  <button
+                    onClick={addKeyword}
+                    className="rounded-xl bg-[#002147] px-6 py-3 text-white font-medium hover:bg-[#001a3a] transition shadow-sm"
+                  >
+                    Qo'shish
+                  </button>
+                </div>
+                {keywords.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {keywords.map((k, i) => (
+                      <span
+                        key={i}
+                        onClick={() => removeKeyword(i)}
+                        className="inline-flex items-center gap-1 px-4 py-1.5 rounded-full bg-[#e6f0ff] text-[#002147] text-sm cursor-pointer hover:bg-blue-200 transition"
+                      >
+                        {k} <span className="font-bold">×</span>
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
-            )}
 
-            {/* Step 2 */}
-            {step === 2 && (
-              <div className="space-y-6 max-w-2xl mx-auto">
-                <h2 className="text-2xl font-bold text-gray-800 text-center">2-bosqich: Maqola ma'lumotlari</h2>
-
+              <div className="grid sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="block font-medium text-gray-700">Sarlavha *</label>
+                  <label className="block font-medium text-gray-700">Toifa *</label>
                   <input
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition"
-                    placeholder="Maqola sarlavhasini kiriting..."
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition bg-white"
+                    placeholder="Masalan: Tadqiqot maqolasi"
                   />
                 </div>
-
                 <div className="space-y-2">
-                  <label className="block font-medium text-gray-700">Annotatsiya *</label>
-                  <textarea
-                    value={abstract}
-                    onChange={(e) => setAbstract(e.target.value)}
-                    rows={5}
-                    className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition resize-y"
-                    placeholder="Annotatsiyani kiriting..."
+                  <label className="block font-medium text-gray-700">Til *</label>
+                  <input
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition bg-white"
+                    placeholder="Masalan: Ingliz tili"
                   />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block font-medium text-gray-700">Kalit so'zlar *</label>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <input
-                      value={keywordInput}
-                      onChange={(e) => setKeywordInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addKeyword())}
-                      className="flex-1 rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none"
-                      placeholder="Kalit so'zni yozing va Enter tugmasini bosing"
-                    />
-                    <button
-                      onClick={addKeyword}
-                      className="rounded-xl bg-[#002147] px-6 py-3 text-white font-medium hover:bg-[#001a3a] transition"
-                    >
-                      Qo'shish
-                    </button>
-                  </div>
-                  {keywords.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {keywords.map((k, i) => (
-                        <span
-                          key={i}
-                          onClick={() => removeKeyword(i)}
-                          className="inline-flex items-center gap-1 px-4 py-1.5 rounded-full bg-[#e6f0ff] text-[#002147] text-sm cursor-pointer hover:bg-blue-200 transition"
-                        >
-                          {k} <span className="font-bold">×</span>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid sm:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="block font-medium text-gray-700">Toifa *</label>
-                    <input
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition"
-                      placeholder="Masalan: Tadqiqot maqolasi"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block font-medium text-gray-700">Til *</label>
-                    <input
-                      value={language}
-                      onChange={(e) => setLanguage(e.target.value)}
-                      className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition"
-                      placeholder="Masalan: Ingliz tili"
-                    />
-                  </div>
                 </div>
               </div>
-            )}
+            </div>
 
-            {/* Step 3 – Authors (unchanged except text) */}
-            {step === 3 && (
-              <div className="space-y-8">
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                  <h2 className="text-2xl font-bold text-gray-800">3-bosqich: Mualliflar</h2>
-                  <button
-                    onClick={addAuthor}
-                    className="inline-flex items-center gap-2 bg-[#002147] text-white px-5 py-2.5 rounded-xl hover:bg-[#001a3a] transition font-medium"
-                  >
-                    <FiPlus /> Muallif qo'shish
-                  </button>
-                </div>
+            {/* Step 3: Authors */}
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pb-2 border-b border-gray-200">
+                <h2 className="text-xl font-bold text-[#002147]">3. Mualliflar</h2>
+                <button
+                  onClick={addAuthor}
+                  className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 px-4 py-2 rounded-xl hover:bg-blue-100 transition font-medium text-sm"
+                >
+                  <FiPlus /> Muallif qo'shish
+                </button>
+              </div>
 
+              <div className="space-y-6">
                 {authors.map((author, idx) => (
-                  <div key={idx} className="border border-gray-200 rounded-xl p-6 bg-white shadow-sm">
+                  <div key={idx} className="border border-gray-200 rounded-xl p-6 bg-gray-50 shadow-sm relative">
                     <div className="flex justify-between items-center mb-5">
-                      <h3 className="text-lg font-bold text-gray-800">
-                        Muallif {idx + 1}
+                      <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <span className="bg-[#002147] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">{idx + 1}</span>
+                        Muallif
                         {idx === 0 && (
-                          <span className="ml-3 text-xs bg-[#e6f0ff] text-[#002147] px-3 py-1 rounded-full">
+                          <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full border border-blue-200">
                             Mas'ul muallif
                           </span>
                         )}
                       </h3>
                       {authors.length > 1 && (
-                        <button onClick={() => removeAuthor(idx)} className="text-gray-500 hover:text-red-600">
-                          <FiTrash2 size={20} />
+                        <button onClick={() => removeAuthor(idx)} className="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded-lg transition">
+                          <FiTrash2 size={18} />
                         </button>
                       )}
                     </div>
@@ -458,130 +448,110 @@ const SubmitArticle = () => {
                           <input
                             value={author.fullName}
                             onChange={(e) => updateAuthor(idx, "fullName", e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none"
+                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none bg-white"
                             placeholder="Ism Familiya"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-600">Phone *</label>
+                        <label className="block text-sm font-medium text-gray-600">Telefon raqam *</label>
                         <div className="relative">
                           <FiPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                           <input
                             value={author.phone}
                             onChange={(e) => updateAuthor(idx, "phone", formatPhone(e.target.value))}
-                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none"
+                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none bg-white"
                             placeholder="+998 90 123 45 67"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-600">ORCID *</label>
+                        <label className="block text-sm font-medium text-gray-600">ORCID ID *</label>
                         <div className="relative">
                           <FiGlobe className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                           <input
                             value={author.orcidId}
                             onChange={(e) => updateAuthor(idx, "orcidId", formatOrcid(e.target.value))}
                             maxLength={19}
-                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none"
+                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none bg-white"
                             placeholder="0000-0000-0000-0000"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-600">Rasm *</label>
+                        <label className="block text-sm font-medium text-gray-600">Muallif rasmi *</label>
                         <input
                           type="file"
                           accept="image/*"
                           onChange={(e) => handleAuthorImage(idx, e.target.files?.[0])}
-                          className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-[#002147] file:text-white hover:file:bg-[#001a3a] file:transition file:cursor-pointer cursor-pointer"
+                          className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-[#002147] file:text-white hover:file:bg-[#001a3a] file:transition file:cursor-pointer cursor-pointer bg-white border border-gray-300 rounded-xl"
                         />
                         {authorImages[idx] ? (
-                          <p className="text-green-600 text-sm mt-1">Yuklandi: {authorImages[idx].name}</p>
+                          <p className="text-green-600 text-sm mt-1 font-medium">Yuklandi: {authorImages[idx].name}</p>
                         ) : (
-                          <p className="text-red-500 text-sm mt-1">* Majburiy</p>
+                          <p className="text-red-500 text-xs mt-1">* Majburiy (5MB gacha)</p>
                         )}
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
-            )}
+            </div>
 
-            {/* Step 4 */}
-            {step === 4 && (
-              <div className="space-y-8 max-w-xl mx-auto">
-                <h2 className="text-2xl font-bold text-gray-800 text-center">4-bosqich: Maqola faylini yuklash</h2>
+            {/* Step 4: File Upload */}
+            <div className="space-y-6">
+              <h2 className="text-xl font-bold text-[#002147] pb-2 border-b border-gray-200">4. Maqola fayli</h2>
 
-                <div className="border-2 border-dashed border-gray-300 rounded-2xl p-10 text-center hover:border-blue-400 transition">
-                  <FiUpload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <label
-                    htmlFor="file-upload"
-                    className="cursor-pointer inline-block bg-[#002147] text-white px-8 py-4 rounded-xl font-medium hover:bg-[#001a3a] transition"
-                  >
-                    Faylni tanlang
-                  </label>
-                  <input
-                    id="file-upload"
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) => handleArticleFile(e.target.files?.[0])}
-                    className="hidden"
-                  />
-                  <p className="mt-4 text-gray-500 text-sm">
-                    PDF, DOC, DOCX • maksimal {MAX_FILE_MB} MB
-                  </p>
-                </div>
-
-                {articleFile && (
-                  <div className="flex items-center gap-4 p-5 bg-gray-50 border border-gray-200 rounded-xl">
-                    <FiFileText className="text-[#002147]" size={28} />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{articleFile.name}</p>
-                      <p className="text-sm text-gray-500">
-                        {(articleFile.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    </div>
-                    <button onClick={() => setArticleFile(null)} className="text-gray-500 hover:text-red-600">
-                      <FiTrash2 />
-                    </button>
-                  </div>
-                )}
-
-                <div className="pt-4">
-                  <button
-                    onClick={submit}
-                    disabled={submitting}
-                    className="w-full bg-[#002147] text-white py-4 rounded-xl font-bold hover:bg-[#001a3a] disabled:opacity-60 transition shadow-md"
-                  >
-                    {submitting ? "Yuborilmoqda..." : isEdit ? "Saqlash" : "Maqolani yuborish"}
-                  </button>
-
-                </div>
+              <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 sm:p-12 text-center hover:border-blue-400 transition bg-white cursor-pointer" onClick={() => document.getElementById('file-upload').click()}>
+                <FiUpload className="mx-auto h-12 w-12 text-blue-500 mb-4" />
+                <span className="inline-block bg-[#002147] text-white px-8 py-3 rounded-xl font-medium hover:bg-[#001a3a] transition shadow-md">
+                  Faylni tanlang
+                </span>
+                <input
+                  id="file-upload"
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={(e) => handleArticleFile(e.target.files?.[0])}
+                  className="hidden"
+                />
+                <p className="mt-4 text-gray-500 text-sm">
+                  PDF, DOC, DOCX formatlari qo'llab-quvvatlanadi. Maksimal hajm: {MAX_FILE_MB} MB.
+                </p>
               </div>
-            )}
-          </div>
 
-          {/* Navigation - yonma-yon */}
-          <div className="flex flex-row justify-between items-center px-6 sm:px-10 py-6 border-t bg-gray-50 gap-4">
-            <button
-              onClick={prev}
-              disabled={step === 1 || submitting}
-              className="flex-1 max-w-xs flex items-center justify-center gap-2 py-3 px-6 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 disabled:opacity-50 transition"
-            >
-              <FiArrowLeft /> Orqaga
-            </button>
+              {articleFile && (
+                <div className="flex items-center gap-4 p-5 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="bg-white p-3 rounded-lg text-blue-600 shadow-sm">
+                    <FiFileText size={28} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-[#002147] truncate">{articleFile.name}</p>
+                    <p className="text-sm text-blue-600 font-medium">
+                      {(articleFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <button onClick={(e) => { e.stopPropagation(); setArticleFile(null); }} className="text-red-500 hover:text-red-700 bg-red-100 p-2 rounded-lg transition">
+                    <FiTrash2 size={20} />
+                  </button>
+                </div>
+              )}
+            </div>
 
-            <button
-              onClick={step === 4 ? submit : next}
-              disabled={submitting}
-              className="flex-1 max-w-xs flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-[#002147] text-white font-medium hover:bg-[#001a3a] disabled:opacity-60 transition shadow-md"
-            >
-              {step === 4 ? "Yuborish" : "Keyingisi"} <FiArrowRight />
-            </button>
+            {/* Submit Button */}
+            <div className="pt-6 border-t border-gray-200">
+              <button
+                onClick={submit}
+                disabled={submitting}
+                className="w-full bg-[#002147] text-white py-4 rounded-xl text-lg font-bold hover:bg-[#001a3a] disabled:opacity-60 transition shadow-xl flex items-center justify-center gap-3"
+              >
+                {submitting ? "Yuborilmoqda..." : isEdit ? "O'zgarishlarni saqlash" : "Maqolani yuborish"}
+                {!submitting && <FiArrowRight />}
+              </button>
+            </div>
+
           </div>
         </div>
       </div>
