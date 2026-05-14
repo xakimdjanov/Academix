@@ -9,6 +9,7 @@ import {
 import { Toaster } from "react-hot-toast";
 
 import SignIn from "./pages/Login";
+import SignUp from "./pages/SignUp";
 import Layout from "./Layout/Layout";
 
 import Dashboard from "./components/Dashboard";
@@ -26,6 +27,7 @@ const App = () => {
       <Routes>
         {/* Public */}
         <Route path="/signin" element={<SignIn />} />
+        <Route path="/signup" element={<SignUp />} />
 
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<Dashboard />} />

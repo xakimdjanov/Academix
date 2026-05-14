@@ -14,6 +14,7 @@ const menuItems = [
   { path: "/journal-settings", label: "Sozlamalar", icon: FiSettings },
   { path: "/journal-articles", label: "Maqolalar", icon: FiFileText },
   { path: "/journal-editors", label: "Muharrirlarni biriktirish", icon: FiUsers },
+  { path: "/editor-requests", label: "Muharrir so'rovlari", icon: FiPlusCircle },
   // { path: "/journal-decisions", label: "Qarorlar", icon: FiCheckCircle },
   // { path: "/journal-payments", label: "To'lovlar", icon: FiCreditCard },
   { path: "/journal-reports", label: "Hisobotlar", icon: FiBarChart2 },

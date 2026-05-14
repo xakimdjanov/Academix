@@ -18,7 +18,25 @@ const initialState = {
 };
 
 function slugify(text) {
-  return String(text || "").toLowerCase().trim().replace(/[\s_]+/g, "-").replace(/[^\w-]+/g, "").replace(/--+/g, "-");
+  const cyrillicToLatin = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z', 'и': 'i',
+    'й': 'j', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't',
+    'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch', 'ъ': '', 'ы': 'y', 'ь': '',
+    'э': 'e', 'ю': 'yu', 'я': 'ya', 'ў': 'o', 'қ': 'q', 'ғ': 'g', 'ҳ': 'h'
+  };
+
+  let str = String(text || "").toLowerCase().trim();
+
+  // Kirill harflarini transliteratsiya qilish
+  str = str.split('').map(char => cyrillicToLatin[char] || char).join('');
+
+  return str
+    .replace(/o[''‘’`]/g, "o") // O' harfi uchun
+    .replace(/g[''‘’`]/g, "g") // G' harfi uchun
+    .replace(/[\s_]+/g, "-")    // Bo'shliqlarni chiziqqa almashtirish
+    .replace(/[^\w-]+/g, "")    // No-alphanumeric belgilarni o'chirish
+    .replace(/--+/g, "-")       // Ketma-ket chiziqlarni bittaga keltirish
+    .replace(/^-+|-+$/g, "");   // Boshi va oxiridagi chiziqlarni o'chirish
 }
 
 const Input = ({ icon: Icon, label, required, className = "", ...props }) => (
