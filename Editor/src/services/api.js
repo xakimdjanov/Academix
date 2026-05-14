@@ -27,7 +27,10 @@ export const journalAdminService = {
 
 // --- 3. EDITOR SERVISI ---
 export const editorService = {
-  register: (data) => axiosInstance.post("/editor/register", data),
+  register: (data) =>
+    axiosInstance.post("/editor/register", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
   login: (credentials) => axiosInstance.post("/editor/login", credentials),
   getAll: () => axiosInstance.get("/editor/getEditor"),
   getById: (id) => axiosInstance.get(`/editor/getEditorById/${id}`),
@@ -35,6 +38,8 @@ export const editorService = {
   headers: { "Content-Type": "multipart/form-data" }
 }),
   delete: (id) => axiosInstance.delete(`/editor/deleteEditor/${id}`),
+  updateStatus: (id, status) => axiosInstance.patch(`/editor/updateStatus/${id}`, { status }),
+  getByJournalAdmin: (adminId) => axiosInstance.get(`/editor/byJournalAdmin/${adminId}`),
 };
 
 // --- 4. MAQOLALAR (ARTICLES) ---

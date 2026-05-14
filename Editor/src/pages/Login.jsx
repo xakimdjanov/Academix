@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { editorService } from "../services/api";
 import { FiMail, FiLock, FiEye, FiEyeOff, FiEdit3 } from "react-icons/fi";
 
@@ -48,7 +48,6 @@ const SignIn = () => {
       // Tokenni saqlash
       localStorage.setItem("token", token);
 
-      // Editor data fallback orqali aniqlanadi
       const editor =
         res?.data?.editor ||
         res?.data?.data?.editor ||
@@ -61,7 +60,6 @@ const SignIn = () => {
         localStorage.setItem("user", JSON.stringify(editor));
       }
 
-      // Token ichidan ID olish
       const decoded = getUserFromToken();
       const editorId = decoded?.id || editor?.id;
 
@@ -70,10 +68,24 @@ const SignIn = () => {
       }
 
       toast.success("Welcome back!");
-
       navigate("/dashboard");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Invalid credentials.");
+      const status = error?.response?.status;
+      const message = error?.response?.data?.message;
+
+      if (status === 403) {
+        // Tasdiqlash kutilmoqda yoki rad etilgan
+        const editorStatus = error?.response?.data?.status;
+        if (editorStatus === "Pending") {
+          toast.error("⏳ Sizning hisobingiz hali tasdiqlanmagan. Journal Admin tasdiqlashini kuting.", { duration: 5000 });
+        } else if (editorStatus === "Rejected") {
+          toast.error("❌ Sizning so'rovingiz rad etilgan. Boshqa jurnal tanlang.", { duration: 5000 });
+        } else {
+          toast.error(message || "Hisobingiz faol emas.", { duration: 5000 });
+        }
+      } else {
+        toast.error(message || "Invalid credentials.");
+      }
     } finally {
       setLoading(false);
     }
@@ -148,6 +160,13 @@ const SignIn = () => {
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
+
+          <p className="text-center text-sm text-gray-500 mt-6">
+            Don't have an account?{" "}
+            <Link to="/signup" className="text-[#1F4F8F] font-semibold hover:underline">
+              Sign Up
+            </Link>
+          </p>
 
         </form>
       </div>

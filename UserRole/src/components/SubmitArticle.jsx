@@ -128,14 +128,21 @@ const SubmitArticle = () => {
   );
 
   // Handlers (unchanged logic)
-  const addKeyword = () => {
-    const v = keywordInput.trim();
-    if (!v) return;
-    if (keywords.some((k) => k.toLowerCase() === v.toLowerCase())) {
-      toast.error("Ushbu kalit so'z allaqachon qo'shilgan");
-      return;
-    }
-    setKeywords((p) => [...p, v]);
+  const addKeyword = (rawValue) => {
+    const source = rawValue !== undefined ? rawValue : keywordInput;
+    // Vergul bilan ajratilgan so'zlarni alohida qo'shamiz
+    const parts = source.split(",").map((v) => v.trim()).filter(Boolean);
+    const added = [];
+    const dupes = [];
+    parts.forEach((v) => {
+      if (keywords.some((k) => k.toLowerCase() === v.toLowerCase())) {
+        dupes.push(v);
+      } else {
+        added.push(v);
+      }
+    });
+    if (dupes.length) toast.error(`Allaqachon qo'shilgan: ${dupes.join(", ")}`);
+    if (added.length) setKeywords((p) => [...p, ...added]);
     setKeywordInput("");
   };
 
@@ -359,10 +366,18 @@ const SubmitArticle = () => {
                 <div className="flex flex-col sm:flex-row gap-3">
                   <input
                     value={keywordInput}
-                    onChange={(e) => setKeywordInput(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      // Vergul kiritilsa darhol ajratib qo'shamiz
+                      if (val.includes(",")) {
+                        addKeyword(val);
+                      } else {
+                        setKeywordInput(val);
+                      }
+                    }}
                     onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addKeyword())}
                     className="flex-1 rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none bg-white"
-                    placeholder="Kalit so'zni yozing va Enter tugmasini bosing"
+                    placeholder="Kalit so'z yozing, vergul yoki Enter bilan ajrating"
                   />
                   <button
                     onClick={addKeyword}

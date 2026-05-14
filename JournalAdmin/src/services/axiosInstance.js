@@ -1,6 +1,7 @@
 import axios from "axios";
 
 const API_BASE_URL = "https://academixbackend-production.up.railway.app";
+// const API_BASE_URL = "http://localhost:5000";
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -20,7 +21,7 @@ axiosInstance.interceptors.request.use(
 // ✅ Response: 401 bo‘lsa tokenni o‘chirish (ixtiyoriy, lekin foydali)
 axiosInstance.interceptors.response.use(
   (res) => res,
-  (error) => {
+  (error) => {z
     if (error?.response?.status === 401) {
       localStorage.removeItem("token");
     }

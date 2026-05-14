@@ -21,6 +21,7 @@ import JournalSettings from "./components/JournalAdmin/JournalSettings/JournalSe
 import AddJournal from "./components/JournalAdmin/AddJournal/AddJournal";
 import JournalList from "./components/JournalAdmin/AddJournal/GetEditJournal";
 import ArticlesDetails from "./pages/JournalAdmin/ArticlesDetails/ArticlesDetails";
+import EditorRequests from "./components/JournalAdmin/EditorRequests/EditorRequests";
 
 const App = () => {
   return (
@@ -54,6 +55,7 @@ const App = () => {
           <Route path="/journal-payments" element={<JournalPayments />} />
           <Route path="/journal-reports" element={<JournalReports />} />
           <Route path="/journal-settings" element={<JournalSettings />} />
+          <Route path="/editor-requests" element={<EditorRequests />} />
           <Route path="/journal-list/addjournal" element={<AddJournal />} />
           <Route path="/journal-list" element={<JournalList />} />
           <Route path="/journal-list/editjournal/:id" element={<AddJournal />} />

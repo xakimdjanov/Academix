@@ -96,6 +96,14 @@ const JournalEditors = () => {
     return safeArr(articles).filter((a) => myJournalIds.includes(String(a?.journal_id)));
   }, [articles, myJournalIds]);
 
+  // Faqat shu jurnallarga tegishli va Active holatdagi editorlar
+  const myEditors = useMemo(() => {
+    if (myJournalIds.length === 0) return [];
+    return safeArr(editors).filter(
+      (ed) => myJournalIds.includes(String(ed?.journal_id)) && ed?.status === "Active"
+    );
+  }, [editors, myJournalIds]);
+
   const loadAll = async () => {
     try {
       setLoading(true);
@@ -304,7 +312,10 @@ const JournalEditors = () => {
               className="w-full rounded-2xl border border-slate-200 px-4 py-3 focus:ring-4 focus:ring-blue-50 outline-none text-sm font-semibold text-slate-700"
             >
               <option value="">Muharrirni tanlang...</option>
-              {editors.map((ed) => {
+              {myEditors.length === 0 && (
+                <option disabled value="">-- Ushbu jurnalda tasdiqlangan editor yo'q --</option>
+              )}
+              {myEditors.map((ed) => {
                 const id = getId(ed);
                 return (
                   <option key={String(id)} value={String(id)}>
@@ -404,7 +415,7 @@ const JournalEditors = () => {
       {/* Editors Table */}
       <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b bg-slate-50/60 font-extrabold text-slate-800">
-          Muharrirlar (Jami)
+          Muharrirlar (Sizning jurnallaringizda)
         </div>
 
         <div className="overflow-x-auto">
@@ -414,27 +425,39 @@ const JournalEditors = () => {
                 <th className="py-4 px-6">ID</th>
                 <th className="py-4 px-6">F.I.Sh</th>
                 <th className="py-4 px-6">Email</th>
-                <th className="py-4 px-6">Telefon</th>
+                <th className="py-4 px-6">Jurnal</th>
+                <th className="py-4 px-6">Holat</th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-slate-50">
-              {editors.map((ed, idx) => {
-                const id = getId(ed) ?? idx;
-                return (
-                  <tr key={String(id)} className="hover:bg-blue-50/30 transition-colors">
-                    <td className="py-4 px-6 font-bold text-slate-700">{id}</td>
-                    <td className="py-4 px-6 text-slate-800 font-semibold">{getEditorName(ed)}</td>
-                    <td className="py-4 px-6 text-slate-600">{ed?.email || "—"}</td>
-                    <td className="py-4 px-6 text-slate-600">{ed?.phone || ed?.phone_number || "—"}</td>
-                  </tr>
-                );
-              })}
+              {editors
+                .filter((ed) => myJournalIds.includes(String(ed.journal_id)))
+                .map((ed, idx) => {
+                  const id = getId(ed) ?? idx;
+                  return (
+                    <tr key={String(id)} className="hover:bg-blue-50/30 transition-colors">
+                      <td className="py-4 px-6 font-bold text-slate-700">{id}</td>
+                      <td className="py-4 px-6 text-slate-800 font-semibold">{getEditorName(ed)}</td>
+                      <td className="py-4 px-6 text-slate-600">{ed?.email || "—"}</td>
+                      <td className="py-4 px-6 text-xs text-slate-500">{ed?.journal?.name || "—"}</td>
+                      <td className="py-4 px-6">
+                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${
+                          ed.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 
+                          ed.status === 'Rejected' ? 'bg-rose-100 text-rose-700' : 
+                          'bg-amber-100 text-amber-700'
+                        }`}>
+                          {ed.status?.toUpperCase() || 'PENDING'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
 
-              {editors.length === 0 && (
+              {editors.filter((ed) => myJournalIds.includes(String(ed.journal_id))).length === 0 && (
                 <tr>
-                  <td className="py-10 px-6 text-center text-slate-400" colSpan={4}>
-                    Editor topilmadi.
+                  <td className="py-10 px-6 text-center text-slate-400" colSpan={5}>
+                    Sizning jurnallaringizda editor topilmadi.
                   </td>
                 </tr>
               )}
