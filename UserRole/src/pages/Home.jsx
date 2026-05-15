@@ -13,11 +13,13 @@ import {
   FiUsers,
   FiEye
 } from "react-icons/fi";
-import { journalService } from "../services/api";
+import { journalService, tariffService } from "../services/api";
 
 const Home = () => {
   const [journals, setJournals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [tariffs, setTariffs] = useState([]);
+  const [loadingTariffs, setLoadingTariffs] = useState(true);
   const [whyChooseUs, setWhyChooseUs] = useState([]);
   const [stats, setStats] = useState({
     articles: 0,
@@ -59,7 +61,21 @@ const Home = () => {
         setLoading(false);
       }
     };
+    const fetchTariffs = async () => {
+      try {
+        const res = await tariffService.getAll();
+        const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+        // Faqat maqolalar uchun tariflarni ko'rsatamiz
+        setTariffs(data.filter(t => t.type === 'Article'));
+      } catch (err) {
+        console.error("Tariff fetch failed:", err);
+      } finally {
+        setLoadingTariffs(false);
+      }
+    };
+
     fetchJournals();
+    fetchTariffs();
   }, []);
 
   return (
@@ -250,25 +266,32 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <PricingCard
-              title="Bepul"
-              price="0"
-              features={["Maqola yuborish", "Iqtiboslarni kuzatish", "Asosiy profil"]}
-              btnText="Bepul boshlash"
-            />
-            <PricingCard
-              title="Pro"
-              price="49"
-              popular={true}
-              features={["Tezkor taqriz", "DOI biriktirish", "Ustuvor qo'llab-quvvatlash", "Analitika paneli"]}
-              btnText="Boshlash"
-            />
-            <PricingCard
-              title="Korporativ"
-              price="Maxsus"
-              features={["Bir nechta jurnallar", "Cheksiz taqrizchilar", "Brendlash", "API kirish"]}
-              btnText="Biz bilan bog'lanish"
-            />
+            {loadingTariffs ? (
+              [1, 2, 3].map(i => <div key={i} className="h-96 bg-gray-50 animate-pulse rounded-3xl"></div>)
+            ) : (
+              tariffs.map((t, idx) => (
+                <PricingCard
+                  key={t.id}
+                  title={t.name}
+                  price={t.price}
+                  popular={idx === 1}
+                  features={[
+                    t.type === 'Journal' ? (t.journal_limit ? `${t.journal_limit} ta jurnal` : "Cheksiz jurnallar") : null,
+                    t.article_limit ? `${t.article_limit} ta maqola` : "Cheksiz maqolalar",
+                    t.duration_days ? `${t.duration_days} kunlik muddat` : "Umrbod foydalanish",
+                    ...(t.description ? t.description.split(/[\n,]+/).map(f => f.trim()).filter(f => f.length > 0) : [])
+                  ].filter(Boolean)}
+                  btnText={t.price === 0 ? "Bepul boshlash" : "Hoziroq boshlash"}
+                  link={`/signup?tariff_id=${t.id}`}
+                />
+              ))
+            )}
+            
+            {!loadingTariffs && tariffs.length === 0 && (
+                <div className="col-span-full text-center p-12 bg-gray-50 rounded-3xl">
+                    <p className="text-gray-400 font-bold">Hozircha tariflar mavjud emas.</p>
+                </div>
+            )}
           </div>
         </div>
       </section>
@@ -357,14 +380,14 @@ const StatItem = ({ label, value }) => (
   </div>
 );
 
-const PricingCard = ({ title, price, features, popular, btnText }) => (
+const PricingCard = ({ title, price, features, popular, btnText, link }) => (
   <div className={`p-10 rounded-3xl border ${popular ? 'border-blue-600 shadow-2xl relative bg-blue-600 text-white' : 'border-gray-200 bg-white text-[#002147]'} transition-all`}>
     {popular && <div className="absolute top-0 right-10 -translate-y-1/2 bg-yellow-400 text-[#002147] text-[10px] font-black uppercase px-4 py-1.5 rounded-full shadow-lg">Eng mashhur</div>}
     <div className="mb-8">
       <span className="text-sm font-bold uppercase tracking-widest opacity-60">{title}</span>
       <div className="mt-4 flex items-baseline">
-        <span className="text-4xl font-black">{price === "Maxsus" ? "" : "$"}{price}</span>
-        {price !== "Maxsus" && <span className="text-sm opacity-60 ml-2">/oyiga</span>}
+        <span className="text-4xl font-black">{price === "Maxsus" || isNaN(price) ? "" : "$"}{price}</span>
+        {!(price === "Maxsus" || isNaN(price)) && <span className="text-sm opacity-60 ml-2">/oyiga</span>}
       </div>
     </div>
     <ul className="space-y-4 mb-10">
@@ -374,7 +397,7 @@ const PricingCard = ({ title, price, features, popular, btnText }) => (
         </li>
       ))}
     </ul>
-    <Link to="/signup" className={`block w-full text-center py-4 rounded-xl font-bold transition ${popular ? 'bg-white text-blue-600 hover:bg-blue-50' : 'bg-[#002147] text-white hover:bg-[#003366]'}`}>
+    <Link to={link || "/signup"} className={`block w-full text-center py-4 rounded-xl font-bold transition ${popular ? 'bg-white text-blue-600 hover:bg-blue-50' : 'bg-[#002147] text-white hover:bg-[#003366]'}`}>
       {btnText}
     </Link>
   </div>

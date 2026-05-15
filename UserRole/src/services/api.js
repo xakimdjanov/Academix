@@ -25,6 +25,11 @@ export const journalAdminService = {
   delete: (id) => axiosInstance.delete(`/JournalAdmin/deleteJournalAdmin/${id}`),
 };
 
+export const tariffService = {
+  getAll: () => axiosInstance.get("/tariffs"),
+  getById: (id) => axiosInstance.get(`/tariffs/${id}`),
+};
+
 // --- 3. EDITOR SERVISI ---
 export const editorService = {
   register: (data) => axiosInstance.post("/editor/register", data),
@@ -134,3 +139,12 @@ export const chatService = {
   updateStatus: (id, data) => axiosInstance.put(`/chat/updateStatus/${id}`, data),
   delete: (id) => axiosInstance.delete(`/chat/delete/${id}`),
 };
+
+// 12. SUGGESTIONS (Taklif va Shikoyatlar)
+export const suggestionService = {
+  create: (data) => axiosInstance.post("/suggestion/create", data, {
+    headers: { "Content-Type": "multipart/form-data" }
+  }),
+  getAll: () => axiosInstance.get("/suggestion/getAll"),
+  updateStatus: (id, data) => axiosInstance.put(`/suggestion/update-status/${id}`, data)
+};

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
-import { FiBookOpen, FiHash, FiGlobe, FiImage, FiPlus, FiX, FiSave, FiTag, FiInfo, FiArrowLeft } from "react-icons/fi";
+import { FiBookOpen, FiHash, FiGlobe, FiImage, FiPlus, FiX, FiSave, FiTag, FiInfo, FiArrowLeft, FiDollarSign } from "react-icons/fi";
 import { journalService } from "../../../services/api";
 
 const initialState = {
@@ -15,6 +15,7 @@ const initialState = {
   website_url: "",
   cover_image_url: "",
   status: "Active",
+  submission_fee: 0,
 };
 
 function slugify(text) {
@@ -124,7 +125,7 @@ const AddJournal = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
     const adminId = localStorage.getItem("journal_admin_id");
-    
+
     if (!adminId) return toast.error("Admin ID topilmadi");
 
     const payload = { ...form, journal_admin_id: adminId };
@@ -163,31 +164,31 @@ const AddJournal = () => {
         <form onSubmit={onSubmit} className="p-6 space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <Input icon={FiBookOpen} label="Jurnal nomi" required name="name" value={form.name} onChange={onChange} />
-            <Input 
-              icon={FiHash} 
-              label="Slug" 
-              required 
-              name="slug" 
-              value={form.slug} 
-              onChange={(e) => setForm(p => ({ ...p, slug: slugify(e.target.value) }))} 
+            <Input
+              icon={FiHash}
+              label="Slug"
+              required
+              name="slug"
+              value={form.slug}
+              onChange={(e) => setForm(p => ({ ...p, slug: slugify(e.target.value) }))}
             />
             <Input icon={FiTag} label="ISSN" required name="issn" value={form.issn} onChange={onChange} />
             <Input icon={FiInfo} label="Soha (Subject area)" required name="subject_area" value={form.subject_area} onChange={onChange} />
           </div>
 
           <Textarea icon={FiInfo} label="Tavsif (Description)" required name="description" value={form.description} onChange={onChange} rows={3} />
-          
+
           <Textarea icon={FiInfo} label="Aims & Scope" name="aims_scope" value={form.aims_scope} onChange={onChange} rows={3} />
 
           <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
             <span className="mb-2 block text-sm font-medium text-slate-700">Tillar (Languages) *</span>
             <div className="flex gap-2 mb-3">
-              <input 
-                value={langInput} 
-                onChange={(e) => setLangInput(e.target.value)} 
-                onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); addLanguage(); } }}
-                placeholder="Masalan: Uzbek" 
-                className="flex-1 rounded-lg border border-slate-200 px-4 py-2 outline-none focus:border-blue-400" 
+              <input
+                value={langInput}
+                onChange={(e) => setLangInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addLanguage(); } }}
+                placeholder="Masalan: Uzbek"
+                className="flex-1 rounded-lg border border-slate-200 px-4 py-2 outline-none focus:border-blue-400"
               />
               <button type="button" onClick={addLanguage} className="bg-white border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-100 transition flex items-center gap-2">
                 <FiPlus /> Qo'shish
@@ -211,6 +212,7 @@ const AddJournal = () => {
               <option value="Inactive">Nofaol (Inactive)</option>
               <option value="Draft">Qoralama (Draft)</option>
             </Select>
+            <Input icon={FiDollarSign} label="Maqola yuborish narxi ($)" type="number" step="0.01" name="submission_fee" value={form.submission_fee} onChange={onChange} />
           </div>
 
           <div className="flex justify-end pt-4">

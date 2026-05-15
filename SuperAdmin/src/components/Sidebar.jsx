@@ -25,11 +25,13 @@ const links = [
   { name: "Maqolalar", path: "/articles", icon: <FiFileText /> },
   { name: "Muharrirlar", path: "/editor", icon: <FiEdit3 /> },
   { name: "Loglar", path: "/logs", icon: <FiFileText /> },
+  { name: "Takliflar", path: "/suggestions", icon: <FiAlertTriangle /> },
+  { name: "Tariflar", path: "/tariffs", icon: <FiPlus /> },
   { name: "Sozlamalar", path: "/settings", icon: <FiSettings /> },
 ];
- 
+
 const Sidebar = ({ isOpen, toggleSidebar }) => {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); ``
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // ✅ Logout confirmation modal
@@ -90,9 +92,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
         {/* User Profile */}
         <div
-          className={`px-4 py-8 flex items-center transition-all ${
-            isCollapsed ? "justify-center" : "gap-4"
-          }`}
+          className={`px-4 py-8 flex items-center transition-all ${isCollapsed ? "justify-center" : "gap-4"
+            }`}
         >
           <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-xl bg-blue-600 text-white font-bold border border-white/20 shadow-lg">
             {initials}
@@ -117,10 +118,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               className={({ isActive }) => `
                 flex items-center group relative p-3 rounded-xl text-sm font-semibold transition-all
                 ${isCollapsed ? "justify-center" : "gap-3"}
-                ${
-                  isActive
-                    ? "bg-blue-600 text-white shadow-lg"
-                    : "text-white/60 hover:bg-white/5 hover:text-white"
+                ${isActive
+                  ? "bg-blue-600 text-white shadow-lg"
+                  : "text-white/60 hover:bg-white/5 hover:text-white"
                 }
               `}
             >

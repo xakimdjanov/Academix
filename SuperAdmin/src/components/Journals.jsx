@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { FiCheckCircle, FiClock, FiSlash, FiPlay, FiBook } from "react-icons/fi";
-import { journalService } from "../services/api";
+import { FiCheckCircle, FiClock, FiSlash, FiPlay, FiBook, FiDollarSign } from "react-icons/fi";
+import { journalService, adminService } from "../services/api";
 
 const normalizeStatus = (s = "") => String(s).trim().toLowerCase().replace(/\s+/g, "");
 
@@ -12,31 +12,24 @@ const isPending = (s) => {
 const isActive = (s) => normalizeStatus(s) === "active";
 const isDisabled = (s) => ["disabled", "inactive", "blocked"].includes(normalizeStatus(s));
 
-const StatusBadge = ({ status }) => {
-  if (isActive(status)) {
+const StatusBadge = ({ j }) => {
+  if (!j?.is_approved_by_admin) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-50 text-amber-600 border border-amber-100 uppercase">
+        <FiClock /> Pending Approval
+      </span>
+    );
+  }
+  if (j?.is_active) {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase">
         <FiCheckCircle /> Active
       </span>
     );
   }
-  if (isPending(status)) {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-50 text-amber-600 border border-amber-100 uppercase">
-        <FiClock /> Pending
-      </span>
-    );
-  }
-  if (isDisabled(status)) {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-rose-50 text-rose-600 border border-rose-100 uppercase">
-        <FiSlash /> Disabled
-      </span>
-    );
-  }
   return (
-    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold bg-gray-100 text-gray-600 border uppercase">
-      {status || "Unknown"}
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-rose-50 text-rose-600 border border-rose-100 uppercase">
+      <FiSlash /> Disabled
     </span>
   );
 };
@@ -75,9 +68,9 @@ const Journals = () => {
     fetchJournals();
   }, []);
 
-  const pendingList = useMemo(() => journals.filter((j) => isPending(j?.status)), [journals]);
-  const activeList = useMemo(() => journals.filter((j) => isActive(j?.status)), [journals]);
-  const disabledList = useMemo(() => journals.filter((j) => isDisabled(j?.status)), [journals]);
+  const pendingList = useMemo(() => journals.filter((j) => !j?.is_approved_by_admin), [journals]);
+  const activeList = useMemo(() => journals.filter((j) => j?.is_approved_by_admin && j?.is_active), [journals]);
+  const disabledList = useMemo(() => journals.filter((j) => j?.is_approved_by_admin && !j?.is_active), [journals]);
 
   const filteredList = useMemo(() => {
     if (tab === "pending") return pendingList;
@@ -86,17 +79,30 @@ const Journals = () => {
     return journals;
   }, [tab, journals, pendingList, activeList, disabledList]);
 
-  const setJournalStatus = async (journal, nextStatus) => {
-    const id = getId(journal);
-    if (!id) return;
-
+  const handleApprove = async (id) => {
     setBusyId(id);
+    const admin_id = localStorage.getItem("admin_id");
     try {
-      await journalService.update(id, { status: nextStatus });
-      setJournals((prev) => prev.map((j) => (getId(j) === id ? { ...j, status: nextStatus } : j)));
-      toast.success(`Journal is now ${nextStatus}`);
+      await adminService.approveJournal(id, { admin_id });
+      setJournals((prev) => prev.map((j) => (getId(j) === id ? { ...j, is_approved_by_admin: true, is_active: true } : j)));
+      toast.success("Jurnal muvaffaqiyatli tasdiqlandi");
     } catch (e) {
-      toast.error("Failed to update status");
+      toast.error("Failed to approve journal");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleToggleStatus = async (id) => {
+    setBusyId(id);
+    const admin_id = localStorage.getItem("admin_id");
+    try {
+      const res = await adminService.toggleJournalStatus(id, { admin_id });
+      const updatedJournal = res.data.journal;
+      setJournals((prev) => prev.map((j) => (getId(j) === id ? { ...j, is_active: updatedJournal.is_active } : j)));
+      toast.success(`Jurnal holati o'zgartirildi: ${updatedJournal.is_active ? "Yoqildi" : "Bloklandi"}`);
+    } catch (e) {
+      toast.error("Failed to toggle status");
     } finally {
       setBusyId(null);
     }
@@ -129,18 +135,16 @@ const Journals = () => {
     return (
       <button
         onClick={() => setTab(value)}
-        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
-          active
-            ? "bg-blue-700 text-white border-blue-700 shadow-sm shadow-blue-100"
-            : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-        }`}
+        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${active
+          ? "bg-blue-700 text-white border-blue-700 shadow-sm shadow-blue-100"
+          : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+          }`}
       >
         <span className="flex items-center gap-2">
           {label}
           <span
-            className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-              active ? "bg-white/20 text-white" : "bg-gray-100 text-gray-600"
-            }`}
+            className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${active ? "bg-white/20 text-white" : "bg-gray-100 text-gray-600"
+              }`}
           >
             {count}
           </span>
@@ -175,10 +179,10 @@ const Journals = () => {
             {tab === "all"
               ? "All Journals"
               : tab === "pending"
-              ? "Pending Approval"
-              : tab === "active"
-              ? "Active Publications"
-              : "Disabled Journals"}
+                ? "Pending Approval"
+                : tab === "active"
+                  ? "Active Publications"
+                  : "Disabled Journals"}
           </h2>
 
           <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-[10px] font-bold uppercase">
@@ -241,7 +245,14 @@ const Journals = () => {
 
                       <td className="py-4 px-6 text-sm text-gray-500 font-mono">{j?.issn}</td>
 
-                      <td className="py-4 px-6 text-sm text-gray-500 italic">{j?.subject_area}</td>
+                      <td className="py-4 px-6 text-sm text-gray-500 italic">
+                        <div>{j?.subject_area}</div>
+                        {Number(j?.submission_fee) > 0 && (
+                          <div className="flex items-center gap-1 text-[10px] font-bold text-blue-600 mt-1 uppercase">
+                            <FiDollarSign size={10} /> Fee: ${j.submission_fee}
+                          </div>
+                        )}
+                      </td>
 
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
@@ -254,41 +265,30 @@ const Journals = () => {
                       </td>
 
                       <td className="py-4 px-6">
-                        <StatusBadge status={j?.status} />
+                        <StatusBadge j={j} />
                       </td>
 
                       <td className="py-4 px-6 text-center">
-                        {pending && (
+                        {!j.is_approved_by_admin ? (
                           <button
-                            onClick={() => setJournalStatus(j, "Active")}
+                            onClick={() => handleApprove(id)}
                             disabled={busyId === id}
                             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-white hover:bg-emerald-600 transition-all disabled:opacity-50 shadow-sm shadow-emerald-100"
                           >
                             <FiCheckCircle /> {busyId === id ? "..." : "Approve"}
                           </button>
-                        )}
-
-                        {active && (
+                        ) : (
                           <button
-                            onClick={() => setJournalStatus(j, "Disabled")}
+                            onClick={() => handleToggleStatus(id)}
                             disabled={busyId === id}
-                            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 transition-all disabled:opacity-50"
+                            className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${j.is_active
+                              ? "bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100"
+                              : "bg-blue-700 text-white hover:bg-blue-800 shadow-sm shadow-blue-100"
+                              }`}
                           >
-                            <FiSlash /> {busyId === id ? "..." : "Disable"}
+                            {j.is_active ? <><FiSlash /> {busyId === id ? "..." : "Disable"}</> : <><FiPlay /> {busyId === id ? "..." : "Activate"}</>}
                           </button>
                         )}
-
-                        {disabled && (
-                          <button
-                            onClick={() => setJournalStatus(j, "Active")}
-                            disabled={busyId === id}
-                            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold bg-blue-700 text-white hover:bg-blue-800 transition-all disabled:opacity-50 shadow-sm shadow-blue-100"
-                          >
-                            <FiPlay /> {busyId === id ? "..." : "Re-activate"}
-                          </button>
-                        )}
-
-                        {!pending && !active && !disabled && <span className="text-xs text-gray-400">—</span>}
                       </td>
                     </tr>
                   );

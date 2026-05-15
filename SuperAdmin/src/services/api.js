@@ -13,6 +13,12 @@ export const adminService = {
   getById: (id) => axiosInstance.get(`/admin/getAdminById/${id}`),
   update: (id, data) => axiosInstance.put(`/admin/updateAdmin/${id}`, data),
   delete: (id) => axiosInstance.delete(`/admin/deleteAdmin/${id}`),
+  
+  // Journal & Article Management
+  approveJournal: (id, data = {}) => axiosInstance.put(`/admin/approve-journal/${id}`, data),
+  toggleJournalStatus: (id, data = {}) => axiosInstance.put(`/admin/toggle-journal-status/${id}`, data),
+  approveArticle: (id, data = {}) => axiosInstance.put(`/admin/approve-article/${id}`, data),
+  toggleArticleStatus: (id, data = {}) => axiosInstance.put(`/admin/toggle-article-status/${id}`, data),
 };
 
 // --- 2. JOURNAL ADMIN SERVISI (Jurnal boshqaruvchilari uchun) ---
@@ -46,7 +52,7 @@ export const editorService = {
 // --- 4. MAQOLALAR (ARTICLES) SERVISI ---
 export const articleService = {
   create: (data) => axiosInstance.post("/article/create", data),
-  getAll: () => axiosInstance.get("/article/getAll"),
+  getAll: () => axiosInstance.get("/article/getAll", { params: { admin: true } }),
   getById: (id) => axiosInstance.get(`/article/getById/${id}`),
   search: (query) =>
     axiosInstance.get(`/article/search`, { params: { query } }),
@@ -57,7 +63,7 @@ export const articleService = {
 // --- 5. JURNALLAR (JOURNALS) SERVISI ---
 export const journalService = {
   create: (data) => axiosInstance.post("/journal/create", data),
-  getAll: () => axiosInstance.get("/journal/getAll"),
+  getAll: () => axiosInstance.get("/journal/getAll", { params: { admin: true } }),
   getById: (id) => axiosInstance.get(`/journal/getById/${id}`),
   update: (id, data) => axiosInstance.put(`/journal/update/${id}`, data),
   delete: (id) => axiosInstance.delete(`/journal/delete/${id}`),
@@ -117,4 +123,21 @@ export const ReviewAssignments = {
   getById: (id) => axiosInstance.get(`/reviews/${id}`),
   update: (id, data) => axiosInstance.put(`/reviews/${id}`, data),
   delete: (id) => axiosInstance.delete(`/reviews/${id}`),
+};
+
+export const tariffService = {
+  getAll: () => axiosInstance.get("/tariffs"),
+  getById: (id) => axiosInstance.get(`/tariffs/${id}`),
+  create: (data) => axiosInstance.post("/tariffs", data),
+  update: (id, data) => axiosInstance.put(`/tariffs/${id}`, data),
+  delete: (id) => axiosInstance.delete(`/tariffs/${id}`),
+};
+
+// --- 12. TAKLIF VA SHIKOYATLAR (SUGGESTIONS) ---
+export const suggestionService = {
+  create: (data) => axiosInstance.post("/suggestion/create", data, {
+    headers: { "Content-Type": "multipart/form-data" }
+  }),
+  getAll: () => axiosInstance.get("/suggestion/getAll"),
+  updateStatus: (id, status) => axiosInstance.put(`/suggestion/update-status/${id}`, { status }),
 };
