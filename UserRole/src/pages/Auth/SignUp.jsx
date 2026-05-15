@@ -15,6 +15,7 @@ import {
   FiCamera,
   FiCheck,
   FiXCircle,
+  FiShield, // <-- FiShield import qilindi
 } from "react-icons/fi";
 
 const COUNTRY_OPTIONS = [
@@ -49,6 +50,9 @@ const SignUp = () => {
 
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // selectedTariff uchun state yaratildi (agar default qiymat bo'lsa null o'rniga yozishingiz mumkin)
+  const [selectedTariff, setSelectedTariff] = useState(null); 
 
   const [form, setForm] = useState({
     full_name: "",
@@ -165,7 +169,7 @@ const SignUp = () => {
       fd.append("affiliation", form.affiliation.trim());
       fd.append("country", finalCountry);
       fd.append("role", "user");
-      fd.append("avatar_url", avatarFile); // Backend User uses 'avatar_url'
+      fd.append("avatar_url", avatarFile);
       
       await userService.register(fd);
 
@@ -194,7 +198,7 @@ const SignUp = () => {
                 Hisob yaratish
               </h1>
               <p className="text-white/90 text-sm md:text-base text-center md:text-left mt-2">
-                Foydalanuvchi sifatida ro'yxatdan o'ting va profilingizni yarating
+                Foydalanuvchi sifatida ro'yxatdan o'teng va profilingizni yarating
               </p>
             </div>
           </div>
