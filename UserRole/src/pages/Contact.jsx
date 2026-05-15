@@ -1,144 +1,211 @@
 import React, { useState } from "react";
 import { FiMail, FiPhone, FiSend, FiMessageCircle, FiMapPin } from "react-icons/fi";
 import toast from "react-hot-toast";
+import { suggestionService } from "../services/api";
 
 const Contact = () => {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    
+    try {
+      const combinedMessage = `Mavzu: ${form.subject}\nIsm: ${form.name}\nEmail: ${form.email}\n\nXabar:\n${form.message}`;
+      
+      const formData = new FormData();
+      formData.append("type", "Boshqa");
+      formData.append("message", combinedMessage);
+      
+      const userId = localStorage.getItem("user_id");
+      if (userId) formData.append("user_id", userId);
+
+      await suggestionService.create(formData);
+
       toast.success("Xabar muvaffaqiyatli yuborildi!");
       setForm({ name: "", email: "", subject: "", message: "" });
+    } catch (error) {
+      console.error(error);
+      toast.error("Xatolik yuz berdi. Iltimos, qayta urinib ko'ring.");
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
-    <div className="bg-[#F6F8FB] min-h-screen">
-      {/* Header */}
-      <section className="bg-[#002147] text-white py-20 md:py-32">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-black mb-6">Biz bilan bog'lanish</h1>
-          <p className="text-blue-100/70 text-lg md:text-xl max-w-2xl mx-auto">
-            Obunalar yoki tahririyat jarayonlari bo'yicha savollaringiz bormi? 
-            Bizning qo'llab-quvvatlash jamoamiz sizga 24/7 yordam berishga tayyor.
+    <div className="bg-[#f8fafc] min-h-screen font-sans selection:bg-blue-500 selection:text-white">
+      {/* Premium Header */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#001f3f] via-[#0a2e5c] to-[#001f3f] text-white py-24 md:py-40">
+        {/* Background decorative blobs */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 opacity-40">
+          <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-500/30 blur-[120px]"></div>
+          <div className="absolute top-[20%] -right-[10%] w-[40%] h-[40%] rounded-full bg-cyan-400/20 blur-[100px]"></div>
+          <div className="absolute -bottom-[20%] left-[20%] w-[60%] h-[60%] rounded-full bg-indigo-500/20 blur-[120px]"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-5 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-blue-200 text-xs font-bold tracking-widest uppercase mb-8 shadow-xl">
+             <FiMessageCircle className="text-sm" /> Biz bilan aloqa
+          </div>
+          <h1 className="text-5xl md:text-7xl font-black mb-8 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-gray-300">
+            Savollaringiz bormi? <br className="hidden md:block"/> Biz yordamga tayyormiz
+          </h1>
+          <p className="text-blue-100/80 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed">
+            Platforma faoliyati yoki obunalar bo'yicha savollaringizni yo'llang. Bizning qo'llab-quvvatlash jamoamiz sizga 24/7 yordam beradi.
           </p>
+        </div>
+        
+        {/* Custom shape divider */}
+        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none">
+           <svg className="relative block w-full h-[50px] md:h-[100px]" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+              <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C59.71,118,130.83,124.22,190.61,115.17,235.32,108.41,278.4,85.29,321.39,56.44Z" className="fill-[#f8fafc]"></path>
+           </svg>
         </div>
       </section>
 
       {/* Contact Content */}
-      <section className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-20">
-         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
+         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+            
             {/* Info Sidebar */}
-            <div className="lg:col-span-4 space-y-6">
+            <div className="lg:col-span-5 grid sm:grid-cols-2 lg:grid-cols-1 gap-6">
                <ContactInfoCard 
                   icon={<FiMail />} 
                   label="Elektron pochta" 
-                  value="support@academix.uz" 
+                  value="stacknowa@gmail.com" 
                   sub="24 soat ichida javob beriladi"
+                  href="mailto:stacknowa@gmail.com"
                />
                <ContactInfoCard 
                   icon={<FiPhone />} 
                   label="To'g'ridan-to'g'ri bog'lanish" 
-                  value="+998 (71) 123-45-67" 
+                  value="+998 (20) 014-66-67" 
                   sub="Du-Ju, 9:00-18:00"
+                  href="tel:+998200146667"
                />
                <ContactInfoCard 
                   icon={<FiMessageCircle />} 
                   label="Telegram kanal" 
-                  value="@academix_admin" 
+                  value="@stacknowa" 
                   sub="Jamiyatimizga qo'shiling"
+                  href="https://t.me/stacknowa"
                />
                <ContactInfoCard 
                   icon={<FiMapPin />} 
                   label="Asosiy ofis" 
-                  value="123-uy, Fan ko'chasi, Toshkent, O'zbekiston" 
+                  value="Namangan shahar" 
                   sub="Tashrif buyuruvchilar uchun ochiq"
                />
             </div>
 
             {/* Form */}
-            <div className="lg:col-span-8">
-               <div className="bg-white rounded-[2.5rem] shadow-xl p-8 md:p-12 border border-gray-100">
-                  <h2 className="text-3xl font-black text-[#002147] mb-8">Xabar qoldiring</h2>
-                  <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-500 ml-1 uppercase tracking-widest">Ism-sharifingiz</label>
-                        <input 
-                           required
-                           type="text" 
-                           placeholder="Eshmatov Toshmat"
-                           value={form.name}
-                           onChange={e => setForm({...form, name: e.target.value})}
-                           className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-                        />
-                     </div>
-                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-500 ml-1 uppercase tracking-widest">Elektron pochta manzili</label>
-                        <input 
-                           required
-                           type="email" 
-                           placeholder="email@manzil.com"
-                           value={form.email}
-                           onChange={e => setForm({...form, email: e.target.value})}
-                           className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-                        />
-                     </div>
-                     <div className="md:col-span-2 space-y-2">
-                        <label className="text-sm font-bold text-gray-500 ml-1 uppercase tracking-widest">Mavzu</label>
-                        <input 
-                           required
-                           type="text" 
-                           placeholder="Savol mavzusi"
-                           value={form.subject}
-                           onChange={e => setForm({...form, subject: e.target.value})}
-                           className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-                        />
-                     </div>
-                     <div className="md:col-span-2 space-y-2">
-                        <label className="text-sm font-bold text-gray-500 ml-1 uppercase tracking-widest">Sizning xabaringiz</label>
-                        <textarea 
-                           required
-                           rows="5"
-                           placeholder="Sizga qanday yordam kerakligini ayting..."
-                           value={form.message}
-                           onChange={e => setForm({...form, message: e.target.value})}
-                           className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium resize-none text-sm"
-                        ></textarea>
-                     </div>
-                     <div className="md:col-span-2">
-                        <button 
-                           type="submit" 
-                           disabled={loading}
-                           className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-xl shadow-blue-500/20 active:scale-[0.98] flex items-center justify-center gap-2"
-                        >
-                           {loading ? "Yuborilmoqda..." : "Xabarni yuborish"} <FiSend />
-                        </button>
-                     </div>
-                  </form>
+            <div className="lg:col-span-7">
+               <div className="bg-white rounded-[2rem] shadow-2xl shadow-blue-900/5 p-8 md:p-12 border border-gray-100/50 backdrop-blur-xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -mr-20 -mt-20 z-0"></div>
+                  
+                  <div className="relative z-10">
+                     <h2 className="text-3xl font-black text-[#001f3f] mb-8">Xabar qoldiring</h2>
+                     <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2 group">
+                           <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-blue-600">Ism-sharifingiz</label>
+                           <input 
+                              required
+                              type="text" 
+                              placeholder="Eshmatov Toshmat"
+                              value={form.name}
+                              onChange={e => setForm({...form, name: e.target.value})}
+                              className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-5 py-4 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:bg-white transition-all font-medium"
+                           />
+                        </div>
+                        <div className="space-y-2 group">
+                           <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-blue-600">Pochta manzili</label>
+                           <input 
+                              required
+                              type="email" 
+                              placeholder="email@manzil.com"
+                              value={form.email}
+                              onChange={e => setForm({...form, email: e.target.value})}
+                              className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-5 py-4 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:bg-white transition-all font-medium"
+                           />
+                        </div>
+                        <div className="md:col-span-2 space-y-2 group">
+                           <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-blue-600">Mavzu</label>
+                           <input 
+                              required
+                              type="text" 
+                              placeholder="Xabaringiz mavzusi"
+                              value={form.subject}
+                              onChange={e => setForm({...form, subject: e.target.value})}
+                              className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-5 py-4 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:bg-white transition-all font-medium"
+                           />
+                        </div>
+                        <div className="md:col-span-2 space-y-2 group">
+                           <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-blue-600">Sizning xabaringiz</label>
+                           <textarea 
+                              required
+                              rows="5"
+                              placeholder="Sizga qanday yordam kerakligini batafsil yozing..."
+                              value={form.message}
+                              onChange={e => setForm({...form, message: e.target.value})}
+                              className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-5 py-4 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:bg-white transition-all font-medium resize-none"
+                           ></textarea>
+                        </div>
+                        <div className="md:col-span-2 pt-2">
+                           <button 
+                              type="submit" 
+                              disabled={loading}
+                              className="w-full py-4 bg-[#0052cc] hover:bg-[#0043a8] text-white rounded-xl font-bold transition-all duration-300 shadow-xl shadow-blue-600/20 hover:shadow-blue-600/40 active:scale-[0.98] flex items-center justify-center gap-3 group overflow-hidden relative"
+                           >
+                              <span className="relative z-10 flex items-center gap-2">
+                                 {loading ? "Yuborilmoqda..." : "Xabarni yuborish"} 
+                                 <FiSend className={`transition-transform duration-300 ${loading ? 'animate-pulse' : 'group-hover:-translate-y-1 group-hover:translate-x-1'}`} />
+                              </span>
+                              <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-white/20 to-blue-400/0 translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                           </button>
+                        </div>
+                     </form>
+                  </div>
                </div>
             </div>
          </div>
       </section>
+      
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes shimmer {
+          100% { transform: translateX(100%); }
+        }
+      `}} />
     </div>
   );
 };
 
-const ContactInfoCard = ({ icon, label, value, sub }) => (
-  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5 group hover:border-blue-200 transition-colors">
-     <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 text-xl font-bold group-hover:bg-blue-600 group-hover:text-white transition-all">
-        {icon}
-     </div>
-     <div>
-        <div className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-1">{label}</div>
-        <div className="text-sm font-bold text-[#002147] mb-0.5">{value}</div>
-        <div className="text-[10px] font-medium text-blue-400 italic">{sub}</div>
-     </div>
-  </div>
-);
+const ContactInfoCard = ({ icon, label, value, sub, href }) => {
+  const content = (
+    <div className="bg-white p-6 rounded-2xl shadow-lg shadow-gray-200/40 border border-gray-100 flex items-center gap-5 group hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/10 hover:border-blue-200 transition-all duration-300 h-full relative overflow-hidden">
+       {/* Card highlight effect */}
+       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+       
+       <div className="w-14 h-14 shrink-0 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 text-2xl font-bold group-hover:bg-[#0052cc] group-hover:text-white group-hover:scale-110 transition-all duration-300 relative z-10 shadow-sm">
+          {icon}
+       </div>
+       <div className="relative z-10">
+          <div className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-1.5">{label}</div>
+          <div className="text-base font-bold text-[#001f3f] mb-1 group-hover:text-[#0052cc] transition-colors">{value}</div>
+          <div className="text-xs font-medium text-gray-500">{sub}</div>
+       </div>
+    </div>
+  );
+
+  return href ? (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="block h-full cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-2xl">
+      {content}
+    </a>
+  ) : (
+    <div className="h-full">
+      {content}
+    </div>
+  );
+};
 
 export default Contact;

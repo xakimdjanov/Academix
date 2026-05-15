@@ -165,12 +165,9 @@ const SignUp = () => {
       fd.append("affiliation", form.affiliation.trim());
       fd.append("country", finalCountry);
       fd.append("role", "user");
-      fd.append("avatar_url", avatarFile);
-
-      const res = await userService.register(fd);
-
-      const user = res?.data?.user || res?.user || res?.data;
-      if (user) localStorage.setItem("user_data", JSON.stringify(user));
+      fd.append("avatar_url", avatarFile); // Backend User uses 'avatar_url'
+      
+      await userService.register(fd);
 
       toast.success("Ro'yxatdan o'tish muvaffaqiyatli yakunlandi!");
       navigate("/signin");
@@ -199,13 +196,6 @@ const SignUp = () => {
               <p className="text-white/90 text-sm md:text-base text-center md:text-left mt-2">
                 Foydalanuvchi sifatida ro'yxatdan o'ting va profilingizni yarating
               </p>
-            </div>
-
-            <div className="mt-4 md:mt-0 flex justify-center md:justify-end">
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span className="text-white text-sm">Xavfsiz</span>
-              </div>
             </div>
           </div>
         </div>
@@ -288,6 +278,28 @@ const SignUp = () => {
                   </div>
                 </div>
               </div>
+
+              {selectedTariff && (
+                  <div className="bg-blue-50/50 rounded-xl border border-blue-100 p-6 space-y-4">
+                      <div className="flex items-center gap-2 text-blue-800 font-bold">
+                          <FiShield /> Tarif imkoniyatlari
+                      </div>
+                      <div className="space-y-2 text-sm text-blue-700 font-medium">
+                          <div className="flex justify-between">
+                              <span>Jurnallar:</span>
+                              <span className="font-bold">{selectedTariff.journal_limit || 'Cheksiz'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                              <span>Maqolalar:</span>
+                              <span className="font-bold">{selectedTariff.article_limit || 'Cheksiz'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                              <span>Muddati:</span>
+                              <span className="font-bold">{selectedTariff.duration_days ? `${selectedTariff.duration_days} kun` : 'Umrbod'}</span>
+                          </div>
+                      </div>
+                  </div>
+              )}
             </div>
 
             {/* Form */}
@@ -425,18 +437,8 @@ const SignUp = () => {
                         <FiGlobe className="text-[#0B2A6D]" />
                       </div>
                       <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <svg
-                          className="w-4 h-4 text-[#6B7280]"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
+                        <svg className="w-4 h-4 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </div>
                     </div>

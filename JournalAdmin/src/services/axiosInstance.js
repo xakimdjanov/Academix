@@ -21,7 +21,7 @@ axiosInstance.interceptors.request.use(
 // ✅ Response: 401 bo‘lsa tokenni o‘chirish (ixtiyoriy, lekin foydali)
 axiosInstance.interceptors.response.use(
   (res) => res,
-  (error) => {z
+  (error) => {
     if (error?.response?.status === 401) {
       localStorage.removeItem("token");
     }

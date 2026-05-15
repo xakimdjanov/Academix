@@ -13,6 +13,7 @@ import {
   FiChevronRight,
   FiAlertTriangle,
   FiMessageCircle,
+  FiGlobe,
 } from "react-icons/fi";
 import { userService, chatService, notificationService } from "../services/api";
 
@@ -25,9 +26,10 @@ const menuItems = [
   { path: "/submit-article", label: "Maqola yuborish", icon: FiSend },
   { path: "/notifications", label: "Bildirishnomalar", icon: FiBell },
   { path: "/chat", label: "Xabarlar", icon: FiMessageCircle },
+  { path: "/suggestions", label: "Takliflar", icon: FiAlertTriangle },
 ];
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -52,7 +54,7 @@ const Sidebar = () => {
       if (cached) {
         try {
           setUser(JSON.parse(cached));
-        } catch {}
+        } catch { }
       }
       try {
         const res = await userService.getById(userId);
@@ -61,7 +63,7 @@ const Sidebar = () => {
           setUser(userData);
           localStorage.setItem("user_data", JSON.stringify(userData));
         }
-      } catch (e) {}
+      } catch (e) { }
     };
     load();
   }, [userId]);
@@ -180,9 +182,8 @@ const Sidebar = () => {
               <div className="flex items-center w-full justify-between">
                 <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className={`shrink-0 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 overflow-hidden flex items-center justify-center font-bold border border-white/20 shadow-lg transition-all duration-300 ${
-                      isCollapsed && !isMobileOpen ? "w-12 h-12" : "w-11 h-11"
-                    }`}
+                    className={`shrink-0 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 overflow-hidden flex items-center justify-center font-bold border border-white/20 shadow-lg transition-all duration-300 ${isCollapsed && !isMobileOpen ? "w-12 h-12" : "w-11 h-11"
+                      }`}
                   >
                     {avatarUrl ? (
                       <img
@@ -242,14 +243,12 @@ const Sidebar = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setIsMobileOpen(false)}
-                  className={`flex items-center group relative p-3 rounded-xl transition-all duration-200 ${
-                    isCollapsed && !isMobileOpen ? "justify-center" : "gap-3"
-                  } ${isActive ? "bg-blue-600 shadow-lg shadow-blue-900/40 text-white" : "text-white/60 hover:bg-white/5 hover:text-white"}`}
+                  className={`flex items-center group relative p-3 rounded-xl transition-all duration-200 ${isCollapsed && !isMobileOpen ? "justify-center" : "gap-3"
+                    } ${isActive ? "bg-blue-600 shadow-lg shadow-blue-900/40 text-white" : "text-white/60 hover:bg-white/5 hover:text-white"}`}
                 >
                   <Icon
-                    className={`text-xl shrink-0 transition-transform duration-200 ${
-                      isActive ? "scale-110" : "group-hover:scale-110"
-                    }`}
+                    className={`text-xl shrink-0 transition-transform duration-200 ${isActive ? "scale-110" : "group-hover:scale-110"
+                      }`}
                   />
 
                   {(!isCollapsed || isMobileOpen) && (
@@ -284,13 +283,21 @@ const Sidebar = () => {
             })}
           </nav>
 
-          {/* Logout */}
-          <div className="p-4 border-t border-white/5 shrink-0">
+          {/* Logout & Saytga Qaytish */}
+          <div className="p-4 border-t border-white/5 shrink-0 space-y-2">
+            <a
+              href="http://localhost:5173"
+              className={`w-full flex items-center p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 transition-all duration-200 ${isCollapsed && !isMobileOpen ? "justify-center" : "gap-3"
+                }`}
+              title={isCollapsed && !isMobileOpen ? "Saytga qaytish" : ""}
+            >
+              <FiGlobe className="text-xl shrink-0" />
+              {(!isCollapsed || isMobileOpen) && <span className="text-[14px] font-bold">Saytga qaytish</span>}
+            </a>
             <button
               onClick={() => setIsLogoutModalOpen(true)}
-              className={`w-full flex items-center p-3 rounded-xl bg-red-500/5 hover:bg-red-500/15 text-red-400/80 hover:text-red-400 transition-all duration-200 ${
-                isCollapsed && !isMobileOpen ? "justify-center" : "gap-3"
-              }`}
+              className={`w-full flex items-center p-3 rounded-xl bg-red-500/5 hover:bg-red-500/15 text-red-400/80 hover:text-red-400 transition-all duration-200 ${isCollapsed && !isMobileOpen ? "justify-center" : "gap-3"
+                }`}
             >
               <FiLogOut className="text-xl shrink-0" />
               {(!isCollapsed || isMobileOpen) && <span className="text-[14px] font-bold">Chiqish</span>}

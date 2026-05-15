@@ -120,5 +120,9 @@ export const ReviewAssignments = {
   getAll: () => axiosInstance.get("/reviews"),
   getById: (id) => axiosInstance.get(`/reviews/${id}`),
   update: (id, data) => axiosInstance.put(`/reviews/${id}`, data),
-  delete: (id) => axiosInstance.delete(`/reviews/${id}`),
+}
+// 12. TARIFFS
+export const tariffService = {
+  getAll: () => axiosInstance.get("/tariffs"),
+  getById: (id) => axiosInstance.get(`/tariffs/${id}`),
 };

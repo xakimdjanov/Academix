@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, Link } from "react-router-dom";
-import { journalAdminService } from "../../../services/api";
+import { journalAdminService, tariffService } from "../../../services/api";
 import {
   FiEye,
   FiEyeOff,
@@ -15,6 +15,7 @@ import {
   FiCamera,
   FiCheck,
   FiXCircle,
+  FiAward
 } from "react-icons/fi";
 
 const COUNTRY_OPTIONS = [
@@ -49,6 +50,7 @@ const SignUp = () => {
 
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [tariffs, setTariffs] = useState([]);
 
   const [form, setForm] = useState({
     full_name: "",
@@ -59,9 +61,17 @@ const SignUp = () => {
     affiliation: "",
     country: "O'zbekiston",
     country_other: "",
+    tariff_id: "",
   });
 
   const [avatarFile, setAvatarFile] = useState(null);
+
+  useEffect(() => {
+    tariffService.getAll().then(res => {
+      const list = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      setTariffs(list);
+    }).catch(err => console.error("Tariflarni yuklashda xato:", err));
+  }, []);
 
   const avatarPreview = useMemo(() => {
     if (!avatarFile) return null;
@@ -159,6 +169,12 @@ const SignUp = () => {
         return;
       }
 
+      if (!form.tariff_id) {
+        toast.error("Iltimos, tarif rejasini tanlang.");
+        setLoading(false);
+        return;
+      }
+
       const fd = new FormData();
 
       fd.append("full_name", form.full_name.trim());
@@ -168,6 +184,7 @@ const SignUp = () => {
       fd.append("orcid", form.orcid.trim());
       fd.append("affiliation", form.affiliation.trim());
       fd.append("country", finalCountry);
+      fd.append("tariff_id", form.tariff_id);
       fd.append("role", "journal_admin");
       fd.append("avatar", avatarFile);
 
@@ -425,18 +442,8 @@ const SignUp = () => {
                         <FiGlobe className="text-[#1F4F8F]" />
                       </div>
                       <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <svg
-                          className="w-4 h-4 text-[#6B7280]"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
+                        <svg className="w-4 h-4 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </div>
                     </div>
@@ -450,6 +457,36 @@ const SignUp = () => {
                         className="mt-3 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#1F4F8F] focus:border-transparent"
                       />
                     )}
+                  </div>
+
+                  {/* Tariff Selection */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-[#1F2937] mb-2">
+                      Tarif Rejasi *
+                    </label>
+                    <div className="relative">
+                      <select
+                        name="tariff_id"
+                        value={form.tariff_id}
+                        onChange={onChange}
+                        className={`${inputCls} appearance-none pr-10 hover:cursor-pointer font-bold text-blue-800 bg-blue-50/30`}
+                      >
+                        <option value="">Tarifni tanlang...</option>
+                        {tariffs.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.name} — ${t.price} ({t.journal_limit || 'Cheksiz'} jurnal, {t.article_limit || 'Cheksiz'} maqola)
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                        <FiAward className="text-[#1F4F8F]" />
+                      </div>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <svg className="w-4 h-4 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

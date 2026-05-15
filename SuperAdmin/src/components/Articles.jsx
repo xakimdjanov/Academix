@@ -3,52 +3,43 @@ import toast from "react-hot-toast";
 import { 
   FiFileText, FiCheckCircle, FiClock, FiXCircle, 
   FiEye, FiTrash2, FiDownload, FiSearch, FiFilter, FiUser, FiCalendar, FiBook, FiInfo, FiLayers, FiGlobe, FiChevronRight, FiChevronLeft,
-  FiPhone, FiMail, FiExternalLink
+  FiPhone, FiMail, FiExternalLink, FiSlash, FiPlay
 } from "react-icons/fi";
-import { articleService } from "../services/api";
+import { articleService, adminService } from "../services/api";
 
-const StatusBadge = ({ status }) => {
-  const s = String(status || "").toLowerCase();
+const StatusBadge = ({ a }) => {
+  const s = String(a.status || "").toLowerCase();
   
-  if (s === "accepted" || s === "public" || s === "published") {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase tracking-wider">
-        <FiCheckCircle /> {s === "published" ? "Nashr qilingan" : "Qabul qilingan"}
-      </span>
-    );
-  }
-  if (s === "submitted" || s === "pending") {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-100 uppercase tracking-wider">
-        <FiClock /> Yuborilgan
-      </span>
-    );
-  }
-  if (s === "under review") {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-wider">
-        <FiEdit3 /> Ko'rib chiqilmoqda
-      </span>
-    );
-  }
-  if (s === "needs revision") {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-orange-50 text-orange-600 border border-orange-100 uppercase tracking-wider">
-        <FiAlertCircle /> Tahrir kutilmoqda
-      </span>
-    );
-  }
-  if (s === "rejected") {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-100 uppercase tracking-wider">
-        <FiXCircle /> Rad etilgan
-      </span>
-    );
-  }
   return (
-    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold bg-gray-100 text-gray-600 border uppercase tracking-wider">
-      {status || "Noma'lum"}
-    </span>
+    <div className="flex flex-col gap-1">
+      {/* Original Status */}
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider border ${
+        (s === "accepted" || s === "published") ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+        (s === "submitted" || s === "pending") ? "bg-amber-50 text-amber-600 border-amber-100" :
+        s === "rejected" ? "bg-rose-50 text-rose-600 border-rose-100" :
+        "bg-blue-50 text-blue-600 border-blue-100"
+      }`}>
+        {s === "published" ? <FiCheckCircle /> : <FiClock />} {a.status}
+      </span>
+      
+      {/* Admin Approval */}
+      {!a.is_approved_by_admin ? (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[8px] font-black bg-rose-50 text-rose-500 border border-rose-100 uppercase tracking-tighter">
+          <FiXCircle size={10} /> Tasdiqlanmagan
+        </span>
+      ) : (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[8px] font-black bg-indigo-50 text-indigo-500 border border-indigo-100 uppercase tracking-tighter">
+          <FiCheckCircle size={10} /> Tasdiqlangan
+        </span>
+      )}
+
+      {/* Active Status */}
+      {!a.is_active && (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[8px] font-black bg-gray-100 text-gray-500 border border-gray-200 uppercase tracking-tighter">
+          <FiSlash size={10} /> Yashirilgan
+        </span>
+      )}
+    </div>
   );
 };
 
@@ -95,6 +86,37 @@ const Articles = () => {
       }
     } catch (e) {
       toast.error("O'chirishda xatolik");
+    }
+  };
+
+  const handleApprove = async (e, id) => {
+    e.stopPropagation();
+    setIsUpdating(true);
+    const admin_id = localStorage.getItem("admin_id");
+    try {
+      await adminService.approveArticle(id, { admin_id });
+      toast.success("Maqola tasdiqlandi");
+      setArticles(prev => prev.map(a => (a.id === id || a._id === id) ? { ...a, is_approved_by_admin: true, is_active: true } : a));
+    } catch (error) {
+      toast.error("Tasdiqlashda xatolik");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleToggleStatus = async (e, id) => {
+    e.stopPropagation();
+    setIsUpdating(true);
+    const admin_id = localStorage.getItem("admin_id");
+    try {
+      const res = await adminService.toggleArticleStatus(id, { admin_id });
+      const updated = res.data.article;
+      toast.success(updated.is_active ? "Maqola yoqildi" : "Maqola yashirildi");
+      setArticles(prev => prev.map(a => (a.id === id || a._id === id) ? { ...a, is_active: updated.is_active } : a));
+    } catch (error) {
+      toast.error("Statusni o'zgartirishda xatolik");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -269,11 +291,30 @@ const Articles = () => {
                             </td>
 
                             <td className="py-5 px-6">
-                            <StatusBadge status={a.status} />
+                            <StatusBadge a={a} />
                             </td>
 
                             <td className="py-5 px-6">
                             <div className="flex items-center justify-center gap-2">
+                                {!a.is_approved_by_admin ? (
+                                    <button
+                                        onClick={(e) => handleApprove(e, id)}
+                                        disabled={isUpdating}
+                                        className="p-2 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                                        title="Tasdiqlash"
+                                    >
+                                        <FiCheckCircle size={16} />
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={(e) => handleToggleStatus(e, id)}
+                                        disabled={isUpdating}
+                                        className={`p-2 rounded-lg transition-all shadow-sm ${a.is_active ? 'bg-amber-50 text-amber-600 hover:bg-amber-600' : 'bg-blue-50 text-blue-600 hover:bg-blue-600'} hover:text-white`}
+                                        title={a.is_active ? "Yashirish" : "Ko'rsatish"}
+                                    >
+                                        {a.is_active ? <FiSlash size={16} /> : <FiPlay size={16} />}
+                                    </button>
+                                )}
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setSelectedArticle(a); }}
                                     className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
@@ -325,7 +366,7 @@ const Articles = () => {
                                     <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-[10px] font-black uppercase rounded-full tracking-widest border border-blue-500/30">
                                         {selectedArticle.category || "Ilmiy maqola"}
                                     </span>
-                                    <StatusBadge status={selectedArticle.status} />
+                                    <StatusBadge a={selectedArticle} />
                                 </div>
                                 <h2 className="text-xl md:text-2xl font-bold leading-tight" title={selectedArticle.title}>
                                     {selectedArticle.title}
