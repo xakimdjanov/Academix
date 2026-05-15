@@ -29,6 +29,7 @@ import MyArticleDetail from "./pages/MyArticleDetail";
 import Chat from "./components/Chat";
 import MyArticleComments from "./components/MyArticleComments";
 import MyComments from "./components/MyComments";
+import Suggestions from "./components/Suggestions";
 
 // ✅ optional: simple private route wrapper
 const PrivateRoute = ({ children }) => {
@@ -57,6 +58,7 @@ const App = () => {
           <Route path="/signin" element={<SignIn />} />
           <Route path="/forgot-password" element={<ForgotPass />} />
           <Route path="/reset-password" element={<ResetPass />} />
+          <Route path="/suggestions" element={<Suggestions />} />
         </Route>
 
         {/* ✅ Auth routes (Layoutsiz olib tashlandi, MainLayout ga ko'chirildi) */}

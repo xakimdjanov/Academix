@@ -185,12 +185,10 @@ const JournalEditors = () => {
     if (Number.isNaN(articleIdNum) || articleIdNum <= 0) return toast.error("article_id xato");
     if (Number.isNaN(editorIdNum) || editorIdNum <= 0) return toast.error("editor_id xato");
 
-    // ✅ FK xato chiqmasligi uchun assigned_by = editor_id
-    // UI’da esa Assigned By input = article owner name (user)
     const payload = {
       article_id: articleIdNum,
       editor_id: editorIdNum,
-      assigned_by: editorIdNum, // ✅ FK Editors.id
+      assigned_by: Number(myAdminId), 
       due_date: form.due_date,
       message: form.message?.trim() || "",
     };

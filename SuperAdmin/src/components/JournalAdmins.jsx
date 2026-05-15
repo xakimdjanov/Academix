@@ -3,7 +3,7 @@ import { journalAdminService } from "../services/api";
 import toast from "react-hot-toast";
 import { 
   FiUsers, FiMail, FiShield, FiPlus, FiTrash2, FiEdit2, FiX, 
-  FiCamera, FiCheck, FiUser, FiGlobe, FiBriefcase, FiPhone, FiLock, FiAlertTriangle 
+  FiCamera, FiCheck, FiUser, FiGlobe, FiBriefcase, FiPhone, FiLock, FiAlertTriangle, FiAward 
 } from "react-icons/fi";
 
 const COUNTRY_OPTIONS = ["Uzbekistan", "Kazakhstan", "Kyrgyzstan", "Tajikistan", "Turkmenistan", "United States", "Others"];
@@ -35,6 +35,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, loading }) =
 
 const JournalAdmins = () => {
   const [admins, setAdmins] = useState([]);
+  const [tariffs, setTariffs] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Modals States
@@ -52,6 +53,7 @@ const JournalAdmins = () => {
     affiliation: "",
     country: "Uzbekistan",
     country_other: "",
+    tariff_id: "",
   };
   const [form, setForm] = useState(initialForm);
   const [avatarFile, setAvatarFile] = useState(null);
@@ -71,8 +73,18 @@ const JournalAdmins = () => {
     }
   };
 
+  const fetchTariffs = async () => {
+    try {
+      const res = await journalAdminService.getTariffs?.() || (await fetch("http://localhost:5000/tariff").then(r => r.json()));
+      setTariffs(Array.isArray(res) ? res : res.data || []);
+    } catch (error) {
+      console.error("Tariflarni yuklab bo'lmadi");
+    }
+  };
+
   useEffect(() => {
     fetchAdmins();
+    fetchTariffs();
   }, []);
 
   const openAddModal = () => {
@@ -93,6 +105,7 @@ const JournalAdmins = () => {
       affiliation: admin.affiliation || "",
       country: countryInList ? admin.country : "Others",
       country_other: countryInList ? "" : admin.country || "",
+      tariff_id: admin.tariff_id || "",
     });
     setAvatarPreview(admin.avatar_url);
     setAvatarFile(null);
@@ -128,6 +141,8 @@ const JournalAdmins = () => {
           // skip
         } else if (key === "password") {
           if (form.password) fd.append("password", form.password);
+        } else if (key === "tariff_id") {
+          if (form.tariff_id) fd.append("tariff_id", form.tariff_id);
         } else {
           fd.append(key, form[key]);
         }
@@ -237,7 +252,13 @@ const JournalAdmins = () => {
                     </td>
                     <td className="py-5 px-8">
                       <p className="text-sm font-semibold text-gray-700">{admin.affiliation || 'Noma\'lum'}</p>
-                      <p className="text-[10px] text-gray-400 uppercase tracking-tighter">ORCID: {admin.orcid || 'Mavjud emas'}</p>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <FiAward className="text-amber-500" size={12} />
+                        <span className="text-[10px] font-bold text-blue-600 uppercase tracking-tighter">
+                          {tariffs.find(t => t.id === admin.tariff_id)?.name || 'Tarifsiz'}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-gray-400 uppercase tracking-tighter mt-1">ORCID: {admin.orcid || 'Mavjud emas'}</p>
                     </td>
                     <td className="py-5 px-8 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -349,6 +370,16 @@ const JournalAdmins = () => {
                     {form.country === "Others" && (
                       <input name="country_other" value={form.country_other} onChange={handleFormChange} placeholder="Davlat nomini kiriting" className={`${inputCls} mt-3`} />
                     )}
+                  </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Tarif Rejasi</label>
+                    <div className="relative">
+                      <FiAward className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <select name="tariff_id" value={form.tariff_id} onChange={handleFormChange} className={`${inputCls} appearance-none font-bold text-blue-800`}>
+                        <option value="">Tarif tanlanmagan</option>
+                        {tariffs.map(t => <option key={t.id} value={t.id}>{t.name} (${t.price})</option>)}
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1,7 +1,6 @@
-import React from "react";
-import { Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import { FiBell } from "react-icons/fi";
+import { FiBell, FiMessageCircle } from "react-icons/fi";
 
 const Layout = () => {
   return (
