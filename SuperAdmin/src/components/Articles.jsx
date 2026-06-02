@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import { 
   FiFileText, FiCheckCircle, FiClock, FiXCircle, 
@@ -353,11 +354,11 @@ const Articles = () => {
       </div>
 
       {/* DETAIL MODAL */}
-      {selectedArticle && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-10">
-              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in" onClick={() => setSelectedArticle(null)} />
+      {selectedArticle && createPortal(
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 md:p-10 overflow-hidden">
+              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setSelectedArticle(null)} />
               
-              <div className="relative w-full max-w-5xl bg-white rounded-[2.5rem] shadow-2xl border border-white/20 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in duration-300">
+              <div className="relative w-full max-w-5xl bg-white rounded-[2.5rem] shadow-2xl border border-white/20 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in duration-200">
                   {/* Modal Header */}
                   <div className="bg-[#002147] p-6 text-white shrink-0 relative overflow-hidden">
                       <div className="relative z-10 flex items-start justify-between gap-6">
@@ -555,13 +556,14 @@ const Articles = () => {
                         </button>
                   </div>
               </div>
-          </div>
+          </div>,
+          document.body
       )}
 
       {/* Lightbox / Zoomed Image Modal */}
-      {selectedImg && (
+      {selectedImg && createPortal(
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300"
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300"
           onClick={() => setSelectedImg(null)}
         >
           <button 
@@ -578,7 +580,8 @@ const Articles = () => {
               onClick={(e) => e.stopPropagation()} 
             />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import { FiSearch, FiActivity, FiUser, FiMonitor, FiMapPin, FiClock } from "react-icons/fi";
 import { auditLogService } from "../services/api";
@@ -207,11 +208,11 @@ const Logs = () => {
       </div>
 
       {/* DETAIL MODAL */}
-      {selectedLog && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
-           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in" onClick={() => setSelectedLog(null)} />
-           <div className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl border border-white/20 overflow-hidden flex flex-col animate-in zoom-in duration-300 my-auto">
-              <div className="bg-[#002147] p-6 text-white flex justify-between items-center">
+      {selectedLog && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 overflow-hidden">
+           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setSelectedLog(null)} />
+           <div className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl border border-white/20 overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 max-h-[90vh]">
+              <div className="bg-[#002147] p-6 text-white flex justify-between items-center shrink-0">
                  <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-blue-300 border border-white/10">
                        <FiActivity size={24} />
@@ -297,7 +298,8 @@ const Logs = () => {
                  </button>
               </div>
            </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
