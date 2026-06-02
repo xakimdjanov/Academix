@@ -37,7 +37,7 @@ const Sidebar = () => {
     items.push(
       { path: "/journal-send-old-article", label: "Eski maqola qo'shish", icon: FiPlusCircle },
       { path: "/journal-editors", label: "Muharrirlarni biriktirish", icon: FiUsers },
-      { path: "/editor-requests", label: "Muharrir so'rovlari", icon: FiPlusCircle },
+      { path: "/editor-requests", label: "Muharrirlar Boshqaruvi", icon: FiPlusCircle },
       { path: "/journal-reports", label: "Hisobotlar", icon: FiBarChart2 }
     );
     return items;

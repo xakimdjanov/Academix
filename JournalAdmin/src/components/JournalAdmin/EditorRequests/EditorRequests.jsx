@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
-import toast from "react-hot-toast";
-import { FiCheck, FiX, FiRefreshCw, FiUser, FiMail, FiBook } from "react-icons/fi";
+import toast, { Toaster } from "react-hot-toast";
+import { FiCheck, FiX, FiRefreshCw, FiUser, FiMail, FiBook, FiEdit, FiLock, FiAlertCircle } from "react-icons/fi";
 import { editorService, journalService } from "../../../services/api";
 
 const EditorRequests = () => {
@@ -8,6 +8,19 @@ const EditorRequests = () => {
   const [allEditors, setAllEditors] = useState([]);
   const [allJournals, setAllJournals] = useState([]);
   
+  // Tab state: "new" or "list"
+  const [activeTab, setActiveTab] = useState("new");
+
+  // Edit Modal states
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedEditor, setSelectedEditor] = useState(null);
+  const [editForm, setEditForm] = useState({
+    fullname: "",
+    email: "",
+    password: "",
+  });
+  const [isSaving, setIsSaving] = useState(false);
+
   const myAdminId = useMemo(() => localStorage.getItem("journal_admin_id"), []);
 
   const fetchRequests = async () => {
@@ -19,7 +32,6 @@ const EditorRequests = () => {
         journalService.getAll(),
       ]);
 
-      // Har xil javob formatlarini qo'llab-quvvatlash
       const editors = Array.isArray(edRes?.data) 
         ? edRes.data 
         : Array.isArray(edRes?.data?.data) 
@@ -32,19 +44,11 @@ const EditorRequests = () => {
           ? jrRes.data.data 
           : [];
 
-      console.log("📋 All editors from API:", editors.map(e => ({
-        id: e.id, name: e.fullname, status: e.status, journal_id: e.journal_id
-      })));
-      console.log("📚 All journals from API:", journals.map(j => ({
-        id: j.id, name: j.name, admin_id: j.journal_admin_id
-      })));
-      console.log("👤 My Admin ID:", myAdminId);
-
       setAllEditors(editors);
       setAllJournals(journals);
     } catch (error) {
       console.error("Fetch error:", error);
-      toast.error("So'rovlarni yuklashda xatolik yuz berdi");
+      toast.error("Ma'lumotlarni yuklashda xatolik yuz berdi");
     } finally {
       setLoading(false);
     }
@@ -57,33 +61,37 @@ const EditorRequests = () => {
   // Menga tegishli jurnallar
   const myJournalIds = useMemo(() => {
     if (!myAdminId) return [];
-    const ids = allJournals
+    return allJournals
       .filter(j => String(j.journal_admin_id) === String(myAdminId))
       .map(j => String(j.id));
-    console.log("🗂️ My journal IDs:", ids);
-    return ids;
   }, [allJournals, myAdminId]);
 
-  // Mening jurnallarimga kelgan Pending so'rovlar
+  // Mening jurnallarimga tegishli Pending so'rovlar
   const pendingRequests = useMemo(() => {
-    const filtered = allEditors.filter(ed => {
+    return allEditors.filter(ed => {
       const isPending = ed.status === "Pending";
       const isMyJournal = myJournalIds.includes(String(ed.journal_id));
-      console.log(`Editor ${ed.fullname}: status=${ed.status}, journal_id=${ed.journal_id}, isPending=${isPending}, isMyJournal=${isMyJournal}`);
       return isPending && isMyJournal;
     });
-    console.log("✅ Filtered pending requests:", filtered.length);
-    return filtered;
+  }, [allEditors, myJournalIds]);
+
+  // Mening jurnallarimga biriktirilgan tasdiqlangan Active muharrirlar ro'yxati
+  const activeRequests = useMemo(() => {
+    return allEditors.filter(ed => {
+      const isActive = ed.status === "Active";
+      const isMyJournal = myJournalIds.includes(String(ed.journal_id));
+      return isActive && isMyJournal;
+    });
   }, [allEditors, myJournalIds]);
 
   const handleApprove = async (id) => {
     try {
       await editorService.updateStatus(id, "Active");
-      toast.success("Muharrir muvaffaqiyatli qabul qilindi ✅");
+      toast.success("Muharrir so'rovi qabul qilindi va faollashtirildi ✅");
       fetchRequests();
     } catch (error) {
       console.error(error);
-      toast.error("Qabul qilishda xatolik yuz berdi");
+      toast.error("Tasdiqlashda xatolik yuz berdi");
     }
   };
 
@@ -99,6 +107,50 @@ const EditorRequests = () => {
     }
   };
 
+  // Open Edit Modal
+  const openEditModal = (editor) => {
+    setSelectedEditor(editor);
+    setEditForm({
+      fullname: editor.fullname || editor.full_name || "",
+      email: editor.email || "",
+      password: "", // Always leave empty to start with
+    });
+    setIsEditModalOpen(true);
+  };
+
+  // Save Editor updates
+  const handleSaveEditor = async (e) => {
+    e.preventDefault();
+    if (!selectedEditor) return;
+    if (!editForm.fullname.trim() || !editForm.email.trim()) {
+      return toast.error("Barcha maydonlarni to'ldiring");
+    }
+
+    try {
+      setIsSaving(true);
+      const payload = {
+        fullname: editForm.fullname,
+        email: editForm.email,
+      };
+
+      // Add password only if it's filled
+      if (editForm.password.trim()) {
+        payload.password = editForm.password;
+      }
+
+      await editorService.update(selectedEditor.id, payload);
+      toast.success("Muharrir ma'lumotlari muvaffaqiyatli saqlandi ✨");
+      setIsEditModalOpen(false);
+      fetchRequests();
+    } catch (error) {
+      console.error(error);
+      const errMsg = error?.response?.data?.message || "Muharrir ma'lumotlarini tahrirlashda xatolik";
+      toast.error(errMsg);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
@@ -109,107 +161,309 @@ const EditorRequests = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
+      <Toaster position="top-right" />
+
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Muharrir So'rovlari</h1>
+          <h1 className="text-3xl font-extrabold text-[#002147] tracking-tight">Muharrirlar Boshqaruvi</h1>
           <p className="text-gray-500 mt-1">
-            Sizning jurnallaringizga kelgan yangi muharrirlik arizalari
+            Sizga biriktirilgan jurnallar muharrirlarini boshqarish va yangi so'rovlar
           </p>
         </div>
-        <button
-          onClick={fetchRequests}
-          className="flex items-center gap-2 bg-white border border-gray-200 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-50 transition-all font-semibold"
-        >
-          <FiRefreshCw /> Yangilash
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Custom Modern Tabs inside header */}
+          <div className="bg-slate-100 p-1 rounded-2xl flex border border-slate-200">
+            <button
+              onClick={() => setActiveTab("new")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeTab === "new"
+                  ? "bg-white text-[#002147] shadow-sm"
+                  : "text-gray-500 hover:text-slate-800"
+              }`}
+            >
+              Yangi so'rovlar ({pendingRequests.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("list")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeTab === "list"
+                  ? "bg-white text-[#002147] shadow-sm"
+                  : "text-gray-500 hover:text-slate-800"
+              }`}
+            >
+              Muharrirlar Ro'yxati ({activeRequests.length})
+            </button>
+          </div>
+
+          <button
+            onClick={fetchRequests}
+            className="flex items-center justify-center p-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl shadow-sm hover:bg-gray-50 hover:text-[#002147] transition-all font-semibold active:scale-95"
+            title="Yangilash"
+          >
+            <FiRefreshCw />
+          </button>
+        </div>
       </div>
 
-      {/* Debug info */}
+      {/* Warnings & Alerts */}
       {!myAdminId && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm font-semibold">
-          ⚠️ Admin ID topilmadi. Iltimos, qayta login qiling.
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-red-700 text-sm font-semibold flex items-center gap-2">
+          <FiAlertCircle className="text-lg flex-shrink-0" />
+          <span>⚠️ Admin ID topilmadi. Iltimos, qayta tizimga kiring.</span>
         </div>
       )}
 
       {myAdminId && myJournalIds.length === 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-700 text-sm font-semibold">
-          ℹ️ Sizga biriktirilgan jurnal topilmadi (Admin ID: {myAdminId}). Avval jurnal yarating.
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-700 text-sm font-semibold flex items-center gap-2">
+          <FiAlertCircle className="text-lg flex-shrink-0" />
+          <span>ℹ️ Sizga biriktirilgan jurnallar topilmadi. Avval jurnalingiz mavjudligiga ishonch hosil qiling.</span>
         </div>
       )}
 
-      {/* Editor cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {pendingRequests.map((ed) => (
-          <div
-            key={ed.id}
-            className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all"
-          >
-            {/* Card header */}
-            <div className="h-24 bg-gradient-to-r from-blue-600 to-[#1F4F8F] relative">
-              <div className="absolute -bottom-10 left-6">
-                {ed.profile_img ? (
-                  <img
-                    src={ed.profile_img}
-                    alt={ed.fullname}
-                    className="w-20 h-20 rounded-2xl object-cover border-4 border-white shadow-sm"
-                  />
-                ) : (
-                  <div className="w-20 h-20 rounded-2xl bg-gray-100 flex items-center justify-center border-4 border-white shadow-sm">
-                    <FiUser className="text-3xl text-gray-400" />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="pt-12 p-6 space-y-4">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">{ed.fullname}</h3>
-                <div className="flex items-center gap-2 text-gray-500 text-sm mt-1">
-                  <FiMail className="flex-shrink-0" />
-                  <span className="truncate">{ed.email}</span>
+      {/* --- TAB CONTENT: NEW REQUESTS --- */}
+      {activeTab === "new" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {pendingRequests.map((ed) => (
+            <div
+              key={ed.id}
+              className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-lg transition-all duration-300"
+            >
+              <div className="h-20 bg-gradient-to-r from-blue-600 to-[#002147] relative">
+                <div className="absolute -bottom-8 left-6">
+                  {ed.profile_img ? (
+                    <img
+                      src={ed.profile_img}
+                      alt={ed.fullname}
+                      className="w-16 h-16 rounded-2xl object-cover border-4 border-white shadow-sm"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center border-4 border-white shadow-sm">
+                      <FiUser className="text-2xl text-gray-400" />
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="bg-blue-50 rounded-xl p-3 flex items-start gap-3">
-                <FiBook className="text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="pt-10 p-6 space-y-4">
                 <div>
-                  <p className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">Jurnal</p>
-                  <p className="text-sm font-semibold text-blue-900">
-                    {ed.journal?.name ||
-                      allJournals.find(j => String(j.id) === String(ed.journal_id))?.name ||
-                      `Jurnal #${ed.journal_id}`}
-                  </p>
+                  <h3 className="text-lg font-bold text-gray-900 leading-tight">{ed.fullname}</h3>
+                  <div className="flex items-center gap-2 text-gray-400 text-xs mt-1">
+                    <FiMail className="flex-shrink-0" />
+                    <span className="truncate">{ed.email}</span>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50/50 rounded-xl p-3 flex items-start gap-3 border border-blue-100/30">
+                  <FiBook className="text-[#002147] mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-[9px] uppercase font-black text-blue-400 tracking-wider">Jurnal</p>
+                    <p className="text-xs font-bold text-[#002147]">
+                      {ed.journal?.name ||
+                        allJournals.find(j => String(j.id) === String(ed.journal_id))?.name ||
+                        `Jurnal #${ed.journal_id}`}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <button
+                    onClick={() => handleApprove(ed.id)}
+                    className="flex items-center justify-center gap-2 bg-emerald-500 text-white py-2.5 rounded-xl font-extrabold text-xs hover:bg-emerald-600 transition-all shadow-md shadow-emerald-100 active:scale-95"
+                  >
+                    <FiCheck /> Tasdiqlash
+                  </button>
+                  <button
+                    onClick={() => handleReject(ed.id)}
+                    className="flex items-center justify-center gap-2 bg-rose-500 text-white py-2.5 rounded-xl font-extrabold text-xs hover:bg-rose-600 transition-all shadow-md shadow-rose-100 active:scale-95"
+                  >
+                    <FiX /> Rad etish
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {pendingRequests.length === 0 && myJournalIds.length > 0 && (
+            <div className="col-span-full text-center py-20 bg-slate-50/60 rounded-3xl border-2 border-dashed border-slate-100">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-sm text-gray-300">
+                <FiUser size={32} />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900">Yangi so'rovlar yo'q</h2>
+              <p className="text-gray-400 text-sm mt-1">Hozirda barcha kelgan so'rovlar ko'rib chiqilgan.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* --- TAB CONTENT: ACTIVE EDITORS LIST --- */}
+      {activeTab === "list" && (
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-[10px] uppercase font-bold tracking-wider text-slate-400 border-b border-slate-50 bg-slate-50/60">
+                <tr>
+                  <th className="py-4 px-6">Rasm</th>
+                  <th className="py-4 px-6">Muharrir F.I.Sh</th>
+                  <th className="py-4 px-6">Email</th>
+                  <th className="py-4 px-6">Jurnal</th>
+                  <th className="py-4 px-6 text-center">Amallar</th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-slate-50">
+                {activeRequests.map((ed) => (
+                  <tr key={ed.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="py-4 px-6">
+                      {ed.profile_img ? (
+                        <img
+                          src={ed.profile_img}
+                          alt=""
+                          className="w-10 h-10 rounded-xl object-cover border border-slate-200"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center border border-slate-200 text-gray-400">
+                          <FiUser />
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-4 px-6 font-bold text-slate-800">{ed.fullname || ed.full_name}</td>
+                    <td className="py-4 px-6 text-slate-600 font-medium">{ed.email}</td>
+                    <td className="py-4 px-6">
+                      <span className="px-3 py-1 bg-slate-100 rounded-full text-xs text-slate-700 font-semibold border border-slate-200/50">
+                        {ed.journal?.name ||
+                          allJournals.find(j => String(j.id) === String(ed.journal_id))?.name ||
+                          `Jurnal #${ed.journal_id}`}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => openEditModal(ed)}
+                          className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-xl transition-all font-semibold flex items-center gap-1 active:scale-95"
+                          title="Tahrirlash"
+                        >
+                          <FiEdit size={16} /> <span className="text-xs px-1">Tahrirlash</span>
+                        </button>
+                        <button
+                          onClick={() => handleReject(ed.id)}
+                          className="p-2 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-xl transition-all active:scale-95"
+                          title="O'chirish"
+                        >
+                          <FiX size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+
+                {activeRequests.length === 0 && (
+                  <tr>
+                    <td className="py-20 px-6 text-center text-slate-400" colSpan={5}>
+                      <div className="inline-flex items-center justify-center w-12 h-12 bg-slate-100 rounded-xl mb-3 text-gray-300">
+                        <FiUser size={24} />
+                      </div>
+                      <p className="font-bold">Faol muharrirlar topilmadi.</p>
+                      <p className="text-xs text-gray-400 mt-1">Muharrirlar faollashtirilishi bilanoq shu yerda ko'rinadi.</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* --- EDIT MODAL (PREMIUM GLASSMORPHIC DIALOG) --- */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 w-full max-w-md overflow-hidden animate-scaleUp">
+            
+            {/* Modal Header */}
+            <div className="p-6 pb-4 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-extrabold text-[#002147]">Muharrirni Tahrirlash</h3>
+                <p className="text-xs text-gray-400 mt-0.5">Email va parollarni o'zgartirish</p>
+              </div>
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-2 text-gray-400 hover:text-[#002147] hover:bg-slate-100 rounded-xl transition-all"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveEditor} className="p-6 space-y-4">
+              {/* Fullname input */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider ml-1">F.I.Sh (To'liq ismi)</label>
+                <div className="relative">
+                  <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    required
+                    value={editForm.fullname}
+                    onChange={(e) => setEditForm({ ...editForm, fullname: e.target.value })}
+                    className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 focus:border-[#002147] focus:ring-4 focus:ring-blue-50/50 outline-none text-sm font-semibold text-slate-800 transition-all"
+                    placeholder="Foydalanuvchining to'liq ismi"
+                  />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              {/* Email input */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider ml-1">Email manzili</label>
+                <div className="relative">
+                  <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="email"
+                    required
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 focus:border-[#002147] focus:ring-4 focus:ring-blue-50/50 outline-none text-sm font-semibold text-slate-800 transition-all"
+                    placeholder="example@academix.uz"
+                  />
+                </div>
+              </div>
+
+              {/* Password input */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider ml-1">Yangi Parol (ixtiyoriy)</label>
+                <div className="relative">
+                  <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="password"
+                    value={editForm.password}
+                    onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                    className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 focus:border-[#002147] focus:ring-4 focus:ring-blue-50/50 outline-none text-sm font-semibold text-slate-800 transition-all"
+                    placeholder="Parolni o'zgartirmaslik uchun bo'sh qoldiring"
+                  />
+                </div>
+                <p className="text-[10px] text-gray-400 ml-1 leading-normal">
+                  ⚠️ Agar parolni yangilamoqchi bo'lsangiz, yangi parol kiriting. Aks holda ushbu maydonni bo'sh qoldiring.
+                </p>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-3 pt-4 border-t border-slate-50">
                 <button
-                  onClick={() => handleApprove(ed.id)}
-                  className="flex items-center justify-center gap-2 bg-emerald-500 text-white py-2.5 rounded-xl font-bold hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-100 active:scale-95"
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="flex-1 py-3 border border-slate-200 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all active:scale-95"
                 >
-                  <FiCheck /> Qabul
+                  Bekor qilish
                 </button>
                 <button
-                  onClick={() => handleReject(ed.id)}
-                  className="flex items-center justify-center gap-2 bg-rose-500 text-white py-2.5 rounded-xl font-bold hover:bg-rose-600 transition-all shadow-lg shadow-rose-100 active:scale-95"
+                  type="submit"
+                  disabled={isSaving}
+                  className="flex-1 py-3 bg-[#002147] text-white rounded-2xl font-extrabold text-sm hover:bg-blue-900 transition-all shadow-lg shadow-blue-900/10 disabled:opacity-60 active:scale-95"
                 >
-                  <FiX /> Rad etish
+                  {isSaving ? "Saqlanmoqda..." : "Saqlash"}
                 </button>
               </div>
-            </div>
+            </form>
           </div>
-        ))}
-      </div>
-
-      {/* Empty state */}
-      {pendingRequests.length === 0 && myJournalIds.length > 0 && (
-        <div className="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full mb-4 shadow-sm">
-            <FiUser className="text-3xl text-gray-300" />
-          </div>
-          <h2 className="text-xl font-bold text-gray-900">Yangi so'rovlar mavjud emas</h2>
-          <p className="text-gray-500 mt-2">Hozirda barcha so'rovlar ko'rib chiqilgan.</p>
         </div>
       )}
     </div>
