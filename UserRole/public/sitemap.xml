@@ -39,8 +39,20 @@
     <priority>0.60</priority>
   </url>
 
-  <!-- Jurnallar: 0 ta -->
+  <!-- Jurnallar: 1 ta -->
+  <url>
+    <loc>https://akademix.uz/journals/ilim-taqdiqot-va-taraqiyot</loc>
+    <lastmod>2026-06-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
 
-  <!-- Maqolalar: 0 ta -->
+  <!-- Maqolalar: 1 ta -->
+  <url>
+    <loc>https://akademix.uz/articles/1</loc>
+    <lastmod>2026-06-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
 
 </urlset>

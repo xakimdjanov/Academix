@@ -113,9 +113,9 @@ const Header = () => {
     <header className="bg-[#002147] text-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
-          <Link to="/" className="flex items-center gap-2 font-bold tracking-tight">
+          <Link to="/" className="flex items-center gap-3 font-bold tracking-tight group">
+            <img src="/logo.png" alt="Academix Logo" className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-lg transition-transform group-hover:scale-105" />
             <span className="text-lg sm:text-xl md:text-2xl">Academix</span>
-            <span className="text-blue-400 text-xl md:text-2xl">•</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 lg:gap-8">
@@ -262,8 +262,9 @@ const Header = () => {
             }`}
         >
           <div className="p-5 flex items-center justify-between border-b border-white/10">
-            <span className="text-lg font-bold">
-              Academix<span className="text-blue-400">.</span>
+            <span className="text-lg font-bold flex items-center gap-2">
+              <img src="/logo.png" alt="Academix Logo" className="w-7 h-7 object-contain rounded-md" />
+              Academix
             </span>
             <button
               onClick={closeMenu}
