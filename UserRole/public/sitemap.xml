@@ -47,7 +47,13 @@
     <priority>0.85</priority>
   </url>
 
-  <!-- Maqolalar: 1 ta -->
+  <!-- Maqolalar: 2 ta -->
+  <url>
+    <loc>https://akademix.uz/articles/5</loc>
+    <lastmod>2026-06-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
   <url>
     <loc>https://akademix.uz/articles/1</loc>
     <lastmod>2026-06-02</lastmod>

@@ -16,13 +16,14 @@ import { useEffect } from "react";
  */
 export const useSEO = ({ title, description, keywords, image, url, type = "website" }) => {
   useEffect(() => {
-    const SITE_NAME = "Academix";
+    const SITE_NAME = "Academix | Akademix.uz";
     const FALLBACK_DESC =
-      "Academix — O'zbekistonning eng ilg'or ilmiy jurnallari, maqolalari va tadqiqotlari platformasi. " +
-      "Ilmiy ishlaringizni xalqaro darajada nashr qiling, o'qing va taqrizdan o'tkazing.";
+      "Academix / Akademix.uz — O'zbekiston va O'rta Osiyodagi eng ilg'or ilmiy jurnallar, akademik maqolalar va ilmiy tadqiqotlar ma'lumotlar bazasi. " +
+      "Ilmiy ishlaringizni xalqaro darajada nashr eting, o'qing va yuqori darajada taqrizdan o'tkazing.";
     const FALLBACK_KEYS =
-      "ilmiy maqolalar, jurnallar, akademik nashrlar, tadqiqotlar, o'zbekiston ilmiy ishlari, " +
-      "akademix, akademix.uz, ochiq jurnallar, dissertatsiya, ilmiy ish";
+      "Academix, Academix.uz, akademix, akademix.uz, academix uz, akademix uz, ilmiy maqolalar, akademik jurnallar, " +
+      "scientific articles, open access journals, uzbekistan science, uzbekistan journals, tadqiqotlar, dissertatsiyalar, " +
+      "ilmiy ishlar bazasi, ochiq jurnallar, DOI ilmiy maqola, elibrary, researchgate, scholar uz, o'zbekiston ilmiy maqolalari";
     const FALLBACK_IMG = "https://akademix.uz/logo.png";
     const FALLBACK_URL = "https://akademix.uz";
 

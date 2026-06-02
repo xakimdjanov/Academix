@@ -30,9 +30,9 @@ const Home = () => {
   });
 
   useSEO({
-    title: "Akademik Jurnallar va Ilmiy Maqolalar Platformasi",
-    description: "Academix - O'zbekistondagi akademik jurnallar, maqolalar va tadqiqotlarni nashr qilish hamda tahririyat ishlarini avtomatlashtirish bo'yicha eng ilg'or platforma. DOI va xalqaro indekslar.",
-    keywords: "ilmiy maqolalar, akademik jurnallar, nashr etish, doi, o'zbekiston jurnallari, akademix, akademix.uz, tadqiqotlar, ilm-fan, dissertatsiya, maqola chiqarish",
+    title: "Akademik Jurnallar va Ilmiy Maqolalar Platformasi | Academix.uz",
+    description: "Academix / Akademix.uz — O'zbekistondagi akademik jurnallar, ilmiy maqolalar va tadqiqotlarni nashr qilish hamda tahririyat ishlarini avtomatlashtirish bo'yicha eng mukammal platforma. DOI va xalqaro indeksatsiya xizmatlari.",
+    keywords: "Academix, Academix.uz, akademix, akademix.uz, academix uz, akademix uz, ilmiy maqolalar, akademik jurnallar, o'zbekiston jurnallari, doi maqola, tadqiqotlar, dissertatsiya, maqola chiqarish, ilmiy jurnallar",
     url: "https://akademix.uz",
     type: "website"
   });

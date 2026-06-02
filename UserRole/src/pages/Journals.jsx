@@ -11,9 +11,9 @@ const Journals = () => {
   const [selectedCategory, setSelectedCategory] = useState("Barchasi");
 
   useSEO({
-    title: "Akademik Ilmiy Jurnallar Ro'yxati",
-    description: "Academix - O'zbekistonning barcha sohalardagi yuqori sifatli va taqrizdan o'tgan ilmiy jurnallari ro'yxati. O'z sohangizga mos jurnalni toping va maqola yuboring.",
-    keywords: "ilmiy jurnallar ro'yxati, o'zbekiston ilmiy jurnallari, kimyo jurnali, fizika jurnali, pedagogika, tibbiyot jurnallari, dissertatsiya, akademix, akademix.uz",
+    title: "Akademik Ilmiy Jurnallar Ro'yxati | Academix.uz",
+    description: "Academix / Akademix.uz — O'zbekistonning barcha sohalardagi yuqori sifatli, nufuzli va taqrizdan o'tgan ilmiy jurnallari ro'yxati. O'z sohangizga mos jurnalni toping.",
+    keywords: "Academix, Academix.uz, akademix, akademix.uz, academix uz, ilmiy jurnallar ro'yxati, o'zbekiston ilmiy jurnallari, pedagogika, tibbiyot jurnallari, dissertatsiya jurnallari, ochiq ilmiy jurnallar",
     url: "https://akademix.uz/journals",
     type: "website"
   });

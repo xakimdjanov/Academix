@@ -11,9 +11,9 @@ const Articles = () => {
   const [selectedStatus, setSelectedStatus] = useState("Barchasi");
 
   useSEO({
-    title: "Nashr Etilgan Ilmiy Maqolalar Ro'yxati",
-    description: "Academix - O'zbekiston va xalqaro miqyosdagi eng so'nggi ilmiy maqolalar, tadqiqotlar va tezislar ro'yxati. Barcha sohalardagi ilmiy ishlar bilan tanishing.",
-    keywords: "ilmiy maqolalar ro'yxati, tadqiqot ishlari, dissertatsiyalar, maqola qidirish, iqtisodiyot, tibbiyot, matematika ilmiy maqolalari, akademix, akademix.uz",
+    title: "Nashr Etilgan Ilmiy Maqolalar Ro'yxati | Academix.uz",
+    description: "Academix / Akademix.uz — O'zbekiston va xalqaro doiradagi eng so'nggi ilmiy maqolalar, tezislar va tadqiqot ishlari ma'lumotlar bazasi. Ilmiy maqolalarni bepul o'qing.",
+    keywords: "Academix, Academix.uz, akademix, akademix.uz, academix uz, ilmiy maqolalar ro'yxati, tadqiqot ishlari, dissertatsiyalar, maqola qidirish, iqtibos olish, scholar uz, ilmiy maqola yuklab olish",
     url: "https://akademix.uz/articles",
     type: "website"
   });
