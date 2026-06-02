@@ -5,7 +5,7 @@ import {
   FiHome, FiSettings, FiFileText, FiUsers,
   FiCheckCircle, FiCreditCard, FiBarChart2,
   FiLogOut, FiMenu, FiX, FiChevronLeft, FiChevronRight,
-  FiPlusCircle, FiAlertTriangle,
+  FiPlusCircle, FiAlertTriangle, FiGlobe,
 } from "react-icons/fi";
 import { journalAdminService } from "../../../services/api";
 
