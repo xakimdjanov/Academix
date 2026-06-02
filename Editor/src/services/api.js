@@ -21,7 +21,9 @@ export const journalAdminService = {
   login: (credentials) => axiosInstance.post("/JournalAdmin/login", credentials),
   getAll: () => axiosInstance.get("/JournalAdmin/getJournalAdmin"),
   getById: (id) => axiosInstance.get(`/JournalAdmin/getJournalAdminById/${id}`),
-  update: (id, data) => axiosInstance.put(`/JournalAdmin/updateJournalAdmin/${id}`, data),
+  update: (id, data) => axiosInstance.put(`/JournalAdmin/updateJournalAdmin/${id}`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  }),
   delete: (id) => axiosInstance.delete(`/JournalAdmin/deleteJournalAdmin/${id}`),
 };
 
