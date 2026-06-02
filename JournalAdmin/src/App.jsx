@@ -22,6 +22,8 @@ import AddJournal from "./components/JournalAdmin/AddJournal/AddJournal";
 import JournalList from "./components/JournalAdmin/AddJournal/GetEditJournal";
 import ArticlesDetails from "./pages/JournalAdmin/ArticlesDetails/ArticlesDetails";
 import EditorRequests from "./components/JournalAdmin/EditorRequests/EditorRequests";
+import SendOldArticle from "./components/JournalAdmin/SendOldArticle/SendOldArticle";
+import JournalBobs from "./components/JournalAdmin/JournalBobs/JournalBobs";
 
 const App = () => {
   return (
@@ -50,12 +52,14 @@ const App = () => {
         <Route element={<DashboardLayout />}>
           <Route path="/journal-dashboard" element={<Dashboard />} />
           <Route path="/journal-articles" element={<JournalArticles />} />
+          <Route path="/journal-bobs" element={<JournalBobs />} />
           <Route path="/journal-decisions" element={<JournalDecisions />} />
           <Route path="/journal-editors" element={<JournalEditors />} />
           <Route path="/journal-payments" element={<JournalPayments />} />
           <Route path="/journal-reports" element={<JournalReports />} />
           <Route path="/journal-settings" element={<JournalSettings />} />
           <Route path="/editor-requests" element={<EditorRequests />} />
+          <Route path="/journal-send-old-article" element={<SendOldArticle />} />
           <Route path="/journal-list/addjournal" element={<AddJournal />} />
           <Route path="/journal-list" element={<JournalList />} />
           <Route path="/journal-list/editjournal/:id" element={<AddJournal />} />

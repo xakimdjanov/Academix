@@ -39,7 +39,7 @@ const Suggestions = () => {
         formData.append("images", img);
       });
 
-      await axios.post("http://localhost:5000/suggestion/create", formData);
+      await axios.post(`https://academixbackend-production.up.railway.app/suggestion/create`, formData);
       setSuccess(true);
       toast.success("Raxmat! Taklifingiz qabul qilindi.");
     } catch (error) {

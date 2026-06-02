@@ -18,6 +18,7 @@ import { useLocation } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { articleService, journalService } from "../services/api";
 import { getUserIdFromToken } from "../utils/getUserIdFromToken";
+import { convertToWebP } from "../utils/webpHelper";
 
 const MAX_FILE_MB = 20;
 const ACCEPTED_MIME = [
@@ -165,11 +166,15 @@ const SubmitArticle = () => {
   const updateAuthor = (idx, field, value) =>
     setAuthors((p) => p.map((a, i) => (i === idx ? { ...a, [field]: value } : a)));
 
-  const handleAuthorImage = (idx, file) => {
+  const handleAuthorImage = async (idx, file) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) return toast.error("Faqat rasm fayllari ruxsat etiladi");
-    if (file.size / (1024 * 1024) > 5) return toast.error("Rasm hajmi 5MB dan kam bo'lishi kerak");
-    setAuthorImages((prev) => ({ ...prev, [idx]: file }));
+    try {
+      const webpFile = await convertToWebP(file);
+      setAuthorImages((prev) => ({ ...prev, [idx]: webpFile }));
+    } catch (e) {
+      toast.error("Rasm yuklashda xatolik");
+    }
   };
 
   const formatOrcid = (v) => {

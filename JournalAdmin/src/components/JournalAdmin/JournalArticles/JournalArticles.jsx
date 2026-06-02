@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { articleService, journalService } from "../../../services/api";
+import { articleService, journalService, bobService, journalAdminService } from "../../../services/api";
 import {
   FiEye,
   FiEdit2,
@@ -31,6 +31,14 @@ const JournalArticles = () => {
   const [articles, setArticles] = useState([]);
   const [filter, setFilter] = useState("Submitted");
 
+  // User Profile & Bobs States
+  const [user, setUser] = useState(null);
+  const [bobs, setBobs] = useState([]);
+  const [bobsLoading, setBobsLoading] = useState(false);
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [publishingArticleId, setPublishingArticleId] = useState(null);
+  const [selectedBobId, setSelectedBobId] = useState("");
+
   // Edit modal
   const [editOpen, setEditOpen] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
@@ -45,6 +53,7 @@ const JournalArticles = () => {
     file_url: "",
     file_size: 0,
     apc_paid: false,
+    bob_id: "",
   });
 
   const myAdminId = useMemo(() => localStorage.getItem("journal_admin_id"), []);
@@ -100,6 +109,20 @@ const JournalArticles = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    const loadUser = async () => {
+      if (!myAdminId) return;
+      try {
+        const res = await journalAdminService.getById(myAdminId);
+        const userData = res?.data?.data || res?.data?.user || res?.data || null;
+        setUser(userData);
+      } catch (e) {
+        setUser(null);
+      }
+    };
+    loadUser();
+  }, [myAdminId]);
+
   const openEdit = (article) => {
     setEditArticle(article);
     setEditForm({
@@ -114,7 +137,17 @@ const JournalArticles = () => {
       file_url: article?.file_url || "",
       file_size: Number(article?.file_size || 0),
       apc_paid: article?.apc_paid === true,
+      bob_id: article?.bob_id ? String(article.bob_id) : "",
     });
+    
+    if (user?.allow_bob_creation && article?.journal_id) {
+      bobService.getByJournal(article.journal_id)
+        .then(res => {
+          setBobs(res?.data || []);
+        })
+        .catch(err => console.error("Error loading bobs in edit", err));
+    }
+
     setEditOpen(true);
   };
 
@@ -173,6 +206,7 @@ const JournalArticles = () => {
       file_url: editForm.file_url,
       file_size: Number(editForm.file_size || 0),
       apc_paid: editForm.apc_paid === true,
+      bob_id: editForm.bob_id ? parseInt(editForm.bob_id) : null,
     };
 
     try {
@@ -199,6 +233,55 @@ const JournalArticles = () => {
       toast.success(`Maqola holati ${newStatus} ga o'zgartirildi`);
     } catch (err) {
       toast.error("Holatni yangilashda xatolik");
+    }
+  };
+
+  const handlePublishClick = async (article) => {
+    const artId = getId(article);
+    if (user?.allow_bob_creation) {
+      setPublishingArticleId(artId);
+      setSelectedBobId("");
+      setBobs([]);
+      setBobsLoading(true);
+      setPublishModalOpen(true);
+      try {
+        const res = await bobService.getByJournal(article.journal_id);
+        const list = res?.data || [];
+        setBobs(list);
+        if (list.length > 0) {
+          setSelectedBobId(String(list[0].id));
+        }
+      } catch (err) {
+        toast.error("Boblar ro'yxatini yuklashda xatolik yuz berdi");
+      } finally {
+        setBobsLoading(false);
+      }
+    } else {
+      await handleUpdateStatus(artId, "Published");
+    }
+  };
+
+  const handleConfirmPublish = async () => {
+    if (!selectedBobId) {
+      return toast.error("Iltimos, maqola biriktirilishi kerak bo'lgan Bobni tanlang.");
+    }
+    try {
+      setEditSaving(true);
+      await articleService.update(publishingArticleId, {
+        status: "Published",
+        bob_id: parseInt(selectedBobId)
+      });
+      setArticles((prev) =>
+        prev.map((a) => (getId(a) === publishingArticleId ? { ...a, status: "Published", bob_id: parseInt(selectedBobId) } : a))
+      );
+      toast.success("Maqola bobga biriktirilib, muvaffaqiyatli nashr etildi!");
+      setPublishModalOpen(false);
+      setPublishingArticleId(null);
+      setSelectedBobId("");
+    } catch (e) {
+      toast.error("Nashr etishda xatolik yuz berdi");
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -312,7 +395,7 @@ const JournalArticles = () => {
                   </button>
                   {status === "Accepted" && (
                     <button
-                      onClick={() => handleUpdateStatus(id, "Published")}
+                      onClick={() => handlePublishClick(a)}
                       className="p-2.5 rounded-2xl bg-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all font-bold"
                       title="Publish Now"
                     >
@@ -406,7 +489,7 @@ const JournalArticles = () => {
                         </button>
                         {status === "Accepted" && (
                           <button
-                            onClick={() => handleUpdateStatus(getId(a), "Published")}
+                            onClick={() => handlePublishClick(a)}
                             className="p-2.5 rounded-xl bg-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
                             title="Publish Now"
                           >
@@ -523,6 +606,28 @@ const JournalArticles = () => {
               />
             </label>
           </div>
+
+          {user?.allow_bob_creation && (
+            <div className="md:col-span-2">
+              <label className="text-[11px] font-black text-slate-500 mb-2 block ml-1 uppercase">
+                Biriktirilgan Bob (Son)
+              </label>
+              <select
+                value={editForm.bob_id}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, bob_id: e.target.value })
+                }
+                className="w-full rounded-2xl border border-slate-200 px-4 sm:px-5 py-3 focus:ring-4 focus:ring-blue-50 outline-none transition-all font-semibold text-slate-700 text-sm bg-white"
+              >
+                <option value="">-- Biriktirilmagan (Flat nashr) --</option>
+                {bobs.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name} ({b.year}-yil) - {b.status === "Active" ? "Faol" : "Arxiv"}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="mt-6 sm:mt-8 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
@@ -541,6 +646,64 @@ const JournalArticles = () => {
             className="w-full sm:w-auto bg-[#002147] text-white px-6 sm:px-10 py-3 rounded-2xl font-bold shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 hover:bg-blue-900 transition-all disabled:opacity-50 active:scale-[0.99]"
           >
             {editSaving ? "Saqlanmoqda..." : <>Saqlash</>}
+          </button>
+        </div>
+      </Modal>
+
+      {/* PUBLISH CONFIRMATION MODAL */}
+      <Modal
+        open={publishModalOpen}
+        onClose={() => !editSaving && setPublishModalOpen(false)}
+        title="Maqolani nashr qilish"
+      >
+        <div className="space-y-6">
+          <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl text-blue-800 text-sm font-medium">
+            Sizda Boblar (Issues) tizimi faollashtirilgan. Iltimos, maqolani nashr qilishdan oldin uni qaysi Bobga biriktirish kerakligini tanlang.
+          </div>
+
+          <div>
+            <label className="text-[11px] font-black text-slate-500 mb-2 block ml-1 uppercase">
+              Bob (Volume/Issue)ni tanlang
+            </label>
+            {bobsLoading ? (
+              <div className="py-4 text-center text-slate-400 text-sm font-medium">Boblar yuklanmoqda...</div>
+            ) : bobs.length === 0 ? (
+              <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl text-amber-800 text-sm">
+                Ushbu jurnalda hali hech qanday Bob (Issue) yaratilmagan. Nashr qilishdan oldin avval sidebar-dagi <b>"Boblar"</b> sahifasiga o'tib, yangi Bob qo'shing.
+              </div>
+            ) : (
+              <select
+                value={selectedBobId}
+                onChange={(e) => setSelectedBobId(e.target.value)}
+                className="w-full rounded-2xl border border-slate-200 px-4 sm:px-5 py-3 focus:ring-4 focus:ring-blue-50 outline-none transition-all font-semibold text-slate-700 text-sm bg-white"
+              >
+                {bobs.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name} ({b.year}-yil) - {b.status === "Active" ? "Faol" : "Arxiv"}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-8 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => setPublishModalOpen(false)}
+            disabled={editSaving}
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl text-slate-500 font-bold hover:bg-slate-100 transition-colors"
+          >
+            Bekor qilish
+          </button>
+
+          <button
+            type="button"
+            onClick={handleConfirmPublish}
+            disabled={editSaving || bobs.length === 0}
+            className="w-full sm:w-auto bg-[#002147] text-white px-6 sm:px-10 py-3 rounded-2xl font-bold shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 hover:bg-blue-900 transition-all disabled:opacity-50 active:scale-[0.99]"
+          >
+            {editSaving ? "Nashr etilmoqda..." : <>Nashr etish</>}
           </button>
         </div>
       </Modal>
@@ -575,28 +738,32 @@ const StatusBadge = ({ status }) => {
 const Modal = ({ open, onClose, title, children }) => {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4">
+    <div className="fixed inset-0 z-[60] overflow-y-auto">
+      {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-        <div className="flex items-center justify-between p-5 sm:p-7 border-b border-slate-50">
-          <h2 className="text-base sm:text-xl font-bold text-slate-800">
-            {title}
-          </h2>
-          <button
-            onClick={onClose}
-            type="button"
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-          >
-            ✕
-          </button>
-        </div>
+      {/* Alignment wrapper */}
+      <div className="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
+        <div className="relative w-full max-w-2xl transform bg-white rounded-3xl text-left shadow-2xl transition-all animate-in zoom-in-95 duration-300 my-8">
+          <div className="flex items-center justify-between p-5 sm:p-7 border-b border-slate-100">
+            <h2 className="text-base sm:text-xl font-bold text-slate-800">
+              {title}
+            </h2>
+            <button
+              onClick={onClose}
+              type="button"
+              className="p-2 hover:bg-slate-100 rounded-full transition-colors font-bold text-slate-400 hover:text-slate-600"
+            >
+              ✕
+            </button>
+          </div>
 
-        <div className="p-4 sm:p-8 max-h-[80vh] overflow-y-auto">
-          {children}
+          <div className="p-5 sm:p-8 max-h-[80vh] overflow-y-auto">
+            {children}
+          </div>
         </div>
       </div>
     </div>

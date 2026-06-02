@@ -55,12 +55,16 @@ export const articleService = {
 
 // --- 5. JURNALLAR (JOURNALS) ---
 export const journalService = {
-  create: (data) => axiosInstance.post("/journal/create", data),
+  create: (data) => axiosInstance.post("/journal/create", data, {
+    headers: { "Content-Type": "multipart/form-data" }
+  }),
   getAll: () => axiosInstance.get("/journal/getAll"),
   getById: (id) => axiosInstance.get(`/journal/getById/${id}`),
   getBySlug: (slug) => axiosInstance.get(`/journal/getBySlug/${slug}`),
   getStats: () => axiosInstance.get("/journal/stats"),
-  update: (id, data) => axiosInstance.put(`/journal/update/${id}`, data),
+  update: (id, data) => axiosInstance.put(`/journal/update/${id}`, data, {
+    headers: { "Content-Type": "multipart/form-data" }
+  }),
   delete: (id) => axiosInstance.delete(`/journal/delete/${id}`),
 };
 
@@ -147,4 +151,9 @@ export const suggestionService = {
   }),
   getAll: () => axiosInstance.get("/suggestion/getAll"),
   updateStatus: (id, data) => axiosInstance.put(`/suggestion/update-status/${id}`, data)
+};
+
+// --- 13. BOBS (Nashrlar/Issues) ---
+export const bobService = {
+  getByJournal: (journalId) => axiosInstance.get(`/bob/by-journal/${journalId}`),
 };

@@ -10,7 +10,7 @@ const NAV_ITEMS = [
 ];
 
 // ✅ backend base url
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const API_BASE = "https://academixbackend-production.up.railway.app";
 const UPLOADS_PATH = "/uploads";
 
 function getInitials(fullName = "") {

@@ -286,7 +286,7 @@ const Sidebar = () => {
           {/* Logout & Saytga Qaytish */}
           <div className="p-4 border-t border-white/5 shrink-0 space-y-2">
             <a
-              href="http://localhost:5173"
+              href="https://akademix.uz"
               className={`w-full flex items-center p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 transition-all duration-200 ${isCollapsed && !isMobileOpen ? "justify-center" : "gap-3"
                 }`}
               title={isCollapsed && !isMobileOpen ? "Saytga qaytish" : ""}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { journalAdminService } from "../services/api";
 import toast from "react-hot-toast";
+import { convertToWebP } from "../utils/webpHelper";
 import { 
   FiUsers, FiMail, FiShield, FiPlus, FiTrash2, FiEdit2, FiX, 
   FiCamera, FiCheck, FiUser, FiGlobe, FiBriefcase, FiPhone, FiLock, FiAlertTriangle, FiAward 
@@ -54,6 +55,7 @@ const JournalAdmins = () => {
     country: "Uzbekistan",
     country_other: "",
     tariff_id: "",
+    allow_bob_creation: false,
   };
   const [form, setForm] = useState(initialForm);
   const [avatarFile, setAvatarFile] = useState(null);
@@ -75,7 +77,7 @@ const JournalAdmins = () => {
 
   const fetchTariffs = async () => {
     try {
-      const res = await journalAdminService.getTariffs?.() || (await fetch("http://localhost:5000/tariff").then(r => r.json()));
+      const res = await journalAdminService.getTariffs?.().then(r => r.json());
       setTariffs(Array.isArray(res) ? res : res.data || []);
     } catch (error) {
       console.error("Tariflarni yuklab bo'lmadi");
@@ -106,6 +108,7 @@ const JournalAdmins = () => {
       country: countryInList ? admin.country : "Others",
       country_other: countryInList ? "" : admin.country || "",
       tariff_id: admin.tariff_id || "",
+      allow_bob_creation: admin.allow_bob_creation || false,
     });
     setAvatarPreview(admin.avatar_url);
     setAvatarFile(null);
@@ -113,15 +116,20 @@ const JournalAdmins = () => {
   };
 
   const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setForm(p => ({ ...p, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setForm(p => ({ ...p, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  const onAvatarChange = (e) => {
+  const onAvatarChange = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      setAvatarFile(file);
-      setAvatarPreview(URL.createObjectURL(file));
+      try {
+        const webpFile = await convertToWebP(file);
+        setAvatarFile(webpFile);
+        setAvatarPreview(URL.createObjectURL(webpFile));
+      } catch (err) {
+        toast.error("Avatar rasmini qayta ishlashda xatolik");
+      }
     }
   };
 
@@ -182,6 +190,17 @@ const JournalAdmins = () => {
     }
   };
 
+  const handleToggleBob = async (admin) => {
+    const adminId = admin._id || admin.id;
+    try {
+      await journalAdminService.toggleBobPermission(adminId);
+      toast.success("Bob yaratish ruxsati o'zgartirildi!");
+      fetchAdmins();
+    } catch (error) {
+      toast.error("Ruxsatnomani o'zgartirishda xatolik yuz berdi");
+    }
+  };
+
   return (
     <div className="p-4 md:p-8 space-y-6">
       {/* Header */}
@@ -220,6 +239,7 @@ const JournalAdmins = () => {
                   <th className="py-5 px-8">Foydalanuvchi</th>
                   <th className="py-5 px-8">Aloqa ma'lumotlari</th>
                   <th className="py-5 px-8">Tashkilot</th>
+                  <th className="py-5 px-8">Bob ruxsati</th>
                   <th className="py-5 px-8 text-right">Amallar</th>
                 </tr>
               </thead>
@@ -260,6 +280,27 @@ const JournalAdmins = () => {
                       </div>
                       <p className="text-[10px] text-gray-400 uppercase tracking-tighter mt-1">ORCID: {admin.orcid || 'Mavjud emas'}</p>
                     </td>
+                    <td className="py-5 px-8">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleBob(admin)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                          admin.allow_bob_creation
+                            ? "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100"
+                            : "bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100"
+                        }`}
+                      >
+                        {admin.allow_bob_creation ? (
+                          <>
+                            <FiCheck size={14} /> Ruxsat berilgan
+                          </>
+                        ) : (
+                          <>
+                            <FiX size={14} /> Taqiqlangan
+                          </>
+                        )}
+                      </button>
+                    </td>
                     <td className="py-5 px-8 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
@@ -288,14 +329,22 @@ const JournalAdmins = () => {
 
       {/* Add/Edit Modal */}
       {(isAddOpen || editingAdmin) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="flex items-center justify-between p-8 border-b border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-800">
-                {isAddOpen ? "Yangi Admin Qo'shish" : "Admin Tahrirlash"}
-              </h2>
-              <button onClick={() => { setIsAddOpen(false); setEditingAdmin(null); }} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><FiX size={24} /></button>
-            </div>
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          {/* Backdrop overlay */}
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" 
+            onClick={() => { setIsAddOpen(false); setEditingAdmin(null); }} 
+          />
+
+          {/* Centering wrapper */}
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
+            <div className="relative w-full max-w-4xl transform rounded-[2.5rem] bg-white text-left shadow-2xl transition-all my-8 overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="flex items-center justify-between p-8 border-b border-gray-100">
+                <h2 className="text-2xl font-bold text-gray-800">
+                  {isAddOpen ? "Yangi Admin Qo'shish" : "Admin Tahrirlash"}
+                </h2>
+                <button onClick={() => { setIsAddOpen(false); setEditingAdmin(null); }} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><FiX size={24} /></button>
+              </div>
             
             <form onSubmit={handleSubmit} className="p-8 grid grid-cols-1 md:grid-cols-12 gap-8 max-h-[70vh] overflow-y-auto scrollbar-none">
               <div className="md:col-span-4 flex flex-col items-center gap-6 border-r border-gray-100 pr-8">
@@ -381,6 +430,19 @@ const JournalAdmins = () => {
                       </select>
                     </div>
                   </div>
+                  <div className="space-y-1.5 md:col-span-2 flex items-center gap-3 pt-4">
+                    <label className="relative inline-flex items-center cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        name="allow_bob_creation"
+                        checked={form.allow_bob_creation}
+                        onChange={handleFormChange}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <span className="ml-3 text-xs font-bold text-gray-500 uppercase tracking-widest">Bob Yaratish Ruxsati</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 
@@ -394,7 +456,8 @@ const JournalAdmins = () => {
             </form>
           </div>
         </div>
-      )}
+      </div>
+    )}
 
       {/* Custom Delete Modal */}
       <ConfirmModal 

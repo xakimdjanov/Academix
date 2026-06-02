@@ -12,7 +12,7 @@ const NAV_ITEMS = [
   { to: "/contact", label: "Bog'lanish" },
 ];
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://academixbackend-production.up.railway.app";
 const UPLOADS_PATH = "/uploads";
 
 function getInitials(fullName = "") {
@@ -123,17 +123,15 @@ const Header = () => {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`relative text-sm font-medium transition-colors ${
-                  isActive(item.to)
+                className={`relative text-sm font-medium transition-colors ${isActive(item.to)
                     ? "text-white"
                     : "text-gray-300 hover:text-white"
-                }`}
+                  }`}
               >
                 {item.label}
                 <span
-                  className={`absolute -bottom-1 left-0 h-0.5 bg-blue-400 transition-all duration-300 ${
-                    isActive(item.to) ? "w-full" : "w-0 hover:w-full"
-                  }`}
+                  className={`absolute -bottom-1 left-0 h-0.5 bg-blue-400 transition-all duration-300 ${isActive(item.to) ? "w-full" : "w-0 hover:w-full"
+                    }`}
                 />
               </Link>
             ))}
@@ -231,19 +229,16 @@ const Header = () => {
             >
               <div className="w-6 h-6 flex flex-col justify-center items-center">
                 <span
-                  className={`block h-0.5 w-6 bg-current transform transition-all duration-300 ${
-                    isMenuOpen ? "rotate-45 translate-y-1.5" : "-translate-y-1"
-                  }`}
+                  className={`block h-0.5 w-6 bg-current transform transition-all duration-300 ${isMenuOpen ? "rotate-45 translate-y-1.5" : "-translate-y-1"
+                    }`}
                 />
                 <span
-                  className={`block h-0.5 w-6 bg-current transition-all duration-300 ${
-                    isMenuOpen ? "opacity-0" : "opacity-100"
-                  }`}
+                  className={`block h-0.5 w-6 bg-current transition-all duration-300 ${isMenuOpen ? "opacity-0" : "opacity-100"
+                    }`}
                 />
                 <span
-                  className={`block h-0.5 w-6 bg-current transform transition-all duration-300 ${
-                    isMenuOpen ? "-rotate-45 -translate-y-1.5" : "translate-y-1"
-                  }`}
+                  className={`block h-0.5 w-6 bg-current transform transition-all duration-300 ${isMenuOpen ? "-rotate-45 -translate-y-1.5" : "translate-y-1"
+                    }`}
                 />
               </div>
             </button>
@@ -253,21 +248,18 @@ const Header = () => {
 
       {/* Mobile Drawer */}
       <div
-        className={`md:hidden fixed inset-0 z-40 transition ${
-          isMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
+        className={`md:hidden fixed inset-0 z-40 transition ${isMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
       >
         <div
-          className={`absolute inset-0 bg-black/50 transition-opacity ${
-            isMenuOpen ? "opacity-100" : "opacity-0"
-          }`}
+          className={`absolute inset-0 bg-black/50 transition-opacity ${isMenuOpen ? "opacity-100" : "opacity-0"
+            }`}
           onClick={closeMenu}
         />
 
         <div
-          className={`absolute right-0 top-0 h-full w-[80%] max-w-[360px] bg-[#002147] shadow-2xl transform transition-transform duration-300 ${
-            isMenuOpen ? "translate-x-0" : "translate-x-full"
-          }`}
+          className={`absolute right-0 top-0 h-full w-[80%] max-w-[360px] bg-[#002147] shadow-2xl transform transition-transform duration-300 ${isMenuOpen ? "translate-x-0" : "translate-x-full"
+            }`}
         >
           <div className="p-5 flex items-center justify-between border-b border-white/10">
             <span className="text-lg font-bold">
@@ -312,11 +304,10 @@ const Header = () => {
                   key={item.to}
                   to={item.to}
                   onClick={closeMenu}
-                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-base font-medium transition ${
-                    isActive(item.to)
+                  className={`flex items-center justify-between px-4 py-3 rounded-xl text-base font-medium transition ${isActive(item.to)
                       ? "bg-blue-900 text-white"
                       : "text-gray-200 hover:bg-white/10 hover:text-white"
-                  }`}
+                    }`}
                 >
                   <span>{item.label}</span>
                   {isActive(item.to) && (
@@ -375,9 +366,9 @@ const Header = () => {
           </div>
         </div>
       </div>
-      <RoleSelectionModal 
-        isOpen={isRoleModalOpen} 
-        onClose={() => setIsRoleModalOpen(false)} 
+      <RoleSelectionModal
+        isOpen={isRoleModalOpen}
+        onClose={() => setIsRoleModalOpen(false)}
       />
     </header>
   );

@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import { FiBookOpen, FiHash, FiGlobe, FiImage, FiPlus, FiX, FiSave, FiTag, FiInfo, FiArrowLeft, FiDollarSign } from "react-icons/fi";
 import { journalService } from "../../../services/api";
+import { convertToWebP } from "../../../utils/webpHelper";
 
 const initialState = {
   name: "",
@@ -80,15 +81,26 @@ const AddJournal = () => {
   const [langInput, setLangInput] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState("");
+  const [bannerFile, setBannerFile] = useState(null);
+  const [bannerPreview, setBannerPreview] = useState("");
+
   // Edit rejimida bo'lsa ma'lumotlarni to'ldirish
   useEffect(() => {
     if (id && location.state?.journal) {
-      setForm(location.state.journal);
+      const journal = location.state.journal;
+      setForm(journal);
+      if (journal.cover_image_url) setCoverPreview(journal.cover_image_url);
+      if (journal.banner_url) setBannerPreview(journal.banner_url);
     } else if (id) {
       const fetchById = async () => {
         try {
           const res = await journalService.getById(id);
-          setForm(res.data.data);
+          const journal = res.data.data || res.data;
+          setForm(journal);
+          if (journal.cover_image_url) setCoverPreview(journal.cover_image_url);
+          if (journal.banner_url) setBannerPreview(journal.banner_url);
         } catch (err) {
           toast.error("Ma'lumotni yuklashda xatolik");
         }
@@ -128,15 +140,40 @@ const AddJournal = () => {
 
     if (!adminId) return toast.error("Admin ID topilmadi");
 
-    const payload = { ...form, journal_admin_id: adminId };
+    const fd = new FormData();
+    fd.append("journal_admin_id", adminId);
+    fd.append("name", form.name);
+    fd.append("slug", form.slug);
+    fd.append("issn", form.issn);
+    fd.append("subject_area", form.subject_area);
+    fd.append("description", form.description || "");
+    fd.append("aims_scope", form.aims_scope || "");
+    fd.append("website_url", form.website_url || "");
+    fd.append("status", form.status || "Active");
+    fd.append("submission_fee", form.submission_fee || 0);
+
+    // Send languages as JSON string or comma-separated string
+    fd.append("languages", JSON.stringify(form.languages));
+
+    if (coverFile) {
+      fd.append("cover_image", coverFile);
+    } else {
+      fd.append("cover_image_url", form.cover_image_url || "");
+    }
+
+    if (bannerFile) {
+      fd.append("banner", bannerFile);
+    } else {
+      fd.append("banner_url", form.banner_url || "");
+    }
 
     try {
       setLoading(true);
       if (id) {
-        await journalService.update(id, payload);
+        await journalService.update(id, fd);
         toast.success("Muvaffaqiyatli yangilandi");
       } else {
-        await journalService.create(payload);
+        await journalService.create(fd);
         toast.success("Muvaffaqiyatli yaratildi");
       }
       navigate("/journal-list");
@@ -204,15 +241,117 @@ const AddJournal = () => {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-6 sm:grid-cols-2">
             <Input icon={FiGlobe} label="Veb-sayt URL" name="website_url" value={form.website_url} onChange={onChange} />
-            <Input icon={FiImage} label="Muqova rasmi (URL)" name="cover_image_url" value={form.cover_image_url} onChange={onChange} />
             <Select icon={FiInfo} label="Holati (Status)" name="status" value={form.status} onChange={onChange}>
               <option value="Active">Faol (Active)</option>
               <option value="Inactive">Nofaol (Inactive)</option>
               <option value="Draft">Qoralama (Draft)</option>
             </Select>
-            <Input icon={FiDollarSign} label="Maqola yuborish narxi ($)" type="number" step="0.01" name="submission_fee" value={form.submission_fee} onChange={onChange} />
+            <Input icon={FiDollarSign} label="Maqola yuborish narxi ($)" type="number" step="0.01" name="submission_fee" value={form.submission_fee} onChange={onChange} className="sm:col-span-2" />
+          </div>
+
+          {/* Cover & Banner File Uploads */}
+          <div className="grid gap-6 sm:grid-cols-2 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+            {/* Muqova rasmi (Cover Image) */}
+            <div className="space-y-2">
+              <span className="mb-1 flex items-center gap-2 text-sm font-medium text-slate-700">
+                <FiImage className="text-slate-500" />
+                Muqova rasmi (Cover Image)
+              </span>
+              <div className="relative group border-2 border-dashed border-slate-200 rounded-xl bg-white hover:bg-slate-50 transition-all p-4 flex flex-col items-center justify-center min-h-[140px] cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      try {
+                        const webpFile = await convertToWebP(file);
+                        setCoverFile(webpFile);
+                        setCoverPreview(URL.createObjectURL(webpFile));
+                      } catch (err) {
+                        toast.error("Muqova rasmini qayta ishlashda xatolik");
+                      }
+                    }
+                  }}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                />
+                {coverPreview ? (
+                  <div className="relative w-full h-24 rounded-lg overflow-hidden flex items-center justify-center">
+                    <img src={coverPreview} alt="Cover Preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCoverFile(null);
+                        setCoverPreview("");
+                        setForm(p => ({ ...p, cover_image_url: "" }));
+                      }}
+                      className="absolute top-1 right-1 p-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full transition shadow-md z-20"
+                    >
+                      <FiX size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center space-y-1">
+                    <FiImage className="mx-auto text-slate-400 group-hover:scale-110 transition duration-300" size={32} />
+                    <span className="block text-xs font-semibold text-slate-500">Rasm yuklang</span>
+                    <span className="block text-[10px] text-slate-400">PNG, JPG (tavsiya: 300x400)</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Banner rasmi (Banner Image) */}
+            <div className="space-y-2">
+              <span className="mb-1 flex items-center gap-2 text-sm font-medium text-slate-700">
+                <FiImage className="text-slate-500" />
+                Banner rasmi (Banner Image)
+              </span>
+              <div className="relative group border-2 border-dashed border-slate-200 rounded-xl bg-white hover:bg-slate-50 transition-all p-4 flex flex-col items-center justify-center min-h-[140px] cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      try {
+                        const webpFile = await convertToWebP(file);
+                        setBannerFile(webpFile);
+                        setBannerPreview(URL.createObjectURL(webpFile));
+                      } catch (err) {
+                        toast.error("Banner rasmini qayta ishlashda xatolik");
+                      }
+                    }
+                  }}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                />
+                {bannerPreview ? (
+                  <div className="relative w-full h-24 rounded-lg overflow-hidden flex items-center justify-center">
+                    <img src={bannerPreview} alt="Banner Preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setBannerFile(null);
+                        setBannerPreview("");
+                        setForm(p => ({ ...p, banner_url: "" }));
+                      }}
+                      className="absolute top-1 right-1 p-1 bg-rose-500 hover:bg-rose-600 text-white rounded-full transition shadow-md z-20"
+                    >
+                      <FiX size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center space-y-1">
+                    <FiImage className="mx-auto text-slate-400 group-hover:scale-110 transition duration-300" size={32} />
+                    <span className="block text-xs font-semibold text-slate-500">Banner yuklang</span>
+                    <span className="block text-[10px] text-slate-400">Keng (tavsiya: 1200x400)</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="flex justify-end pt-4">
