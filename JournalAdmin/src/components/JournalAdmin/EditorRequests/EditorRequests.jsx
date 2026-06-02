@@ -376,8 +376,15 @@ const EditorRequests = () => {
 
       {/* --- EDIT MODAL (PREMIUM GLASSMORPHIC DIALOG) --- */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 w-full max-w-md overflow-hidden animate-scaleUp">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          {/* Backdrop overlay */}
+          <div 
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={() => setIsEditModalOpen(false)}
+          />
+          
+          {/* Modal Container */}
+          <div className="relative bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
             
             {/* Modal Header */}
             <div className="p-6 pb-4 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
