@@ -59,7 +59,7 @@ const ArticleDetails = () => {
         ].filter(Boolean).join(", ")
       : undefined,
     image: article?.journal?.banner_url || article?.journal?.cover_image_url,
-    url: `https://akademix.uz/articles/${id}`,
+    url: `https://akademix.uz/articles/${article?.slug || id}`,
     type: "article"
   });
 

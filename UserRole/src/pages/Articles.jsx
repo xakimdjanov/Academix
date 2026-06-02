@@ -140,7 +140,7 @@ const ArticleCard = ({ article }) => (
        </div>
        <div className="flex gap-2">
          <Link 
-            to={`/articles/${article._id || article.id}`} 
+            to={`/articles/${article.slug || article._id || article.id}`} 
             className="flex-1 py-3 text-center text-xs font-black text-[#002147] bg-[#F6F8FB] hover:bg-gray-200 rounded-xl transition-all"
          >
             O'QISH

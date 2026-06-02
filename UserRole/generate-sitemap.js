@@ -91,7 +91,7 @@ async function generate() {
     .map(a => {
       const lastmod = a.updatedAt ? new Date(a.updatedAt).toISOString().split("T")[0] : today;
       return urlEntry({
-        loc: `${BASE_URL}/articles/${a.id}`,
+        loc: `${BASE_URL}/articles/${a.slug || a.id}`,
         lastmod,
         changefreq: "monthly",
         priority: "0.80",

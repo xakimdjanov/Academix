@@ -91,7 +91,7 @@ const MyComments = () => {
 
                <div className="pt-4 border-t border-gray-100">
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Maqolada:</span>
-                  <Link to={`/articles/${c.article_id}`} className="text-xs font-bold text-[#002147] hover:text-blue-600 line-clamp-2 leading-tight flex items-center gap-2 group/link">
+                  <Link to={`/articles/${c.article?.slug || c.article_id}`} className="text-xs font-bold text-[#002147] hover:text-blue-600 line-clamp-2 leading-tight flex items-center gap-2 group/link">
                     {c.article?.title} <FiExternalLink size={14} className="opacity-50 group-hover/link:opacity-100" />
                   </Link>
                </div>
