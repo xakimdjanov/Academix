@@ -163,7 +163,8 @@ const JournalDetail = () => {
         </div>
         {/* Decorative mask */}
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#F6F8FB] to-transparent"></div>
-      </section>      {/* 🔘 Navigation Tabs */}
+      </section>
+      {/* 🔘 Navigation Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20">
          <div className="bg-white rounded-2xl shadow-xl p-2 flex overflow-x-auto no-scrollbar gap-2 border border-gray-100">
             <TabButton active={activeTab === 'about'} onClick={() => { setActiveTab('about'); setSelectedBob(null); }} icon={<FiInfo/>} label="Haqida" />
@@ -309,7 +310,7 @@ const JournalDetail = () => {
                                              </span>
                                           </div>
                                           <div className="flex gap-4">
-                                             <Link to={`/articles/${article._id || article.id}`} className="inline-flex items-center gap-1 text-xs font-black text-blue-600 hover:text-blue-800 tracking-wider">
+                                             <Link to={`/articles/${article.slug || article._id || article.id}`} className="inline-flex items-center gap-1 text-xs font-black text-blue-600 hover:text-blue-800 tracking-wider">
                                                 MAQOLANI O'QISH <FiChevronRight />
                                              </Link>
                                              <a href={article.file_url} target="_blank" rel="noreferrer" className="text-xs font-black text-gray-400 hover:text-gray-600 tracking-wider">PDF YUKLAB OLISH</a>
@@ -391,7 +392,7 @@ const JournalDetail = () => {
                                        </span>
                                     </div>
                                     <div className="flex gap-4">
-                                       <Link to={`/articles/${article._id || article.id}`} className="inline-flex items-center gap-1 text-xs font-black text-blue-600 hover:text-blue-800 tracking-wider">
+                                       <Link to={`/articles/${article.slug || article.id}`} className="inline-flex items-center gap-1 text-xs font-black text-blue-600 hover:text-blue-800 tracking-wider">
                                           MAQOLANI O'QISH <FiChevronRight />
                                        </Link>
                                        <a href={article.file_url} target="_blank" rel="noreferrer" className="text-xs font-black text-gray-400 hover:text-gray-600 tracking-wider">PDF YUKLAB OLISH</a>

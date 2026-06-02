@@ -13,6 +13,7 @@ import {
   FiLayers,
   FiGlobe,
   FiCheckCircle,
+  FiExternalLink,
 } from "react-icons/fi";
 
 const STATUSES = [
@@ -481,6 +482,17 @@ const JournalArticles = () => {
                         >
                           <FiEye size={18} />
                         </button>
+                        {status === "Published" && (
+                          <a
+                            href={`https://akademix.uz/articles/${a.slug || getId(a)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2.5 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm flex items-center justify-center border border-blue-100"
+                            title="Saytda o'qish (Sitesi)"
+                          >
+                            <FiExternalLink size={18} />
+                          </a>
+                        )}
                         <button
                           onClick={() => openEdit(a)}
                           className="p-2.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-amber-500 hover:text-white transition-all shadow-sm"

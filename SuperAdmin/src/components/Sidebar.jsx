@@ -15,6 +15,7 @@ import {
   FiCheck,
   FiPlus,
   FiShield,
+  FiGlobe,
 } from "react-icons/fi";
 
 const links = [
@@ -136,6 +137,22 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </NavLink>
           ))}
         </nav>
+
+        {/* Main Website Link */}
+        <div className="px-4 py-2 border-t border-white/10 shrink-0">
+          <a
+            href="https://akademix.uz"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`w-full flex items-center p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-white transition-all duration-200 ${
+              isCollapsed ? "justify-center" : "gap-3"
+            }`}
+            title="Asosiy sayt"
+          >
+            <span className="text-xl shrink-0"><FiGlobe /></span>
+            {!isCollapsed && <span className="text-sm font-semibold">Asosiy sayt</span>}
+          </a>
+        </div>
 
         {/* Logout Section */}
         <div className="p-4 border-t border-white/10">

@@ -94,7 +94,7 @@ const MyArticleComments = () => {
               comments.map(c => (
                 <tr key={c.id} className="hover:bg-gray-50/50 transition-colors group">
                   <td className="py-5 px-4">
-                    <Link to={`/articles/${c.article_id}`} className="font-bold text-[#002147] hover:text-blue-600 flex items-center gap-2 group/link">
+                    <Link to={`/articles/${c.article?.slug || c.article_id}`} className="font-bold text-[#002147] hover:text-blue-600 flex items-center gap-2 group/link">
                       {c.article?.title} <FiExternalLink className="opacity-0 group-hover/link:opacity-100 transition-opacity" />
                     </Link>
                   </td>
