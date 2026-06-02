@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import { FiBell, FiSend, FiPlus, FiX, FiSearch, FiCheckCircle, FiSlash } from "react-icons/fi";
 import { notificationService, userService } from "../services/api";
@@ -252,11 +253,11 @@ const Settings = () => {
       </div>
 
       {/* Create Modal */}
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40" onClick={closeModal} />
-
-          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+      {open && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 overflow-hidden">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={closeModal} />
+ 
+          <div className="relative w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl border border-white/20 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
             {/* Modal header */}
             <div className="bg-blue-800 p-6 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -273,7 +274,7 @@ const Settings = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto scrollbar-none">
               {/* Searchable user picker */}
               <div className="space-y-2" ref={userPickerRef}>
                 <label className="text-xs font-bold text-gray-400 uppercase">User</label>
@@ -418,7 +419,8 @@ const Settings = () => {
               </button>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import { 
   FiUser, FiMail, FiLock, FiUserPlus, FiShield, FiX, 
@@ -232,17 +233,16 @@ const Editors = () => {
       </div>
 
       {/* Add/Edit Modal */}
-      {(isAddOpen || editingEditor) && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
+      {(isAddOpen || editingEditor) && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
           {/* Backdrop overlay */}
           <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" 
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" 
             onClick={() => { setIsAddOpen(false); setEditingEditor(null); }} 
           />
 
-          {/* Centering wrapper */}
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <div className="relative w-full max-w-xl transform rounded-[2.5rem] bg-white text-left shadow-2xl transition-all my-8 overflow-hidden animate-in zoom-in-95 duration-200">
+          {/* Modal Container */}
+          <div className="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl border border-white/20 overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
               <div className="bg-blue-600 p-8 text-white">
                 <div className="flex justify-between items-start">
                   <div>
@@ -254,7 +254,7 @@ const Editors = () => {
                   <button onClick={() => { setIsAddOpen(false); setEditingEditor(null); }} className="p-2 hover:bg-white/10 rounded-full transition"><FiX size={24} /></button>
                 </div>
               </div>
-            <form onSubmit={isAddOpen ? handleRegisterSubmit : handleUpdateSubmit} className="p-8 space-y-6">
+            <form onSubmit={isAddOpen ? handleRegisterSubmit : handleUpdateSubmit} className="p-8 space-y-6 overflow-y-auto scrollbar-none">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">To'liq ismi</label>
                 <div className="relative">
@@ -303,9 +303,9 @@ const Editors = () => {
               </button>
             </form>
           </div>
-        </div>
-      </div>
-    )}
+        </div>,
+        document.body
+      )}
 
       {/* Custom Delete Modal */}
       <ConfirmModal 

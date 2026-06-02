@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { journalAdminService } from "../services/api";
 import toast from "react-hot-toast";
 import { convertToWebP } from "../utils/webpHelper";
@@ -328,23 +329,22 @@ const JournalAdmins = () => {
       </div>
 
       {/* Add/Edit Modal */}
-      {(isAddOpen || editingAdmin) && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
+      {(isAddOpen || editingAdmin) && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
           {/* Backdrop overlay */}
           <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" 
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" 
             onClick={() => { setIsAddOpen(false); setEditingAdmin(null); }} 
           />
 
-          {/* Centering wrapper */}
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <div className="relative w-full max-w-4xl transform rounded-[2.5rem] bg-white text-left shadow-2xl transition-all my-8 overflow-hidden animate-in zoom-in-95 duration-300">
-              <div className="flex items-center justify-between p-8 border-b border-gray-100">
-                <h2 className="text-2xl font-bold text-gray-800">
-                  {isAddOpen ? "Yangi Admin Qo'shish" : "Admin Tahrirlash"}
-                </h2>
-                <button onClick={() => { setIsAddOpen(false); setEditingAdmin(null); }} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><FiX size={24} /></button>
-              </div>
+          {/* Modal Container */}
+          <div className="relative w-full max-w-4xl bg-white rounded-[2.5rem] shadow-2xl border border-white/20 overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-8 border-b border-gray-100 shrink-0">
+              <h2 className="text-2xl font-bold text-gray-800">
+                {isAddOpen ? "Yangi Admin Qo'shish" : "Admin Tahrirlash"}
+              </h2>
+              <button type="button" onClick={() => { setIsAddOpen(false); setEditingAdmin(null); }} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><FiX size={24} /></button>
+            </div>
             
             <form onSubmit={handleSubmit} className="p-8 grid grid-cols-1 md:grid-cols-12 gap-8 max-h-[70vh] overflow-y-auto scrollbar-none">
               <div className="md:col-span-4 flex flex-col items-center gap-6 border-r border-gray-100 pr-8">
@@ -455,9 +455,9 @@ const JournalAdmins = () => {
               </div>
             </form>
           </div>
-        </div>
-      </div>
-    )}
+        </div>,
+        document.body
+      )}
 
       {/* Custom Delete Modal */}
       <ConfirmModal 
