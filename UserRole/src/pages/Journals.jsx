@@ -2,12 +2,21 @@ import React, { useEffect, useState, useMemo } from "react";
 import { journalService } from "../services/api";
 import { FiSearch, FiFilter, FiLayers, FiArrowRight, FiBookOpen, FiEye } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { useSEO } from "../hooks/useSEO";
 
 const Journals = () => {
   const [journals, setJournals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Barchasi");
+
+  useSEO({
+    title: "Akademik Ilmiy Jurnallar Ro'yxati",
+    description: "Academix - O'zbekistonning barcha sohalardagi yuqori sifatli va taqrizdan o'tgan ilmiy jurnallari ro'yxati. O'z sohangizga mos jurnalni toping va maqola yuboring.",
+    keywords: "ilmiy jurnallar ro'yxati, o'zbekiston ilmiy jurnallari, kimyo jurnali, fizika jurnali, pedagogika, tibbiyot jurnallari, dissertatsiya, akademix, akademix.uz",
+    url: "https://akademix.uz/journals",
+    type: "website"
+  });
 
   useEffect(() => {
     const load = async () => {

@@ -2,12 +2,21 @@ import React, { useEffect, useState, useMemo } from "react";
 import { articleService } from "../services/api";
 import { FiSearch, FiFilter, FiFileText, FiArrowRight, FiBookOpen, FiEye, FiClock } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { useSEO } from "../hooks/useSEO";
 
 const Articles = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("Barchasi");
+
+  useSEO({
+    title: "Nashr Etilgan Ilmiy Maqolalar Ro'yxati",
+    description: "Academix - O'zbekiston va xalqaro miqyosdagi eng so'nggi ilmiy maqolalar, tadqiqotlar va tezislar ro'yxati. Barcha sohalardagi ilmiy ishlar bilan tanishing.",
+    keywords: "ilmiy maqolalar ro'yxati, tadqiqot ishlari, dissertatsiyalar, maqola qidirish, iqtisodiyot, tibbiyot, matematika ilmiy maqolalari, akademix, akademix.uz",
+    url: "https://akademix.uz/articles",
+    type: "website"
+  });
 
   useEffect(() => {
     const load = async () => {

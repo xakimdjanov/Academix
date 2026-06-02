@@ -37,6 +37,8 @@ export const journalAdminService = {
     axiosInstance.put(`/JournalAdmin/updateJournalAdmin/${id}`, data),
   delete: (id) =>
     axiosInstance.delete(`/JournalAdmin/deleteJournalAdmin/${id}`),
+  toggleBobPermission: (id) =>
+    axiosInstance.patch(`/JournalAdmin/toggle-bob-permission/${id}`),
 };
 
 // --- 3. EDITOR SERVISI (Muharrirlar uchun) ---

@@ -14,6 +14,7 @@ import {
   FiEye
 } from "react-icons/fi";
 import { journalService, tariffService } from "../services/api";
+import { useSEO } from "../hooks/useSEO";
 
 const Home = () => {
   const [journals, setJournals] = useState([]);
@@ -26,6 +27,14 @@ const Home = () => {
     journals: 0,
     reviewers: 0,
     impact: 0
+  });
+
+  useSEO({
+    title: "Akademik Jurnallar va Ilmiy Maqolalar Platformasi",
+    description: "Academix - O'zbekistondagi akademik jurnallar, maqolalar va tadqiqotlarni nashr qilish hamda tahririyat ishlarini avtomatlashtirish bo'yicha eng ilg'or platforma. DOI va xalqaro indekslar.",
+    keywords: "ilmiy maqolalar, akademik jurnallar, nashr etish, doi, o'zbekiston jurnallari, akademix, akademix.uz, tadqiqotlar, ilm-fan, dissertatsiya, maqola chiqarish",
+    url: "https://akademix.uz",
+    type: "website"
   });
 
   useEffect(() => {

@@ -18,6 +18,7 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import { articleService, commentService } from "../services/api";
 import { getUserIdFromToken } from "../utils/getUserIdFromToken";
+import { useSEO } from "../hooks/useSEO";
 
 const formatDate = (iso) => {
   if (!iso) return "-";
@@ -25,8 +26,6 @@ const formatDate = (iso) => {
   if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleString();
 };
-
-
 
 const ArticleDetails = () => {
   const { id } = useParams();
@@ -39,6 +38,30 @@ const ArticleDetails = () => {
   const [comments, setComments] = useState([]);
   const [userComment, setUserComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useSEO({
+    title: article ? article.title : undefined,
+    description: article
+      ? (article.abstract || "").substring(0, 250)
+      : undefined,
+    keywords: article
+      ? [
+          article.title,
+          article.category,
+          ...(Array.isArray(article.keywords) ? article.keywords : []),
+          ...(Array.isArray(article.authors)
+            ? article.authors.map(a => a.fullName).filter(Boolean)
+            : []),
+          article.language,
+          "ilmiy maqola",
+          "akademix",
+          "akademix.uz"
+        ].filter(Boolean).join(", ")
+      : undefined,
+    image: article?.journal?.banner_url || article?.journal?.cover_image_url,
+    url: `https://akademix.uz/articles/${id}`,
+    type: "article"
+  });
 
   const fetchAll = async () => {
     if (!id) return;
@@ -127,7 +150,14 @@ const ArticleDetails = () => {
       <Toaster position="top-right" />
       
       {/* 🟦 Dark Hero Section */}
-      <section className="bg-[#002147] text-white pt-20 pb-32 relative overflow-hidden">
+      <section 
+        className="text-white pt-20 pb-32 relative overflow-hidden bg-[#002147]"
+        style={article.journal?.banner_url ? {
+          backgroundImage: `linear-gradient(to bottom, rgba(0, 33, 71, 0.85), rgba(0, 33, 71, 0.95)), url(${article.journal.banner_url})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        } : {}}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <Link to="/journals" className="inline-flex items-center gap-2 text-blue-200 hover:text-white mb-8 transition-colors">
             <FiArrowLeft /> Qidiruvga qaytish
@@ -141,6 +171,11 @@ const ArticleDetails = () => {
                    <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-[10px] font-black uppercase rounded-full tracking-widest border border-blue-500/30">
                       {article.category || "Ilmiy maqola"}
                    </span>
+                   {article.journal && (
+                     <Link to={`/journals/${article.journal.slug}`} className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase rounded-full tracking-widest border border-white/20 transition-colors">
+                        Jurnal: {article.journal.name}
+                     </Link>
+                   )}
                    <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-black uppercase rounded-full tracking-widest border border-white/20 flex items-center gap-1">
                       <FiEye size={12}/> {article.view_count || 0} ko'rishlar
                    </span>
@@ -186,7 +221,7 @@ const ArticleDetails = () => {
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {Array.isArray(article.authors) ? article.authors.map((auth, idx) => (
                     <div key={idx} className="flex items-center gap-5 p-4 rounded-2xl border border-gray-50 hover:border-blue-100 transition-colors group">
-                       <img src={auth.imageUrl || "https://ui-avatars.com/api/?name="+auth.fullName} alt={auth.fullName} className="w-16 h-16 rounded-2xl object-cover shadow-md group-hover:scale-105 transition-transform" />
+                       <img src={auth.imageUrl || "https://ui-avatars.com/api/?name="+auth.fullName} alt={auth.fullName} className="w-16 h-16 rounded-2xl object-cover shadow-md group-hover:scale-105 transition-transform" loading="lazy" />
                        <div>
                           <div className="font-bold text-[#002147]">{auth.fullName}</div>
                           <div className="text-xs text-blue-600 font-medium mb-1">{auth.orcidId}</div>
@@ -241,7 +276,7 @@ const ArticleDetails = () => {
                         <div key={c.id} className="flex gap-4">
                            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-gray-100 shadow-sm">
                               {c.author?.avatar_url ? (
-                                <img src={c.author.avatar_url} alt="Foydalanuvchi" className="w-full h-full object-cover" />
+                                <img src={c.author.avatar_url} alt="Foydalanuvchi" className="w-full h-full object-cover" loading="lazy" />
                               ) : (
                                 <div className="w-full h-full bg-gray-100 flex items-center justify-center text-[#002147] font-black text-xs">
                                    {c.author?.full_name ? c.author.full_name[0] : (c.author?.fullName ? c.author.fullName[0] : "?")}

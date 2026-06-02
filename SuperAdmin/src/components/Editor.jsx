@@ -233,19 +233,27 @@ const Editors = () => {
 
       {/* Add/Edit Modal */}
       {(isAddOpen || editingEditor) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="bg-blue-600 p-8 text-white">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-2xl font-bold flex items-center gap-2"> 
-                    {isAddOpen ? <><FiUserPlus /> Yangi Muharrir</> : <><FiEdit2 /> Muharrirni tahrirlash</>} 
-                  </h2>
-                  <p className="text-blue-100 text-sm mt-1">Muharrir ma'lumotlarini boshqarish</p>
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          {/* Backdrop overlay */}
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" 
+            onClick={() => { setIsAddOpen(false); setEditingEditor(null); }} 
+          />
+
+          {/* Centering wrapper */}
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
+            <div className="relative w-full max-w-xl transform rounded-[2.5rem] bg-white text-left shadow-2xl transition-all my-8 overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="bg-blue-600 p-8 text-white">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h2 className="text-2xl font-bold flex items-center gap-2"> 
+                      {isAddOpen ? <><FiUserPlus /> Yangi Muharrir</> : <><FiEdit2 /> Muharrirni tahrirlash</>} 
+                    </h2>
+                    <p className="text-blue-100 text-sm mt-1">Muharrir ma'lumotlarini boshqarish</p>
+                  </div>
+                  <button onClick={() => { setIsAddOpen(false); setEditingEditor(null); }} className="p-2 hover:bg-white/10 rounded-full transition"><FiX size={24} /></button>
                 </div>
-                <button onClick={() => { setIsAddOpen(false); setEditingEditor(null); }} className="p-2 hover:bg-white/10 rounded-full transition"><FiX size={24} /></button>
               </div>
-            </div>
             <form onSubmit={isAddOpen ? handleRegisterSubmit : handleUpdateSubmit} className="p-8 space-y-6">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">To'liq ismi</label>
@@ -296,7 +304,8 @@ const Editors = () => {
             </form>
           </div>
         </div>
-      )}
+      </div>
+    )}
 
       {/* Custom Delete Modal */}
       <ConfirmModal 

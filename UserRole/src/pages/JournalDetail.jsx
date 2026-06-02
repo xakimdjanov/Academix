@@ -12,16 +12,44 @@ import {
   FiChevronRight,
   FiMessageSquare
 } from "react-icons/fi";
-import { journalService, articleService, settingsService } from "../services/api";
+import { journalService, articleService, settingsService, bobService } from "../services/api";
+import { useSEO } from "../hooks/useSEO";
 
 const JournalDetail = () => {
   const { slug } = useParams();
   const [journal, setJournal] = useState(null);
   const [settings, setSettings] = useState([]);
   const [articles, setArticles] = useState([]);
+  const [bobs, setBobs] = useState([]);
+  const [selectedBob, setSelectedBob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("about");
   const isLoggedIn = !!localStorage.getItem("token");
+
+  useSEO({
+    title: journal ? (journal.journal_name || journal.name) : undefined,
+    description: journal
+      ? [
+          journal.short_description || journal.description || "",
+          journal.aims_scope || ""
+        ].filter(Boolean).join(" ").substring(0, 250)
+      : undefined,
+    keywords: journal
+      ? [
+          journal.journal_name || journal.name,
+          journal.subject_area,
+          journal.issn,
+          journal.languages?.join(", "),
+          "akademix",
+          "akademix.uz",
+          "ilmiy jurnal",
+          "o'zbekiston jurnali"
+        ].filter(Boolean).join(", ")
+      : undefined,
+    image: journal?.banner_url || journal?.cover_image_url,
+    url: `https://akademix.uz/journals/${slug}`,
+    type: "website"
+  });
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -47,6 +75,16 @@ const JournalDetail = () => {
           const allSettings = Array.isArray(sRes?.data?.data) ? sRes.data.data : (Array.isArray(sRes?.data) ? sRes.data : []);
           const journalSettings = allSettings.filter(s => String(s.journal_id) === String(jId));
           setSettings(journalSettings);
+
+          // 3. Boblarni yuklab olish (agar admin ruxsati bo'lsa)
+          if (jData.admin?.allow_bob_creation) {
+            try {
+              const bRes = await bobService.getByJournal(jId);
+              setBobs(bRes?.data || []);
+            } catch (err) {
+              console.error("Error loading journal bobs:", err);
+            }
+          }
         }
       } catch (error) {
         console.error("Error fetching journal details:", error);
@@ -79,14 +117,25 @@ const JournalDetail = () => {
   return (
     <div className="bg-[#F6F8FB] min-h-screen pb-20">
       {/* 🟦 Hero / Header */}
-      <section className="bg-[#002147] text-white pt-20 pb-32 relative overflow-hidden">
+      <section 
+        className="text-white pt-20 pb-32 relative overflow-hidden bg-[#002147]"
+        style={journal.banner_url ? {
+          backgroundImage: `linear-gradient(to bottom, rgba(0, 33, 71, 0.85), rgba(0, 33, 71, 0.95)), url(${journal.banner_url})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        } : {}}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <Link to="/journals" className="inline-flex items-center gap-2 text-blue-200 hover:text-white mb-8 transition-colors">
             <FiArrowLeft /> Qidiruvga qaytish
           </Link>
           <div className="flex flex-col md:flex-row gap-8 items-start">
-             <div className="w-24 h-24 md:w-32 md:h-32 bg-white/10 backdrop-blur-md rounded-3xl flex items-center justify-center text-blue-400 border border-white/20 shadow-2xl">
-                <FiBook size={48} className="md:size-64" />
+             <div className="w-24 h-24 md:w-32 md:h-32 bg-white/10 backdrop-blur-md rounded-3xl flex items-center justify-center text-blue-400 border border-white/20 shadow-2xl overflow-hidden">
+                {journal.cover_image_url ? (
+                   <img src={journal.cover_image_url} alt="Cover" className="w-full h-full object-cover" loading="lazy" />
+                ) : (
+                   <FiBook size={48} />
+                )}
              </div>
              <div className="flex-1">
                 <div className="flex flex-wrap gap-3 mb-4">
@@ -114,22 +163,20 @@ const JournalDetail = () => {
         </div>
         {/* Decorative mask */}
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#F6F8FB] to-transparent"></div>
-      </section>
-
-      {/* 🔘 Navigation Tabs */}
+      </section>      {/* 🔘 Navigation Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20">
          <div className="bg-white rounded-2xl shadow-xl p-2 flex overflow-x-auto no-scrollbar gap-2 border border-gray-100">
-            <TabButton active={activeTab === 'about'} onClick={() => setActiveTab('about')} icon={<FiInfo/>} label="Haqida" />
-            <TabButton active={activeTab === 'scope'} onClick={() => setActiveTab('scope')} icon={<FiAward/>} label="Maqsad va yo'nalishlar" />
-            <TabButton active={activeTab === 'shablon'} onClick={() => setActiveTab('shablon')} icon={<FiLayers/>} label="Maqola shabloni" />
-            <TabButton active={activeTab === 'articles'} onClick={() => setActiveTab('articles')} icon={<FiFileText/>} label={`Maqolalar (${articles.length})`} />
+            <TabButton active={activeTab === 'about'} onClick={() => { setActiveTab('about'); setSelectedBob(null); }} icon={<FiInfo/>} label="Haqida" />
+            <TabButton active={activeTab === 'scope'} onClick={() => { setActiveTab('scope'); setSelectedBob(null); }} icon={<FiAward/>} label="Maqsad va yo'nalishlar" />
+            <TabButton active={activeTab === 'shablon'} onClick={() => { setActiveTab('shablon'); setSelectedBob(null); }} icon={<FiLayers/>} label="Maqola shabloni" />
+            <TabButton active={activeTab === 'articles'} onClick={() => { setActiveTab('articles'); setSelectedBob(null); }} icon={<FiFileText/>} label={`Maqolalar (${articles.length})`} />
             
             {/* 💎 Dynamic Tabs from Backend Settings (Site Pages) */}
             {settings.map((s) => (
                <TabButton 
                   key={s.id} 
                   active={activeTab === `setting-${s.id}`} 
-                  onClick={() => setActiveTab(`setting-${s.id}`)} 
+                  onClick={() => { setActiveTab(`setting-${s.id}`); setSelectedBob(null); }} 
                   icon={<FiLayers/>} 
                   label={s.title || s.page_name} 
                />
@@ -203,36 +250,157 @@ const JournalDetail = () => {
 
             {activeTab === 'articles' && (
                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <h2 className="text-2xl font-black text-[#002147] mb-6">Yaqinda nashr etilgan maqolalar</h2>
-                  {articles.length === 0 ? (
-                     <div className="bg-white p-12 rounded-3xl text-center border border-gray-100 text-gray-400 font-medium">
-                        Ushbu jurnalda hali maqolalar nashr etilmagan.
-                     </div>
-                  ) : (
-                     articles.map(article => (
-                        <div key={article._id || article.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-50 flex gap-4 hover:shadow-md transition-shadow group">
-                           <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
-                              <FiFileText size={20} />
+                  {/* 1. Bob yaratish ruxsati bor bo'lsa */}
+                  {journal?.admin?.allow_bob_creation ? (
+                     selectedBob ? (
+                        /* Selected Bob view: list of nested articles */
+                        <div className="space-y-6">
+                           <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                              <button
+                                 onClick={() => setSelectedBob(null)}
+                                 className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors"
+                              >
+                                 <FiArrowLeft /> Orqaga (Sonlar ro'yxati)
+                              </button>
+                              <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-extrabold rounded-full">
+                                 {selectedBob.year}-yil
+                              </span>
                            </div>
-                           <div className="flex-1">
-                              <h3 className="text-lg font-bold text-[#002147] mb-2 leading-snug group-hover:text-blue-600 transition-colors">
-                                 {article.title}
-                              </h3>
-                              <div className="flex items-center gap-4 mb-3">
-                                 <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest">{new Date(article.createdAt).toLocaleDateString()}</p>
-                                 <span className="flex items-center gap-1 text-[10px] sm:text-xs text-blue-600 font-black">
-                                    <FiEye size={12}/> {article.view_count || 0} KO'RILDI
-                                 </span>
+
+                           <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                              <div>
+                                 <h3 className="text-xl font-black text-[#002147] mb-2">{selectedBob.name}</h3>
+                                 <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Ushbu son tarkibidagi maqolalar</p>
                               </div>
-                              <div className="flex gap-4">
-                                 <Link to={`/articles/${article._id || article.id}`} className="inline-flex items-center gap-1 text-xs font-black text-blue-600 hover:text-blue-800 tracking-wider">
-                                    MAQOLANI O'QISH <FiChevronRight />
-                                 </Link>
-                                 <a href={article.file_url} target="_blank" rel="noreferrer" className="text-xs font-black text-gray-400 hover:text-gray-600 tracking-wider">PDF YUKLAB OLISH</a>
-                              </div>
+                              {selectedBob.file_url && (
+                                 <a 
+                                    href={selectedBob.file_url} 
+                                    target="_blank" 
+                                    rel="noreferrer" 
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md shadow-blue-200 transition-all active:scale-95"
+                                 >
+                                    To'liq sonni yuklab olish (PDF)
+                                 </a>
+                              )}
                            </div>
+
+                           {articles.filter(a => Number(a.bob_id) === Number(selectedBob.id)).length === 0 ? (
+                              <div className="bg-white p-12 rounded-3xl text-center border border-gray-100 text-gray-400 font-medium animate-in fade-in duration-300">
+                                 Ushbu sonda maqolalar hali nashr etilmagan.
+                              </div>
+                           ) : (
+                              <div className="space-y-4">
+                                 {articles.filter(a => Number(a.bob_id) === Number(selectedBob.id)).map(article => (
+                                    <div key={article._id || article.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-50 flex gap-4 hover:shadow-md transition-shadow group animate-in fade-in duration-300">
+                                       <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors flex-shrink-0">
+                                          <FiFileText size={20} />
+                                       </div>
+                                       <div className="flex-1 min-w-0">
+                                          <h3 className="text-lg font-bold text-[#002147] mb-2 leading-snug group-hover:text-blue-600 transition-colors truncate">
+                                             {article.title}
+                                          </h3>
+                                          <p className="text-xs text-gray-500 mb-3">
+                                             Muallif: {article.authors ? (typeof article.authors === 'string' ? article.authors : (Array.isArray(article.authors) ? article.authors.map(x => x.fullName || x.name || x).join(', ') : '')) : '-'}
+                                          </p>
+                                          <div className="flex items-center gap-4 mb-3">
+                                             <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest">{new Date(article.createdAt).toLocaleDateString()}</p>
+                                             <span className="flex items-center gap-1 text-[10px] sm:text-xs text-blue-600 font-black">
+                                                <FiEye size={12}/> {article.view_count || 0} KO'RILDI
+                                             </span>
+                                          </div>
+                                          <div className="flex gap-4">
+                                             <Link to={`/articles/${article._id || article.id}`} className="inline-flex items-center gap-1 text-xs font-black text-blue-600 hover:text-blue-800 tracking-wider">
+                                                MAQOLANI O'QISH <FiChevronRight />
+                                             </Link>
+                                             <a href={article.file_url} target="_blank" rel="noreferrer" className="text-xs font-black text-gray-400 hover:text-gray-600 tracking-wider">PDF YUKLAB OLISH</a>
+                                          </div>
+                                       </div>
+                                    </div>
+                                 ))}
+                              </div>
+                           )}
                         </div>
-                     ))
+                     ) : (
+                        /* List of Bobs view */
+                        <div className="space-y-6">
+                           <h2 className="text-2xl font-black text-[#002147] mb-6">Jurnal sonlari (Boblar)</h2>
+                           {bobs.length === 0 ? (
+                              <div className="bg-white p-12 rounded-3xl text-center border border-gray-100 text-gray-400 font-medium">
+                                 Ushbu jurnalda hali nashrlar (boblar) yaratilmagan.
+                              </div>
+                           ) : (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                 {bobs.map(bob => {
+                                    const bobArticlesCount = articles.filter(a => Number(a.bob_id) === Number(bob.id)).length;
+                                    return (
+                                       <div 
+                                          key={bob.id} 
+                                          onClick={() => setSelectedBob(bob)}
+                                          className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between h-48 hover:-translate-y-1 duration-300"
+                                       >
+                                          <div>
+                                             <div className="flex items-center gap-2 mb-3">
+                                                <span className="px-2.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-full">
+                                                   {bob.year}-yil
+                                                </span>
+                                                <span className="px-2.5 py-0.5 bg-gray-50 text-gray-500 text-[10px] font-black uppercase rounded-full">
+                                                   {bobArticlesCount} maqola
+                                                </span>
+                                             </div>
+                                             <h3 className="text-lg font-black text-[#002147] group-hover:text-blue-600 transition-colors line-clamp-2">
+                                                {bob.name}
+                                             </h3>
+                                          </div>
+                                          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
+                                             <span className="text-xs font-black text-blue-600 uppercase tracking-wider flex items-center gap-1">
+                                                Sonni ko'rish <FiChevronRight />
+                                             </span>
+                                             {bob.file_url && (
+                                                <span className="text-[10px] font-bold text-gray-400">PDF mavjud</span>
+                                             )}
+                                          </div>
+                                       </div>
+                                    );
+                                 })}
+                              </div>
+                           )}
+                        </div>
+                     )
+                  ) : (
+                     /* 2. Bob yaratish ruxsati bo'lmasa: flat list of articles as originally designed */
+                     <div className="space-y-6">
+                        <h2 className="text-2xl font-black text-[#002147] mb-6">Yaqinda nashr etilgan maqolalar</h2>
+                        {articles.length === 0 ? (
+                           <div className="bg-white p-12 rounded-3xl text-center border border-gray-100 text-gray-400 font-medium">
+                              Ushbu jurnalda hali maqolalar nashr etilmagan.
+                           </div>
+                        ) : (
+                           articles.map(article => (
+                              <div key={article._id || article.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-50 flex gap-4 hover:shadow-md transition-shadow group">
+                                 <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
+                                    <FiFileText size={20} />
+                                 </div>
+                                 <div className="flex-1">
+                                    <h3 className="text-lg font-bold text-[#002147] mb-2 leading-snug group-hover:text-blue-600 transition-colors">
+                                       {article.title}
+                                    </h3>
+                                    <div className="flex items-center gap-4 mb-3">
+                                       <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest">{new Date(article.createdAt).toLocaleDateString()}</p>
+                                       <span className="flex items-center gap-1 text-[10px] sm:text-xs text-blue-600 font-black">
+                                          <FiEye size={12}/> {article.view_count || 0} KO'RILDI
+                                       </span>
+                                    </div>
+                                    <div className="flex gap-4">
+                                       <Link to={`/articles/${article._id || article.id}`} className="inline-flex items-center gap-1 text-xs font-black text-blue-600 hover:text-blue-800 tracking-wider">
+                                          MAQOLANI O'QISH <FiChevronRight />
+                                       </Link>
+                                       <a href={article.file_url} target="_blank" rel="noreferrer" className="text-xs font-black text-gray-400 hover:text-gray-600 tracking-wider">PDF YUKLAB OLISH</a>
+                                    </div>
+                                 </div>
+                              </div>
+                           ))
+                        )}
+                     </div>
                   )}
                </div>
             )}
@@ -242,7 +410,7 @@ const JournalDetail = () => {
                <div key={s.id} className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <h2 className="text-2xl font-black text-[#002147] mb-6">{s.title || s.page_name}</h2>
                   {s.image_url && (
-                     <img src={s.image_url} alt={s.title} className="w-full h-auto rounded-2xl mb-8 shadow-lg border border-gray-100" />
+                     <img src={s.image_url} alt={s.title} className="w-full h-auto rounded-2xl mb-8 shadow-lg border border-gray-100" loading="lazy" />
                   )}
                   <div className="prose prose-blue max-w-none text-[#4B5563] leading-relaxed whitespace-pre-wrap text-justify">
                      {s.content}

@@ -8,19 +8,7 @@ import {
 } from "react-icons/fi";
 import { journalAdminService } from "../../../services/api";
 
-const menuItems = [
-  { path: "/journal-dashboard", label: "Asosiy panel", icon: FiHome },
-  { path: "/journal-list", label: "Jurnallar qo'shish", icon: FiPlusCircle },
-  { path: "/journal-settings", label: "Sozlamalar", icon: FiSettings },
-  { path: "/journal-articles", label: "Maqolalar", icon: FiFileText },
-  { path: "/journal-editors", label: "Muharrirlarni biriktirish", icon: FiUsers },
-  { path: "/editor-requests", label: "Muharrir so'rovlari", icon: FiPlusCircle },
-  // { path: "/journal-decisions", label: "Qarorlar", icon: FiCheckCircle },
-  // { path: "/journal-payments", label: "To'lovlar", icon: FiCreditCard },
-  { path: "/journal-reports", label: "Hisobotlar", icon: FiBarChart2 },
-];
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const API_BASE = "https://academixbackend-production.up.railway.app";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -33,6 +21,27 @@ const Sidebar = () => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const adminId = useMemo(() => localStorage.getItem("journal_admin_id"), []);
+
+  const menuItems = useMemo(() => {
+    const items = [
+      { path: "/journal-dashboard", label: "Asosiy panel", icon: FiHome },
+      { path: "/journal-list", label: "Jurnallar qo'shish", icon: FiPlusCircle },
+      { path: "/journal-settings", label: "Sozlamalar", icon: FiSettings },
+      { path: "/journal-articles", label: "Maqolalar", icon: FiFileText },
+    ];
+
+    if (user?.allow_bob_creation) {
+      items.push({ path: "/journal-bobs", label: "Boblar", icon: FiFileText });
+    }
+
+    items.push(
+      { path: "/journal-send-old-article", label: "Eski maqola qo'shish", icon: FiPlusCircle },
+      { path: "/journal-editors", label: "Muharrirlarni biriktirish", icon: FiUsers },
+      { path: "/editor-requests", label: "Muharrir so'rovlari", icon: FiPlusCircle },
+      { path: "/journal-reports", label: "Hisobotlar", icon: FiBarChart2 }
+    );
+    return items;
+  }, [user]);
 
   useEffect(() => {
     const load = async () => {

@@ -1,4 +1,20 @@
+import axios from "axios";
 import axiosInstance from "./axiosInstance";
+
+const API_BASE_URL = "https://academixbackend-production.up.railway.app";
+
+const axiosFormInstance = axios.create({
+  baseURL: API_BASE_URL,
+});
+
+axiosFormInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 /**
  * IDEAL API SERVICE STRUCTURE
@@ -49,7 +65,7 @@ export const editorService = {
 
 // --- 4. MAQOLALAR (ARTICLES) SERVISI ---
 export const articleService = {
-  create: (data) => axiosInstance.post("/article/create", data),
+  create: (data) => axiosFormInstance.post("/article/create", data),
   getAll: () => axiosInstance.get("/article/getAll"),
   getById: (id) => axiosInstance.get(`/article/getById/${id}`),
   search: (query) =>
@@ -60,10 +76,14 @@ export const articleService = {
 
 // --- 5. JURNALLAR (JOURNALS) SERVISI ---
 export const journalService = {
-  create: (data) => axiosInstance.post("/journal/create", data),
+  create: (data) => axiosInstance.post("/journal/create", data, {
+    headers: { "Content-Type": "multipart/form-data" }
+  }),
   getAll: () => axiosInstance.get("/journal/getAll"),
   getById: (id) => axiosInstance.get(`/journal/getById/${id}`),
-  update: (id, data) => axiosInstance.put(`/journal/update/${id}`, data),
+  update: (id, data) => axiosInstance.put(`/journal/update/${id}`, data, {
+    headers: { "Content-Type": "multipart/form-data" }
+  }),
   delete: (id) => axiosInstance.delete(`/journal/delete/${id}`),
 };
 
@@ -125,4 +145,16 @@ export const ReviewAssignments = {
 export const tariffService = {
   getAll: () => axiosInstance.get("/tariffs"),
   getById: (id) => axiosInstance.get(`/tariffs/${id}`),
+};
+
+// 13. BOBS (ISSUES/VOLUMES)
+export const bobService = {
+  create: (data) => axiosInstance.post("/bob/create", data, {
+    headers: { "Content-Type": "multipart/form-data" }
+  }),
+  getByJournal: (journalId) => axiosInstance.get(`/bob/by-journal/${journalId}`),
+  update: (id, data) => axiosInstance.put(`/bob/update/${id}`, data, {
+    headers: { "Content-Type": "multipart/form-data" }
+  }),
+  delete: (id) => axiosInstance.delete(`/bob/delete/${id}`),
 };
