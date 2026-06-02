@@ -403,10 +403,9 @@ const JournalBobs = () => {
                 </div>
               </form>
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body
+        )}
 
       {/* Delete Confirmation Modal */}
       <ConfirmModal 
