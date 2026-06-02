@@ -34,7 +34,9 @@ export const journalAdminService = {
   getAll: () => axiosInstance.get("/JournalAdmin/getJournalAdmin"),
   getById: (id) => axiosInstance.get(`/JournalAdmin/getJournalAdminById/${id}`),
   update: (id, data) =>
-    axiosInstance.put(`/JournalAdmin/updateJournalAdmin/${id}`, data),
+    axiosInstance.put(`/JournalAdmin/updateJournalAdmin/${id}`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
   delete: (id) =>
     axiosInstance.delete(`/JournalAdmin/deleteJournalAdmin/${id}`),
   toggleBobPermission: (id) =>
