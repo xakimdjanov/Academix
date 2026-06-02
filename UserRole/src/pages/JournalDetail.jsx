@@ -10,10 +10,12 @@ import {
   FiEye,
   FiLayers,
   FiChevronRight,
-  FiMessageSquare
+  FiMessageSquare,
+  FiCopy
 } from "react-icons/fi";
 import { journalService, articleService, settingsService, bobService } from "../services/api";
 import { useSEO } from "../hooks/useSEO";
+import toast, { Toaster } from "react-hot-toast";
 
 const JournalDetail = () => {
   const { slug } = useParams();
@@ -25,6 +27,21 @@ const JournalDetail = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("about");
   const isLoggedIn = !!localStorage.getItem("token");
+
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    toast.success("Sahifa havolasi nusxalandi!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const shareTelegram = () => {
+    const text = encodeURIComponent(`Academix platformasida yangi ilmiy nashr:\n\n${journal?.journal_name || journal?.name}\n\n`);
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://t.me/share/url?url=${url}&text=${text}`, "_blank");
+  };
 
   useSEO({
     title: journal ? (journal.journal_name || journal.name) : undefined,
@@ -116,6 +133,7 @@ const JournalDetail = () => {
 
   return (
     <div className="bg-[#F6F8FB] min-h-screen pb-20">
+      <Toaster position="top-right" />
       {/* 🟦 Hero / Header */}
       <section 
         className="text-white pt-20 pb-32 relative overflow-hidden bg-[#002147]"
@@ -154,11 +172,28 @@ const JournalDetail = () => {
                    "{journal.short_description || "Ilmiy tadqiqotlar va akademik mukammallik uchun yetakchi nashriyot maydoni."}"
                 </p>
              </div>
-             <div className="mt-4 md:mt-0">
-                <Link to={`/submit-article?journalId=${journal.id || journal._id}`} className="px-8 py-4 bg-white text-[#002147] rounded-2xl font-black text-sm transition-all shadow-xl hover:-translate-y-1 active:scale-95 flex items-center gap-2">
-                   MAQOLA YUBORISH <FiSend />
-                </Link>
-             </div>
+              <div className="mt-4 md:mt-0 flex flex-wrap gap-3 items-center">
+                 <Link to={`/submit-article?journalId=${journal.id || journal._id}`} className="px-8 py-4 bg-white text-[#002147] rounded-2xl font-black text-sm transition-all shadow-xl hover:-translate-y-1 active:scale-95 flex items-center gap-2">
+                    MAQOLA YUBORISH <FiSend />
+                 </Link>
+                 
+                 <div className="flex gap-2 bg-white/10 backdrop-blur-md p-2 rounded-2xl border border-white/10">
+                    <button 
+                       onClick={shareTelegram}
+                       className="p-3 bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 hover:text-white rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider"
+                       title="Telegram orqali ulashish"
+                    >
+                       <FiSend size={16} /> Ulashish
+                    </button>
+                    <button 
+                       onClick={handleCopyLink}
+                       className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider"
+                       title="Havolani nusxalash"
+                    >
+                       <FiCopy size={16} /> {copied ? "Nusxalandi" : "Nusxa olish"}
+                    </button>
+                 </div>
+              </div>
           </div>
         </div>
         {/* Decorative mask */}
