@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
@@ -220,8 +221,8 @@ const JournalList = () => {
       </div>
 
       {/* ===== MODERN DELETE MODAL ===== */}
-      {deleteOpen && (
-<div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200">
+      {deleteOpen && createPortal(
+<div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[99999] p-4 animate-in fade-in duration-200">
     <div className="bg-white rounded-[2rem] p-8 w-full max-w-md relative shadow-2xl border border-slate-100 scale-in-center animate-in zoom-in-95 duration-200">
       <button
         onClick={() => setDeleteOpen(false)}
@@ -256,7 +257,8 @@ const JournalList = () => {
         </button>
       </div>
     </div>
-  </div>
+  </div>,
+  document.body
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 // JournalArticles.jsx
 import React, { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { articleService, journalService, bobService, journalAdminService } from "../../../services/api";
@@ -737,36 +738,34 @@ const StatusBadge = ({ status }) => {
 
 const Modal = ({ open, onClose, title, children }) => {
   if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-[60] overflow-y-auto">
+  return createPortal(
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 overflow-hidden">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
         onClick={onClose}
       />
 
-      {/* Alignment wrapper */}
-      <div className="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
-        <div className="relative w-full max-w-2xl transform bg-white rounded-3xl text-left shadow-2xl transition-all animate-in zoom-in-95 duration-300 my-8">
-          <div className="flex items-center justify-between p-5 sm:p-7 border-b border-slate-100">
-            <h2 className="text-base sm:text-xl font-bold text-slate-800">
-              {title}
-            </h2>
-            <button
-              onClick={onClose}
-              type="button"
-              className="p-2 hover:bg-slate-100 rounded-full transition-colors font-bold text-slate-400 hover:text-slate-600"
-            >
-              ✕
-            </button>
-          </div>
+      <div className="relative w-full max-w-2xl bg-white rounded-3xl text-left shadow-2xl transition-all animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+        <div className="flex items-center justify-between p-5 sm:p-7 border-b border-slate-100 shrink-0">
+          <h2 className="text-base sm:text-xl font-bold text-slate-800">
+            {title}
+          </h2>
+          <button
+            onClick={onClose}
+            type="button"
+            className="p-2 hover:bg-slate-100 rounded-full transition-colors font-bold text-slate-400 hover:text-slate-600"
+          >
+            ✕
+          </button>
+        </div>
 
-          <div className="p-5 sm:p-8 max-h-[80vh] overflow-y-auto">
-            {children}
-          </div>
+        <div className="p-5 sm:p-8 overflow-y-auto scrollbar-none flex-1">
+          {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
