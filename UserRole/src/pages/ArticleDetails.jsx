@@ -13,7 +13,8 @@ import {
   FiRefreshCw,
   FiEye,
   FiSend,
-  FiCheck
+  FiCheck,
+  FiCopy
 } from "react-icons/fi";
 import toast, { Toaster } from "react-hot-toast";
 import { articleService, commentService } from "../services/api";
@@ -38,6 +39,21 @@ const ArticleDetails = () => {
   const [comments, setComments] = useState([]);
   const [userComment, setUserComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    toast.success("Maqola havolasi nusxalandi!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const shareTelegram = () => {
+    const text = encodeURIComponent(`Academix platformasida qiziqarli ilmiy maqola:\n\n"${article?.title}"\n\n`);
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://t.me/share/url?url=${url}&text=${text}`, "_blank");
+  };
 
   useSEO({
     title: article ? article.title : undefined,
@@ -184,6 +200,25 @@ const ArticleDetails = () => {
                 <div className="flex flex-wrap gap-4 text-sm text-blue-200/60 font-medium">
                    <span>Nashr etilgan: {formatDate(article.createdAt)}</span>
                 </div>
+
+                <div className="flex flex-wrap items-center gap-4 mt-6">
+                    <div className="flex gap-2 bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/10">
+                       <button 
+                          onClick={shareTelegram}
+                          className="px-4 py-2.5 bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 hover:text-white rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider"
+                          title="Telegram orqali ulashish"
+                       >
+                          <FiSend size={14} /> Ulashish
+                       </button>
+                       <button 
+                          onClick={handleCopyLink}
+                          className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider"
+                          title="Havolani nusxalash"
+                       >
+                          <FiCopy size={14} /> {copied ? "Nusxalandi" : "Nusxa olish"}
+                       </button>
+                    </div>
+                 </div>
              </div>
           </div>
         </div>
