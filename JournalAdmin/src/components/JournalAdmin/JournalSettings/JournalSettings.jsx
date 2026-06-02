@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { journalService, settingsService } from "../../../services/api";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -438,10 +439,10 @@ const JournalSettings = () => {
       )}
 
       {/* 📝 Edit Modal */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {isEditModalOpen && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 overflow-hidden">
           <div 
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
             onClick={() => !saving && setIsEditModalOpen(false)}
           />
           <div className="relative bg-white w-full max-w-2xl rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
@@ -539,7 +540,8 @@ const JournalSettings = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

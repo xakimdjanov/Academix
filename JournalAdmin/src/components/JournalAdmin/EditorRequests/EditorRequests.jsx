@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { FiCheck, FiX, FiRefreshCw, FiUser, FiMail, FiBook, FiEdit, FiLock, FiAlertCircle } from "react-icons/fi";
 import { editorService, journalService } from "../../../services/api";
@@ -375,8 +376,8 @@ const EditorRequests = () => {
       )}
 
       {/* --- EDIT MODAL (PREMIUM GLASSMORPHIC DIALOG) --- */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      {isEditModalOpen && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
           {/* Backdrop overlay */}
           <div 
             className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
@@ -471,7 +472,8 @@ const EditorRequests = () => {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

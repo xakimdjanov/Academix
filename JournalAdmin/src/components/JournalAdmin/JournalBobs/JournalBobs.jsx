@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { journalService, bobService } from "../../../services/api";
 import toast from "react-hot-toast";
 import { 
@@ -10,28 +11,26 @@ const inputCls = "w-full rounded-xl border border-gray-200 bg-gray-50/50 pl-11 p
 
 const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, loading }) => {
   if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 z-[110] overflow-y-auto">
+  return createPortal(
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 overflow-hidden">
       {/* Backdrop overlay */}
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={onClose} />
 
-      {/* Centering wrapper */}
-      <div className="flex min-h-full items-center justify-center p-4 text-center">
-        <div className="relative w-full max-w-md transform rounded-[2rem] bg-white p-8 text-center shadow-2xl transition-all my-8 animate-in zoom-in-95 duration-200">
-          <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <FiAlertTriangle size={32} />
-          </div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
-          <p className="text-gray-500 text-sm mb-8 leading-relaxed">{message}</p>
-          <div className="flex gap-3 mt-4">
-            <button onClick={onClose} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-all">Bekor qilish</button>
-            <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 bg-rose-500 text-white rounded-xl font-bold hover:bg-rose-600 transition-all shadow-lg shadow-rose-100 disabled:opacity-50">
-              {loading ? "O'chirilmoqda..." : "O'chirish"}
-            </button>
-          </div>
+      <div className="relative w-full max-w-md bg-white rounded-[2rem] p-8 text-center shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shrink-0">
+          <FiAlertTriangle size={32} />
+        </div>
+        <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
+        <p className="text-gray-500 text-sm mb-8 leading-relaxed">{message}</p>
+        <div className="flex gap-3 mt-4">
+          <button onClick={onClose} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-all">Bekor qilish</button>
+          <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 bg-rose-500 text-white rounded-xl font-bold hover:bg-rose-600 transition-all shadow-lg shadow-rose-100 disabled:opacity-50">
+            {loading ? "O'chirilmoqda..." : "O'chirish"}
+          </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
@@ -309,22 +308,20 @@ const JournalBobs = () => {
       </div>
 
       {/* Add/Edit Modal */}
-      {(isAddOpen || editingBob) && (
-        <div className="fixed inset-0 z-[100] overflow-y-auto">
+      {(isAddOpen || editingBob) && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 overflow-hidden">
           {/* Backdrop overlay */}
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => { setIsAddOpen(false); setEditingBob(null); setFileObj(null); }} />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => { setIsAddOpen(false); setEditingBob(null); setFileObj(null); }} />
 
-          {/* Centering wrapper */}
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <div className="relative w-full max-w-lg transform rounded-[2rem] bg-white text-left shadow-2xl transition-all my-8 overflow-hidden animate-in zoom-in-95 duration-300">
-              <div className="flex items-center justify-between p-8 border-b border-gray-100">
+          <div className="relative w-full max-w-lg bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-8 border-b border-gray-100 shrink-0">
                 <h2 className="text-2xl font-bold text-gray-800">
                   {isAddOpen ? "Yangi Bob Qo'shish" : "Bob Tahrirlash"}
                 </h2>
                 <button onClick={() => { setIsAddOpen(false); setEditingBob(null); setFileObj(null); }} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><FiX size={24} /></button>
               </div>
               
-              <form onSubmit={handleSubmit} className="p-8 space-y-6">
+              <form onSubmit={handleSubmit} className="p-8 space-y-6 overflow-y-auto scrollbar-none">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Nashr Yili *</label>
                   <div className="relative">
@@ -407,7 +404,8 @@ const JournalBobs = () => {
               </form>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Delete Confirmation Modal */}
