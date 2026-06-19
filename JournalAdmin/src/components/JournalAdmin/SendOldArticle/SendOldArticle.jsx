@@ -39,6 +39,7 @@ const emptyAuthor = {
   fullName: "",
   phone: "+998 ",
   orcidId: "",
+  doi: "",
   photoFile: null,
   photoPreview: null
 };
@@ -76,7 +77,7 @@ const SendOldArticle = () => {
   const [pdfFile, setPdfFile] = useState(null);
   
   // Authors State
-  const [authors, setAuthors] = useState([{ fullName: "", phone: "+998 ", orcidId: "", photoFile: null, photoPreview: null }]);
+  const [authors, setAuthors] = useState([{ fullName: "", phone: "+998 ", orcidId: "", doi: "", photoFile: null, photoPreview: null }]);
 
   const myAdminId = useMemo(() => localStorage.getItem("journal_admin_id"), []);
 
@@ -192,11 +193,6 @@ const SendOldArticle = () => {
   };
 
   // Formatters
-  const formatOrcid = (v) => {
-    const digits = v.replace(/\D/g, "").slice(0, 16);
-    return digits.match(/.{1,4}/g)?.join("-") || digits;
-  };
-
   const formatPhone = (v) => {
     const digits = v.replace(/\D/g, "");
     if (!digits) return "";
@@ -252,7 +248,8 @@ const SendOldArticle = () => {
         const a = authors[i];
         if (!a.fullName.trim()) return `${i + 1}-muallif: To'liq ism majburiy`;
         if ((a.phone.replace(/\D/g, "") || "").length < 9) return `${i + 1}-muallif: Telefon raqami noto'g'ri`;
-        if (!/^\d{4}-\d{4}-\d{4}-\d{4}$/.test(a.orcidId)) return `${i + 1}-muallif: ORCID ID formati noto'g'ri (0000-0000-0000-0000)`;
+        if (!a.orcidId.trim()) return `${i + 1}-muallif: ORCID ID majburiy`;
+        if (!a.doi.trim()) return `${i + 1}-muallif: DOI majburiy`;
       }
     }
     return null;
@@ -291,7 +288,8 @@ const SendOldArticle = () => {
       const authorsMetadata = authors.map((a) => ({
         fullName: a.fullName.trim(),
         phone: a.phone.replace(/\D/g, ""),
-        orcidId: a.orcidId.trim()
+        orcidId: a.orcidId.trim(),
+        doi: a.doi.trim()
       }));
       formData.append("authors", JSON.stringify(authorsMetadata));
 
@@ -653,9 +651,13 @@ const SendOldArticle = () => {
                         </div>
                         <div className="space-y-2">
                           <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">ORCID ID *</label>
-                          <input value={author.orcidId} onChange={(e) => updateAuthor(idx, "orcidId", formatOrcid(e.target.value))} maxLength={19} className="w-full px-5 py-3 rounded-xl border border-gray-300 bg-white text-sm font-semibold" placeholder="0000-0000-0000-0000" />
+                          <input value={author.orcidId} onChange={(e) => updateAuthor(idx, "orcidId", e.target.value)} className="w-full px-5 py-3 rounded-xl border border-gray-300 bg-white text-sm font-semibold" placeholder="Masalan: 0000-0000-0000-0000" />
                         </div>
                         <div className="space-y-2">
+                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">DOI *</label>
+                          <input value={author.doi || ""} onChange={(e) => updateAuthor(idx, "doi", e.target.value)} className="w-full px-5 py-3 rounded-xl border border-gray-300 bg-white text-sm font-semibold" placeholder="Masalan: 10.1000/xyz123" />
+                        </div>
+                        <div className="space-y-2 sm:col-span-2">
                           <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Muallif Rasmi (Ixtiyoriy)</label>
                           <div className="flex items-center gap-4">
                             {author.photoPreview && (

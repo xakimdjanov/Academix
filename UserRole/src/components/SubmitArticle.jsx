@@ -31,6 +31,7 @@ const emptyAuthor = {
   fullName: "",
   phone: "+998 ",
   orcidId: "",
+  doi: "",
 };
 const getDefaultAvatarFile = async () => {
   try {
@@ -63,7 +64,7 @@ const SubmitArticle = () => {
   const [customCategory, setCustomCategory] = useState("");
   const [language, setLanguage] = useState("");
 
-  const [authors, setAuthors] = useState([{ fullName: "", phone: "+998 ", orcidId: "" }]);
+  const [authors, setAuthors] = useState([{ fullName: "", phone: "+998 ", orcidId: "", doi: "" }]);
   const [authorImages, setAuthorImages] = useState({});
 
   const [bobs, setBobs] = useState([]);
@@ -72,7 +73,6 @@ const SubmitArticle = () => {
   const [articleFile, setArticleFile] = useState(null);
 
   const [submitting, setSubmitting] = useState(false);
-  const [createdArticleId, setCreatedArticleId] = useState(null);
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
@@ -108,13 +108,13 @@ const SubmitArticle = () => {
                 fullName: auth.fullName || auth.full_name || "",
                 phone: auth.phone || "",
                 orcidId: auth.orcidId || auth.orcid_id || "",
+                doi: auth.doi || "",
                 imageUrl: auth.imageUrl || auth.image_url || auth.photo || "",
               })));
             }
           }
-        } catch (error) {
+        } catch {
           toast.error("Maqola ma'lumotlarini yuklashda xatolik");
-          console.error(error);
         }
       };
       loadArticle();
@@ -124,6 +124,7 @@ const SubmitArticle = () => {
   useEffect(() => {
     const loadJournals = async () => {
       setLoadingJournals(true);
+      
       try {
         const res = await journalService.getAll();
         const jList = res?.data || [];
@@ -229,11 +230,6 @@ const SubmitArticle = () => {
     }
   };
 
-  const formatOrcid = (v) => {
-    const digits = v.replace(/\D/g, "").slice(0, 16);
-    return digits.match(/.{1,4}/g)?.join("-") || digits;
-  };
-
   const formatPhone = (v) => {
     const digits = v.replace(/\D/g, "");
     
@@ -299,7 +295,8 @@ const SubmitArticle = () => {
         const a = authors[i];
         if (!a.fullName?.trim()) return `${i + 1}-muallif: To'liq ism majburiy`;
         if ((a.phone?.replace(/\D/g, "") || "").length < 9) return `${i + 1}-muallif: Telefon raqami noto'g'ri`;
-        if (!/^\d{4}-\d{4}-\d{4}-\d{4}$/.test(a.orcidId || "")) return `${i + 1}-muallif: ORCID formati noto'g'ri`;
+        if (!a.orcidId?.trim()) return `${i + 1}-muallif: ORCID ID majburiy`;
+        if (!a.doi?.trim()) return `${i + 1}-muallif: DOI majburiy`;
       }
     }
     return null;
@@ -332,6 +329,7 @@ const SubmitArticle = () => {
         fullName: a.fullName.trim(),
         phone: a.phone.replace(/\D/g, ""),
         orcidId: a.orcidId.trim(),
+        doi: a.doi ? a.doi.trim() : "",
         imageUrl: a.imageUrl || "",
       }));
       formData.append("authors", JSON.stringify(authorsForBE));
@@ -362,9 +360,7 @@ const SubmitArticle = () => {
         await articleService.update(id, formData);
         toast.success("Maqola muvaffaqiyatli yangilandi!");
       } else {
-        const res = await articleService.create(formData);
-        const idRes = res?.data?.article?.id ?? res?.data?.id;
-        setCreatedArticleId(idRes);
+        await articleService.create(formData);
         toast.success("Maqola muvaffaqiyatli yuborildi!", { duration: 5000 });
       }
 
@@ -669,50 +665,54 @@ const SubmitArticle = () => {
                         </div>
 
                         <div className="grid sm:grid-cols-2 gap-6">
-                           <div className="space-y-2">
-                              <label className="text-sm font-medium text-gray-600">To'liq ismi *</label>
-                              <input value={author.fullName} onChange={(e) => updateAuthor(idx, "fullName", e.target.value)} className="w-full px-5 py-3 rounded-xl border border-gray-300 bg-white" placeholder="Ism Familiya" />
-                           </div>
-                           <div className="space-y-2">
-                              <label className="text-sm font-medium text-gray-600">Telefon raqam *</label>
-                              <input value={author.phone} onChange={(e) => updateAuthor(idx, "phone", formatPhone(e.target.value))} className="w-full px-5 py-3 rounded-xl border border-gray-300 bg-white" placeholder="+998 90..." />
-                           </div>
-                           <div className="space-y-2">
-                              <label className="text-sm font-medium text-gray-600">ORCID ID *</label>
-                              <input value={author.orcidId} onChange={(e) => updateAuthor(idx, "orcidId", formatOrcid(e.target.value))} maxLength={19} className="w-full px-5 py-3 rounded-xl border border-gray-300 bg-white" placeholder="0000-0000..." />
-                           </div>
-                           <div className="space-y-2">
-                              <label className="text-sm font-medium text-gray-600">Rasmi (Ixtiyoriy)</label>
-                              <div className="flex items-center gap-4">
-                                 {(authorImages[idx] || author.imageUrl) && (
-                                    <div className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-blue-100 shadow-sm shrink-0">
-                                       <img 
-                                          src={authorImages[idx] ? URL.createObjectURL(authorImages[idx]) : author.imageUrl} 
-                                          alt="Preview" 
-                                          className="w-full h-full object-cover"
-                                       />
-                                    </div>
-                                 )}
-                                 <label className="flex-1">
-                                    <div className="flex items-center gap-3 px-4 py-3 bg-white border-2 border-dashed border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50/30 cursor-pointer transition-all group">
-                                       <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
-                                          <FiUpload size={20} />
-                                       </div>
-                                       <div className="flex-1">
-                                          <p className="text-sm font-bold text-gray-700">Rasm yuklash</p>
-                                          <p className="text-[10px] text-gray-400 uppercase tracking-wider font-black">PNG, JPG (MAX. 5MB)</p>
-                                       </div>
-                                    </div>
-                                    <input 
-                                       type="file" 
-                                       accept="image/*" 
-                                       onChange={(e) => handleAuthorImage(idx, e.target.files?.[0])} 
-                                       className="hidden" 
-                                    />
-                                 </label>
-                              </div>
-                           </div>
-                        </div>
+                            <div className="space-y-2">
+                               <label className="text-sm font-medium text-gray-600">To'liq ismi *</label>
+                               <input value={author.fullName} onChange={(e) => updateAuthor(idx, "fullName", e.target.value)} className="w-full px-5 py-3 rounded-xl border border-gray-300 bg-white" placeholder="Ism Familiya" />
+                            </div>
+                            <div className="space-y-2">
+                               <label className="text-sm font-medium text-gray-600">Telefon raqam *</label>
+                               <input value={author.phone} onChange={(e) => updateAuthor(idx, "phone", formatPhone(e.target.value))} className="w-full px-5 py-3 rounded-xl border border-gray-300 bg-white" placeholder="+998 90..." />
+                            </div>
+                            <div className="space-y-2">
+                               <label className="text-sm font-medium text-gray-600">ORCID ID *</label>
+                               <input value={author.orcidId} onChange={(e) => updateAuthor(idx, "orcidId", e.target.value)} className="w-full px-5 py-3 rounded-xl border border-gray-300 bg-white" placeholder="Masalan: 0000-0000-0000-0000" />
+                            </div>
+                            <div className="space-y-2">
+                               <label className="text-sm font-medium text-gray-600">DOI *</label>
+                               <input value={author.doi || ""} onChange={(e) => updateAuthor(idx, "doi", e.target.value)} className="w-full px-5 py-3 rounded-xl border border-gray-300 bg-white" placeholder="Masalan: 10.1000/xyz123" />
+                            </div>
+                            <div className="space-y-2 sm:col-span-2">
+                               <label className="text-sm font-medium text-gray-600">Rasmi (Ixtiyoriy)</label>
+                               <div className="flex items-center gap-4">
+                                  {(authorImages[idx] || author.imageUrl) && (
+                                     <div className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-blue-100 shadow-sm shrink-0">
+                                        <img 
+                                           src={authorImages[idx] ? URL.createObjectURL(authorImages[idx]) : author.imageUrl} 
+                                           alt="Preview" 
+                                           className="w-full h-full object-cover"
+                                        />
+                                     </div>
+                                  )}
+                                  <label className="flex-1">
+                                     <div className="flex items-center gap-3 px-4 py-3 bg-white border-2 border-dashed border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50/30 cursor-pointer transition-all group">
+                                        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                                           <FiUpload size={20} />
+                                        </div>
+                                        <div className="flex-1">
+                                           <p className="text-sm font-bold text-gray-700">Rasm yuklash</p>
+                                           <p className="text-[10px] text-gray-400 uppercase tracking-wider font-black">PNG, JPG (MAX. 5MB)</p>
+                                        </div>
+                                     </div>
+                                     <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        onChange={(e) => handleAuthorImage(idx, e.target.files?.[0])} 
+                                        className="hidden" 
+                                     />
+                                  </label>
+                               </div>
+                            </div>
+                         </div>
                       </div>
                     ))}
                   </div>
