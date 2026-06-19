@@ -16,6 +16,20 @@ import {
   FiExternalLink,
 } from "react-icons/fi";
 
+const getDefaultAvatarFile = async () => {
+  try {
+    const res = await fetch("https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png");
+    const blob = await res.blob();
+    return new File([blob], "default-author.png", { type: "image/png" });
+  } catch (err) {
+    console.error("Default avatar fetch error, using fallback", err);
+    const base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+    const res = await fetch(`data:image/png;base64,${base64}`);
+    const blob = await res.blob();
+    return new File([blob], "default-author.png", { type: "image/png" });
+  }
+};
+
 const STATUSES = [
   "Submitted",
   "Under Review",
@@ -57,6 +71,7 @@ const JournalArticles = () => {
     apc_paid: false,
     bob_id: "",
   });
+  const [editAuthorImages, setEditAuthorImages] = useState({});
 
   const myAdminId = useMemo(() => localStorage.getItem("journal_admin_id"), []);
 
@@ -141,6 +156,26 @@ const JournalArticles = () => {
       apc_paid: article?.apc_paid === true,
       bob_id: article?.bob_id ? String(article.bob_id) : "",
     });
+
+    setEditAuthorImages({});
+    if (article?.authors) {
+      const parsedAuthors = Array.isArray(article.authors) ? article.authors : [];
+      parsedAuthors.forEach(async (auth, idx) => {
+        const imgUrl = auth.imageUrl || auth.image_url || auth.photo;
+        if (imgUrl) {
+          try {
+            const response = await fetch(imgUrl);
+            if (response.ok) {
+              const blob = await response.blob();
+              const file = new File([blob], `author-${idx}.png`, { type: blob.type || "image/png" });
+              setEditAuthorImages(prev => ({ ...prev, [idx]: file }));
+            }
+          } catch (err) {
+            console.error("Error pre-fetching author image in admin edit:", err);
+          }
+        }
+      });
+    }
     
     if (user?.allow_bob_creation && article?.journal_id) {
       bobService.getByJournal(article.journal_id)
@@ -205,6 +240,7 @@ const JournalArticles = () => {
           fullName: name,
           phone: originalAuthor?.phone || "",
           orcidId: originalAuthor?.orcidId || "",
+          imageUrl: originalAuthor?.imageUrl || originalAuthor?.image_url || originalAuthor?.photo || "",
         };
       });
     }
@@ -229,6 +265,18 @@ const JournalArticles = () => {
       formData.append("bob_id", editForm.bob_id);
     } else {
       formData.append("bob_id", "");
+    }
+
+    let defaultFile = null;
+    for (let i = 0; i < finalAuthors.length; i++) {
+      if (editAuthorImages[i]) {
+        formData.append("author_images", editAuthorImages[i]);
+      } else {
+        if (!defaultFile) {
+          defaultFile = await getDefaultAvatarFile();
+        }
+        formData.append("author_images", defaultFile);
+      }
     }
 
     try {
