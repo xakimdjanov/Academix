@@ -8,6 +8,20 @@ import {
   FiCamera, FiCheck, FiUser, FiGlobe, FiBriefcase, FiPhone, FiLock, FiAlertTriangle, FiAward 
 } from "react-icons/fi";
 
+const getDefaultAvatarFile = async () => {
+  try {
+    const res = await fetch("https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png");
+    const blob = await res.blob();
+    return new File([blob], "default-author.png", { type: "image/png" });
+  } catch (err) {
+    console.error("Default avatar fetch error, using fallback", err);
+    const base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+    const res = await fetch(`data:image/png;base64,${base64}`);
+    const blob = await res.blob();
+    return new File([blob], "default-author.png", { type: "image/png" });
+  }
+};
+
 const COUNTRY_OPTIONS = ["Uzbekistan", "Kazakhstan", "Kyrgyzstan", "Tajikistan", "Turkmenistan", "United States", "Others"];
 
 const inputCls = "w-full rounded-xl border border-gray-200 bg-gray-50/50 pl-11 pr-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all";
@@ -157,7 +171,12 @@ const JournalAdmins = () => {
         }
       });
       fd.append("role", "JournalAdmin");
-      if (avatarFile) fd.append("avatar", avatarFile);
+      if (avatarFile) {
+        fd.append("avatar", avatarFile);
+      } else if (isAddOpen) {
+        const defaultFile = await getDefaultAvatarFile();
+        fd.append("avatar", defaultFile);
+      }
 
       if (isAddOpen) {
         await journalAdminService.register(fd);

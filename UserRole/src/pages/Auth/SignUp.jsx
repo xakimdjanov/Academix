@@ -18,6 +18,20 @@ import {
   FiShield, // <-- FiShield import qilindi
 } from "react-icons/fi";
 
+const getDefaultAvatarFile = async () => {
+  try {
+    const res = await fetch("https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png");
+    const blob = await res.blob();
+    return new File([blob], "default-author.png", { type: "image/png" });
+  } catch (err) {
+    console.error("Default avatar fetch error, using fallback", err);
+    const base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+    const res = await fetch(`data:image/png;base64,${base64}`);
+    const blob = await res.blob();
+    return new File([blob], "default-author.png", { type: "image/png" });
+  }
+};
+
 const COUNTRY_OPTIONS = [
   "O'zbekiston",
   "Qozog'iston",
@@ -166,6 +180,9 @@ const SignUp = () => {
       fd.append("role", "user");
       if (avatarFile) {
         fd.append("avatar_url", avatarFile);
+      } else {
+        const defaultFile = await getDefaultAvatarFile();
+        fd.append("avatar_url", defaultFile);
       }
       
       await userService.register(fd);

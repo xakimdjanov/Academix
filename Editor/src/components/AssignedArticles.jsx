@@ -151,15 +151,15 @@ const AssignedArticles = () => {
                       <FiFileText size={24} />
                     </div>
                     <div className="min-w-0 flex-grow">
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${getStatusBadgeClass(item.article?.status)}`}>
+                      <div className="flex items-center gap-2 mb-2 min-w-0">
+                        <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border shrink-0 ${getStatusBadgeClass(item.article?.status)}`}>
                           {item.article?.status === 'submitted' ? 'Yuborilgan' : 
                            item.article?.status === 'revision' ? 'Tahrirda' :
                            item.article?.status === 'rejected' ? 'Rad etilgan' :
                            item.article?.status === 'accepted' ? 'Qabul qilingan' :
                            item.article?.status || 'Yuborilgan'}
                         </span>
-                        <h3 className="text-base md:text-lg font-bold text-slate-800 truncate pr-2">
+                        <h3 className="text-base md:text-lg font-bold text-slate-800 truncate pr-2" title={item.article?.title}>
                           {item.article?.title}
                         </h3>
                       </div>

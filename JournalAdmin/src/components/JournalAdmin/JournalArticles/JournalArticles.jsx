@@ -395,7 +395,7 @@ const JournalArticles = () => {
                   >
                     <FiEdit2 size={18} />
                   </button>
-                  {status === "Accepted" && (
+                  {status !== "Published" && (
                     <button
                       onClick={() => handlePublishClick(a)}
                       className="p-2.5 rounded-2xl bg-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all font-bold"
@@ -500,7 +500,7 @@ const JournalArticles = () => {
                         >
                           <FiEdit2 size={18} />
                         </button>
-                        {status === "Accepted" && (
+                        {status !== "Published" && (
                           <button
                             onClick={() => handlePublishClick(a)}
                             className="p-2.5 rounded-xl bg-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
