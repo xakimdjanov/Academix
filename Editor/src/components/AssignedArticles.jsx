@@ -146,7 +146,7 @@ const AssignedArticles = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
                   
                   {/* Info Section */}
-                  <div className="flex gap-4">
+                  <div className="flex gap-4 min-w-0 flex-1">
                     <div className="h-12 w-12 md:h-14 md:w-14 shrink-0 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white">
                       <FiFileText size={24} />
                     </div>
@@ -159,8 +159,8 @@ const AssignedArticles = () => {
                            item.article?.status === 'accepted' ? 'Qabul qilingan' :
                            item.article?.status || 'Yuborilgan'}
                         </span>
-                        <h3 className="text-base md:text-lg font-bold text-slate-800 truncate pr-2" title={item.article?.title}>
-                          {item.article?.title}
+                        <h3 className="text-base md:text-lg font-bold text-slate-800 truncate pr-2 min-w-0 flex-1" title={item.article?.title}>
+                          {item.article?.title?.length > 70 ? item.article.title.slice(0, 70) + '...' : item.article?.title}
                         </h3>
                       </div>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs md:text-sm text-slate-500">
