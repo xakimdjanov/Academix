@@ -24,6 +24,7 @@ import ArticlesDetails from "./pages/JournalAdmin/ArticlesDetails/ArticlesDetail
 import EditorRequests from "./components/JournalAdmin/EditorRequests/EditorRequests";
 import SendOldArticle from "./components/JournalAdmin/SendOldArticle/SendOldArticle";
 import JournalBobs from "./components/JournalAdmin/JournalBobs/JournalBobs";
+import JournalAdminProfile from "./components/JournalAdmin/Profile/JournalAdminProfile";
 
 const App = () => {
   return (
@@ -51,6 +52,7 @@ const App = () => {
         
         <Route element={<DashboardLayout />}>
           <Route path="/journal-dashboard" element={<Dashboard />} />
+          <Route path="/journal-profile" element={<JournalAdminProfile />} />
           <Route path="/journal-articles" element={<JournalArticles />} />
           <Route path="/journal-bobs" element={<JournalBobs />} />
           <Route path="/journal-decisions" element={<JournalDecisions />} />

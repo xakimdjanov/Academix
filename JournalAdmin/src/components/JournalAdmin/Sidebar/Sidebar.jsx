@@ -5,7 +5,7 @@ import {
   FiHome, FiSettings, FiFileText, FiUsers,
   FiCheckCircle, FiCreditCard, FiBarChart2,
   FiLogOut, FiMenu, FiX, FiChevronLeft, FiChevronRight,
-  FiPlusCircle, FiAlertTriangle, FiGlobe,
+  FiPlusCircle, FiAlertTriangle, FiGlobe, FiUser,
 } from "react-icons/fi";
 import { journalAdminService } from "../../../services/api";
 
@@ -26,6 +26,7 @@ const Sidebar = () => {
   const menuItems = useMemo(() => {
     const items = [
       { path: "/journal-dashboard", label: "Asosiy panel", icon: FiHome },
+      { path: "/journal-profile", label: "Profilim", icon: FiUser },
       { path: "/journal-list", label: "Jurnallar qo'shish", icon: FiPlusCircle },
       { path: "/journal-settings", label: "Sozlamalar", icon: FiSettings },
       { path: "/journal-articles", label: "Maqolalar", icon: FiFileText },
