@@ -136,7 +136,7 @@ const JournalAdmins = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isAddOpen && (!form.full_name || !form.email || !form.password || !avatarFile)) {
+    if (isAddOpen && (!form.full_name || !form.email || !form.password)) {
       return toast.error("Iltimos, barcha majburiy maydonlarni to'ldiring");
     }
     
@@ -361,7 +361,7 @@ const JournalAdmins = () => {
                     <input type="file" className="hidden" accept="image/*" onChange={onAvatarChange} />
                   </label>
                 </div>
-                <p className="text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 leading-relaxed">Profil rasmini yuklash majburiy*</p>
+                <p className="text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 leading-relaxed">Profil rasmini yuklash (ixtiyoriy)</p>
               </div>
 
               <div className="md:col-span-8 space-y-6">

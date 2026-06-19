@@ -157,12 +157,6 @@ const SignUp = () => {
         return;
       }
 
-      if (!avatarFile) {
-        toast.error("Iltimos, profil rasmini tanlang.");
-        setLoading(false);
-        return;
-      }
-
       if (form.country === "Boshqalar" && !form.country_other.trim()) {
         toast.error("Iltimos, davlatingizni kiriting.");
         setLoading(false);
@@ -186,7 +180,9 @@ const SignUp = () => {
       fd.append("country", finalCountry);
       fd.append("tariff_id", form.tariff_id);
       fd.append("role", "journal_admin");
-      fd.append("avatar", avatarFile);
+      if (avatarFile) {
+        fd.append("avatar", avatarFile);
+      }
 
       await journalAdminService.register(fd);
 
@@ -239,7 +235,7 @@ const SignUp = () => {
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-6">
                 <div className="flex items-center justify-between mb-4 md:mb-6">
                   <h3 className="text-base md:text-lg font-semibold text-[#1F2937]">
-                    Profil rasmi *
+                    Profil rasmi (Ixtiyoriy)
                   </h3>
                   <FiCamera className="text-[#1F4F8F]" />
                 </div>
