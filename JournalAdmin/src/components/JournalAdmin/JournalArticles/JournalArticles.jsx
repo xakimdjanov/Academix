@@ -101,6 +101,16 @@ const JournalArticles = () => {
     return myArticles.filter((a) => getStatus(a) === filter);
   }, [myArticles, filter]);
 
+  const editJournalCategories = useMemo(() => {
+    const journalId = editArticle?.journal_id;
+    if (!journalId) return ["Research Article", "Review Article", "Case Study"];
+    const j = journals.find((journal) => String(journal.id ?? journal._id) === String(journalId));
+    if (j && Array.isArray(j.categories) && j.categories.length > 0) {
+      return j.categories.map(c => typeof c === 'object' ? c.name : c);
+    }
+    return ["Research Article", "Review Article", "Case Study"];
+  }, [journals, editArticle]);
+
   const loadAll = async () => {
     try {
       setLoading(true);
@@ -627,13 +637,25 @@ const JournalArticles = () => {
             }
             full
           />
-          <CustomInput
-            label="Kategoriya"
-            value={editForm.category}
-            onChange={(e) =>
-              setEditForm({ ...editForm, category: e.target.value })
-            }
-          />
+          <div>
+            <label className="text-[11px] font-black text-slate-500 mb-2 block ml-1 uppercase">
+              Kategoriya
+            </label>
+            <select
+              value={editForm.category}
+              onChange={(e) =>
+                setEditForm({ ...editForm, category: e.target.value })
+              }
+              className="w-full rounded-2xl border border-slate-200 px-4 sm:px-5 py-3 focus:ring-4 focus:ring-blue-50 outline-none transition-all font-semibold text-slate-700 text-sm bg-white"
+            >
+              <option value="">-- Kategoriyani tanlang --</option>
+              {editJournalCategories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
           <CustomInput
             label="Til"
             value={editForm.language}

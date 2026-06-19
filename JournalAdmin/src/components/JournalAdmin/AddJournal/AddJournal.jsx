@@ -137,7 +137,12 @@ const AddJournal = () => {
   };
 
   const canSubmit = useMemo(() => {
-    return form.name.trim() && form.slug.trim() && form.issn.trim() && form.subject_area.trim() && form.languages.length > 0;
+    return form.name.trim() && 
+           form.slug.trim() && 
+           form.issn.trim() && 
+           form.subject_area.trim() && 
+           form.languages.length > 0 && 
+           (form.categories || []).length > 0;
   }, [form]);
 
   const onChange = (e) => {
@@ -227,6 +232,30 @@ const AddJournal = () => {
         </div>
 
         <form onSubmit={onSubmit} className="p-6 space-y-6">
+          <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+            <span className="mb-2 block text-sm font-medium text-slate-700">Kategoriyalar (Categories) * (Maksimal 10 ta)</span>
+            <div className="flex gap-2 mb-3">
+              <input
+                value={categoryInput}
+                onChange={(e) => setCategoryInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCategory(); } }}
+                placeholder="Masalan: Matematika"
+                className="flex-1 rounded-lg border border-slate-200 px-4 py-2 outline-none focus:border-blue-400"
+              />
+              <button type="button" onClick={addCategory} className="bg-white border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-100 transition flex items-center gap-2">
+                <FiPlus /> Qo'shish
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(form.categories || []).map(cat => (
+                <span key={cat} className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                  {cat} <FiX className="cursor-pointer" onClick={() => removeCategory(cat)} />
+                </span>
+              ))}
+              {(!form.categories || form.categories.length === 0) && <span className="text-slate-400 text-sm italic">Hech qanday kategoriya qo'shilmagan</span>}
+            </div>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <Input icon={FiBookOpen} label="Jurnal nomi" required name="name" value={form.name} onChange={onChange} />
             <Input
@@ -266,30 +295,6 @@ const AddJournal = () => {
                 </span>
               ))}
               {form.languages.length === 0 && <span className="text-slate-400 text-sm italic">Hech qanday til qo'shilmagan</span>}
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
-            <span className="mb-2 block text-sm font-medium text-slate-700">Kategoriyalar (Categories) * (Maksimal 10 ta)</span>
-            <div className="flex gap-2 mb-3">
-              <input
-                value={categoryInput}
-                onChange={(e) => setCategoryInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCategory(); } }}
-                placeholder="Masalan: Matematika"
-                className="flex-1 rounded-lg border border-slate-200 px-4 py-2 outline-none focus:border-blue-400"
-              />
-              <button type="button" onClick={addCategory} className="bg-white border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-100 transition flex items-center gap-2">
-                <FiPlus /> Qo'shish
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {(form.categories || []).map(cat => (
-                <span key={cat} className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                  {cat} <FiX className="cursor-pointer" onClick={() => removeCategory(cat)} />
-                </span>
-              ))}
-              {(!form.categories || form.categories.length === 0) && <span className="text-slate-400 text-sm italic">Hech qanday kategoriya qo'shilmagan</span>}
             </div>
           </div>
 

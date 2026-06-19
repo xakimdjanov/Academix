@@ -167,6 +167,13 @@ const SubmitArticle = () => {
     [journals, selectedJournalId]
   );
 
+  const journalCategories = useMemo(() => {
+    if (selectedJournal && Array.isArray(selectedJournal.categories) && selectedJournal.categories.length > 0) {
+      return selectedJournal.categories.map(c => typeof c === 'object' ? c.name : c);
+    }
+    return ["Research Article", "Review Article", "Case Study"];
+  }, [selectedJournal]);
+
   // Handlers (unchanged logic)
   const addKeyword = (rawValue) => {
     const source = rawValue !== undefined ? rawValue : keywordInput;
@@ -605,9 +612,9 @@ const SubmitArticle = () => {
                       <div className="relative">
                         <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition bg-white appearance-none cursor-pointer">
                           <option value="">Toifani tanlang...</option>
-                          <option value="Research Article">Research Article</option>
-                          <option value="Review Article">Review Article</option>
-                          <option value="Case Study">Case Study</option>
+                          {journalCategories.map((cat) => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
                           <option value="Other">Boshqa...</option>
                         </select>
                       </div>
