@@ -12,7 +12,7 @@ const NAV_ITEMS = [
   { to: "/contact", label: "Bog'lanish" },
 ];
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://academixbackend-production.up.railway.app";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://academixbackend-productionn.up.railway.app";
 const UPLOADS_PATH = "/uploads";
 
 function getInitials(fullName = "") {

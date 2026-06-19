@@ -1,7 +1,7 @@
 import axios from "axios";
 import axiosInstance from "./axiosInstance";
 
-const API_BASE_URL = "https://academixbackend-production.up.railway.app";
+const API_BASE_URL = "https://academixbackend-productionn.up.railway.app";
 
 const axiosFormInstance = axios.create({
   baseURL: API_BASE_URL,
