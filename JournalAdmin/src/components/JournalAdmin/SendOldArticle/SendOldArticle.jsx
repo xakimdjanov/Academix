@@ -123,6 +123,13 @@ const SendOldArticle = () => {
     [journals, selectedJournalId]
   );
 
+  const journalCategories = useMemo(() => {
+    if (selectedJournal && Array.isArray(selectedJournal.categories) && selectedJournal.categories.length > 0) {
+      return selectedJournal.categories.map(c => typeof c === 'object' ? c.name : c);
+    }
+    return ["Research Article", "Review Article", "Case Study"];
+  }, [selectedJournal]);
+
   // Filtered users for dropdown search
   const filteredUsers = useMemo(() => {
     if (!userSearch.trim()) return users;
@@ -575,9 +582,9 @@ const SendOldArticle = () => {
                       <label className="block text-sm font-bold text-slate-700">Toifa *</label>
                       <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition bg-white appearance-none cursor-pointer text-sm font-semibold">
                         <option value="">Toifani tanlang...</option>
-                        <option value="Research Article">Research Article</option>
-                        <option value="Review Article">Review Article</option>
-                        <option value="Case Study">Case Study</option>
+                        {journalCategories.map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
                         <option value="Other">Boshqa...</option>
                       </select>
                       {category === "Other" && (
