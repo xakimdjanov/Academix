@@ -270,12 +270,12 @@ const JournalArticles = () => {
     let defaultFile = null;
     for (let i = 0; i < finalAuthors.length; i++) {
       if (editAuthorImages[i]) {
-        formData.append("author_images", editAuthorImages[i]);
+        formData.append(`author_image_${i}`, editAuthorImages[i]);
       } else {
         if (!defaultFile) {
           defaultFile = await getDefaultAvatarFile();
         }
-        formData.append("author_images", defaultFile);
+        formData.append(`author_image_${i}`, defaultFile);
       }
     }
 

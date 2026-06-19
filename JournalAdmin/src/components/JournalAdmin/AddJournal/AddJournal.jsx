@@ -12,6 +12,7 @@ const initialState = {
   subject_area: "",
   description: "",
   languages: [],
+  categories: [],
   aims_scope: "",
   website_url: "",
   cover_image_url: "",
@@ -79,6 +80,7 @@ const AddJournal = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState(initialState);
   const [langInput, setLangInput] = useState("");
+  const [categoryInput, setCategoryInput] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [coverFile, setCoverFile] = useState(null);
@@ -89,7 +91,13 @@ const AddJournal = () => {
   // Edit rejimida bo'lsa ma'lumotlarni to'ldirish
   useEffect(() => {
     if (id && location.state?.journal) {
-      const journal = location.state.journal;
+      const journalData = location.state.journal;
+      const journal = {
+        ...journalData,
+        categories: Array.isArray(journalData.categories)
+          ? journalData.categories.map(c => typeof c === 'object' ? c.name : c)
+          : []
+      };
       setForm(journal);
       if (journal.cover_image_url) setCoverPreview(journal.cover_image_url);
       if (journal.banner_url) setBannerPreview(journal.banner_url);
@@ -97,7 +105,13 @@ const AddJournal = () => {
       const fetchById = async () => {
         try {
           const res = await journalService.getById(id);
-          const journal = res.data.data || res.data;
+          const journalData = res.data.data || res.data;
+          const journal = {
+            ...journalData,
+            categories: Array.isArray(journalData.categories)
+              ? journalData.categories.map(c => typeof c === 'object' ? c.name : c)
+              : []
+          };
           setForm(journal);
           if (journal.cover_image_url) setCoverPreview(journal.cover_image_url);
           if (journal.banner_url) setBannerPreview(journal.banner_url);
@@ -108,6 +122,19 @@ const AddJournal = () => {
       fetchById();
     }
   }, [id, location.state]);
+
+  const addCategory = () => {
+    const cat = categoryInput.trim();
+    if (!cat) return;
+    if (form.categories && form.categories.includes(cat)) return toast.error("Bu kategoriya qo'shilgan");
+    if (form.categories && form.categories.length >= 10) return toast.error("Maksimal 10ta kategoriya qo'shish mumkin");
+    setForm(prev => ({ ...prev, categories: [...(prev.categories || []), cat] }));
+    setCategoryInput("");
+  };
+
+  const removeCategory = (cat) => {
+    setForm(prev => ({ ...prev, categories: (prev.categories || []).filter(c => c !== cat) }));
+  };
 
   const canSubmit = useMemo(() => {
     return form.name.trim() && form.slug.trim() && form.issn.trim() && form.subject_area.trim() && form.languages.length > 0;
@@ -154,6 +181,7 @@ const AddJournal = () => {
 
     // Send languages as JSON string or comma-separated string
     fd.append("languages", JSON.stringify(form.languages));
+    fd.append("categories", JSON.stringify(form.categories || []));
 
     if (coverFile) {
       fd.append("cover_image", coverFile);
@@ -238,6 +266,30 @@ const AddJournal = () => {
                 </span>
               ))}
               {form.languages.length === 0 && <span className="text-slate-400 text-sm italic">Hech qanday til qo'shilmagan</span>}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+            <span className="mb-2 block text-sm font-medium text-slate-700">Kategoriyalar (Categories) * (Maksimal 10 ta)</span>
+            <div className="flex gap-2 mb-3">
+              <input
+                value={categoryInput}
+                onChange={(e) => setCategoryInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCategory(); } }}
+                placeholder="Masalan: Matematika"
+                className="flex-1 rounded-lg border border-slate-200 px-4 py-2 outline-none focus:border-blue-400"
+              />
+              <button type="button" onClick={addCategory} className="bg-white border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-100 transition flex items-center gap-2">
+                <FiPlus /> Qo'shish
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(form.categories || []).map(cat => (
+                <span key={cat} className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                  {cat} <FiX className="cursor-pointer" onClick={() => removeCategory(cat)} />
+                </span>
+              ))}
+              {(!form.categories || form.categories.length === 0) && <span className="text-slate-400 text-sm italic">Hech qanday kategoriya qo'shilmagan</span>}
             </div>
           </div>
 

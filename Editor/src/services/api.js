@@ -53,7 +53,9 @@ export const articleService = {
   getAll: () => axiosInstance.get("/article/getAll"),
   getById: (id) => axiosInstance.get(`/article/getById/${id}`),
   search: (query) => axiosInstance.get(`/article/search`, { params: { query } }),
-  update: (id, data) => axiosInstance.put(`/article/update/${id}`, data),
+  update: (id, data) => axiosInstance.put(`/article/update/${id}`, data, {
+    headers: data instanceof FormData ? { "Content-Type": "multipart/form-data" } : {}
+  }),
   delete: (id) => axiosInstance.delete(`/article/delete/${id}`),
 };
 

@@ -110,22 +110,6 @@ const SubmitArticle = () => {
                 orcidId: auth.orcidId || auth.orcid_id || "",
                 imageUrl: auth.imageUrl || auth.image_url || auth.photo || "",
               })));
-
-              parsedAuthors.forEach(async (auth, idx) => {
-                const imgUrl = auth.imageUrl || auth.image_url || auth.photo;
-                if (imgUrl) {
-                  try {
-                    const response = await fetch(imgUrl);
-                    if (response.ok) {
-                      const blob = await response.blob();
-                      const file = new File([blob], `author-${idx}.png`, { type: blob.type || "image/png" });
-                      setAuthorImages(prev => ({ ...prev, [idx]: file }));
-                    }
-                  } catch (err) {
-                    console.error("Error pre-fetching author image:", err);
-                  }
-                }
-              });
             }
           }
         } catch (error) {
@@ -341,20 +325,29 @@ const SubmitArticle = () => {
         fullName: a.fullName.trim(),
         phone: a.phone.replace(/\D/g, ""),
         orcidId: a.orcidId.trim(),
+        imageUrl: a.imageUrl || "",
       }));
       formData.append("authors", JSON.stringify(authorsForBE));
 
       if (articleFile) formData.append("file_url", articleFile);
 
-      let defaultFile = null;
-      for (let i = 0; i < authors.length; i++) {
-        if (authorImages[i]) {
-          formData.append("author_images", authorImages[i]);
-        } else {
-          if (!defaultFile) {
-            defaultFile = await getDefaultAvatarFile();
+      if (isEdit) {
+        for (let i = 0; i < authors.length; i++) {
+          if (authorImages[i]) {
+            formData.append(`author_image_${i}`, authorImages[i]);
           }
-          formData.append("author_images", defaultFile);
+        }
+      } else {
+        let defaultFile = null;
+        for (let i = 0; i < authors.length; i++) {
+          if (authorImages[i]) {
+            formData.append(`author_image_${i}`, authorImages[i]);
+          } else {
+            if (!defaultFile) {
+              defaultFile = await getDefaultAvatarFile();
+            }
+            formData.append(`author_image_${i}`, defaultFile);
+          }
         }
       }
 
@@ -679,13 +672,12 @@ const SubmitArticle = () => {
                            <div className="space-y-2">
                               <label className="text-sm font-medium text-gray-600">Rasmi (Ixtiyoriy)</label>
                               <div className="flex items-center gap-4">
-                                 {authorImages[idx] && (
+                                 {(authorImages[idx] || author.imageUrl) && (
                                     <div className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-blue-100 shadow-sm shrink-0">
                                        <img 
-                                          src={URL.createObjectURL(authorImages[idx])} 
+                                          src={authorImages[idx] ? URL.createObjectURL(authorImages[idx]) : author.imageUrl} 
                                           alt="Preview" 
                                           className="w-full h-full object-cover"
-                                          onLoad={() => { /* cleanup would be better but simple preview is fine */ }}
                                        />
                                     </div>
                                  )}
