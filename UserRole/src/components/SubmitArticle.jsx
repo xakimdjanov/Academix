@@ -16,7 +16,7 @@ import {
 } from "react-icons/fi";
 import { useLocation } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
-import { articleService, journalService } from "../services/api";
+import { articleService, journalService, bobService } from "../services/api";
 import { getUserIdFromToken } from "../utils/getUserIdFromToken";
 import { convertToWebP } from "../utils/webpHelper";
 
@@ -53,6 +53,9 @@ const SubmitArticle = () => {
   const [authors, setAuthors] = useState([{ fullName: "", phone: "+998 ", orcidId: "" }]);
   const [authorImages, setAuthorImages] = useState({});
 
+  const [bobs, setBobs] = useState([]);
+  const [selectedBobId, setSelectedBobId] = useState("");
+
   const [articleFile, setArticleFile] = useState(null);
 
   const [submitting, setSubmitting] = useState(false);
@@ -69,6 +72,7 @@ const SubmitArticle = () => {
           const a = res.data;
           if (a) {
             setSelectedJournalId(a.journal_id);
+            setSelectedBobId(a.bob_id ? String(a.bob_id) : "");
             setTitle(a.title || "");
             setAbstract(a.abstract || "");
             
@@ -124,6 +128,25 @@ const SubmitArticle = () => {
     };
     loadJournals();
   }, [initialJournalId, isEdit]);
+
+  useEffect(() => {
+    const fetchBobs = async () => {
+      if (!selectedJournalId) {
+        setBobs([]);
+        setSelectedBobId("");
+        return;
+      }
+      try {
+        const res = await bobService.getByJournal(selectedJournalId);
+        const list = res?.data || [];
+        setBobs(list);
+      } catch (err) {
+        console.error("Error fetching bobs:", err);
+        setBobs([]);
+      }
+    };
+    fetchBobs();
+  }, [selectedJournalId]);
 
   const selectedJournal = useMemo(
     () => journals.find((j) => String(j.id) === String(selectedJournalId)),
@@ -232,6 +255,9 @@ const SubmitArticle = () => {
   const validateStep = (s) => {
     if (s === 2) {
       if (!selectedJournalId) return "Iltimos, jurnalni tanlang";
+      if (bobs.length > 0 && !selectedBobId) {
+        return "Iltimos, maqola biriktirilishi kerak bo'lgan Bob (Nashr)ni tanlang";
+      }
       if (!title.trim()) return "Sarlavha majburiy";
       if (!abstract.trim()) return "Annotatsiya majburiy";
       if (!keywords.length) return "Kamida bitta kalit so'z bo'lishi shart";
@@ -262,6 +288,9 @@ const SubmitArticle = () => {
     try {
       const formData = new FormData();
       formData.append("journal_id", selectedJournalId);
+      if (selectedBobId) {
+        formData.append("bob_id", selectedBobId);
+      }
       formData.append("user_id", userId);
       formData.append("title", title.trim());
       formData.append("abstract", abstract.trim());
@@ -298,6 +327,7 @@ const SubmitArticle = () => {
           navigate("/dashboard/my-articles");
         } else {
           setSelectedJournalId("");
+          setSelectedBobId("");
           setTitle("");
           setAbstract("");
           setKeywords([]);
@@ -434,6 +464,31 @@ const SubmitArticle = () => {
                         <p className="text-[#002147] text-sm flex items-center gap-2 font-medium">
                           <FiGlobe className="text-blue-500" /> Sohasi: {selectedJournal.subject_area || "—"}
                         </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedJournal && bobs.length > 0 && (
+                    <div className="space-y-2 mt-4">
+                      <label className="block font-medium text-gray-700 font-semibold text-slate-700">Nashr (Bob/Son) *</label>
+                      <div className="relative">
+                        <select
+                          value={selectedBobId}
+                          onChange={(e) => setSelectedBobId(e.target.value)}
+                          className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition bg-white appearance-none cursor-pointer"
+                        >
+                          <option value="">Nashr (Bob/Son)ni tanlang...</option>
+                          {bobs.map((b) => (
+                            <option key={b.id} value={b.id}>
+                              {b.name} ({b.year}-yil)
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
                       </div>
                     </div>
                   )}
