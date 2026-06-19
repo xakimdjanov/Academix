@@ -24,6 +24,7 @@ const JournalDetail = () => {
   const [articles, setArticles] = useState([]);
   const [bobs, setBobs] = useState([]);
   const [selectedBob, setSelectedBob] = useState(null);
+  const [selectedYear, setSelectedYear] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("about");
   const isLoggedIn = !!localStorage.getItem("token");
@@ -202,17 +203,17 @@ const JournalDetail = () => {
       {/* 🔘 Navigation Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20">
          <div className="bg-white rounded-2xl shadow-xl p-2 flex overflow-x-auto no-scrollbar gap-2 border border-gray-100">
-            <TabButton active={activeTab === 'about'} onClick={() => { setActiveTab('about'); setSelectedBob(null); }} icon={<FiInfo/>} label="Haqida" />
-            <TabButton active={activeTab === 'scope'} onClick={() => { setActiveTab('scope'); setSelectedBob(null); }} icon={<FiAward/>} label="Maqsad va yo'nalishlar" />
-            <TabButton active={activeTab === 'shablon'} onClick={() => { setActiveTab('shablon'); setSelectedBob(null); }} icon={<FiLayers/>} label="Maqola shabloni" />
-            <TabButton active={activeTab === 'articles'} onClick={() => { setActiveTab('articles'); setSelectedBob(null); }} icon={<FiFileText/>} label={`Maqolalar (${articles.length})`} />
+            <TabButton active={activeTab === 'about'} onClick={() => { setActiveTab('about'); setSelectedBob(null); setSelectedYear(null); }} icon={<FiInfo/>} label="Haqida" />
+            <TabButton active={activeTab === 'scope'} onClick={() => { setActiveTab('scope'); setSelectedBob(null); setSelectedYear(null); }} icon={<FiAward/>} label="Maqsad va yo'nalishlar" />
+            <TabButton active={activeTab === 'shablon'} onClick={() => { setActiveTab('shablon'); setSelectedBob(null); setSelectedYear(null); }} icon={<FiLayers/>} label="Maqola shabloni" />
+            <TabButton active={activeTab === 'articles'} onClick={() => { setActiveTab('articles'); setSelectedBob(null); setSelectedYear(null); }} icon={<FiFileText/>} label={`Maqolalar (${articles.length})`} />
             
             {/* 💎 Dynamic Tabs from Backend Settings (Site Pages) */}
             {settings.map((s) => (
                <TabButton 
                   key={s.id} 
                   active={activeTab === `setting-${s.id}`} 
-                  onClick={() => { setActiveTab(`setting-${s.id}`); setSelectedBob(null); }} 
+                  onClick={() => { setActiveTab(`setting-${s.id}`); setSelectedBob(null); setSelectedYear(null); }} 
                   icon={<FiLayers/>} 
                   label={s.title || s.page_name} 
                />
@@ -290,7 +291,7 @@ const JournalDetail = () => {
                   {journal?.admin?.allow_bob_creation ? (
                      selectedBob ? (
                         /* Selected Bob view: list of nested articles */
-                        <div className="space-y-6">
+                        <div className="space-y-6 animate-in fade-in duration-300">
                            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
                               <button
                                  onClick={() => setSelectedBob(null)}
@@ -321,13 +322,13 @@ const JournalDetail = () => {
                            </div>
 
                            {articles.filter(a => Number(a.bob_id) === Number(selectedBob.id)).length === 0 ? (
-                              <div className="bg-white p-12 rounded-3xl text-center border border-gray-100 text-gray-400 font-medium animate-in fade-in duration-300">
+                              <div className="bg-white p-12 rounded-3xl text-center border border-gray-100 text-gray-400 font-medium">
                                  Ushbu sonda maqolalar hali nashr etilmagan.
                               </div>
                            ) : (
                               <div className="space-y-4">
                                  {articles.filter(a => Number(a.bob_id) === Number(selectedBob.id)).map(article => (
-                                    <div key={article._id || article.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-50 flex gap-4 hover:shadow-md transition-shadow group animate-in fade-in duration-300">
+                                    <div key={article._id || article.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-55 flex gap-4 hover:shadow-md transition-shadow group">
                                        <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors flex-shrink-0">
                                           <FiFileText size={20} />
                                        </div>
@@ -356,48 +357,93 @@ const JournalDetail = () => {
                               </div>
                            )}
                         </div>
+                     ) : selectedYear ? (
+                        /* List of Bobs in Selected Year */
+                        <div className="space-y-6 animate-in fade-in duration-300">
+                           <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                              <button
+                                 onClick={() => setSelectedYear(null)}
+                                 className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors"
+                              >
+                                 <FiArrowLeft /> Orqaga (Yillar ro'yxati)
+                              </button>
+                              <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-extrabold rounded-full">
+                                 {selectedYear}-yil
+                              </span>
+                           </div>
+
+                           <h2 className="text-2xl font-black text-[#002147] mb-6">{selectedYear}-yil sonlari (Boblar)</h2>
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {bobs.filter(bob => String(bob.year) === String(selectedYear)).map(bob => {
+                                 const bobArticlesCount = articles.filter(a => Number(a.bob_id) === Number(bob.id)).length;
+                                 return (
+                                    <div 
+                                       key={bob.id} 
+                                       onClick={() => setSelectedBob(bob)}
+                                       className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between h-48 hover:-translate-y-1 duration-300"
+                                    >
+                                       <div>
+                                          <div className="flex items-center gap-2 mb-3">
+                                             <span className="px-2.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-full">
+                                                {bob.year}-yil
+                                             </span>
+                                             <span className="px-2.5 py-0.5 bg-gray-50 text-gray-500 text-[10px] font-black uppercase rounded-full">
+                                                {bobArticlesCount} maqola
+                                             </span>
+                                          </div>
+                                          <h3 className="text-lg font-black text-[#002147] group-hover:text-blue-600 transition-colors line-clamp-2">
+                                             {bob.name}
+                                          </h3>
+                                       </div>
+                                       <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
+                                          <span className="text-xs font-black text-blue-600 uppercase tracking-wider flex items-center gap-1">
+                                             Sonni ko'rish <FiChevronRight />
+                                          </span>
+                                          {bob.file_url && (
+                                             <span className="text-[10px] font-bold text-gray-400">PDF mavjud</span>
+                                          )}
+                                       </div>
+                                    </div>
+                                 );
+                              })}
+                           </div>
+                        </div>
                      ) : (
-                        /* List of Bobs view */
-                        <div className="space-y-6">
-                           <h2 className="text-2xl font-black text-[#002147] mb-6">Jurnal sonlari (Boblar)</h2>
+                        /* List of Years view */
+                        <div className="space-y-6 animate-in fade-in duration-300">
+                           <h2 className="text-2xl font-black text-[#002147] mb-6">Nashr yillari</h2>
                            {bobs.length === 0 ? (
                               <div className="bg-white p-12 rounded-3xl text-center border border-gray-100 text-gray-400 font-medium">
                                  Ushbu jurnalda hali nashrlar (boblar) yaratilmagan.
                               </div>
                            ) : (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                 {bobs.map(bob => {
-                                    const bobArticlesCount = articles.filter(a => Number(a.bob_id) === Number(bob.id)).length;
-                                    return (
-                                       <div 
-                                          key={bob.id} 
-                                          onClick={() => setSelectedBob(bob)}
-                                          className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between h-48 hover:-translate-y-1 duration-300"
-                                       >
-                                          <div>
-                                             <div className="flex items-center gap-2 mb-3">
-                                                <span className="px-2.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-full">
-                                                   {bob.year}-yil
-                                                </span>
-                                                <span className="px-2.5 py-0.5 bg-gray-50 text-gray-500 text-[10px] font-black uppercase rounded-full">
-                                                   {bobArticlesCount} maqola
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                                 {Array.from(new Set(bobs.map(b => b.year).filter(Boolean)))
+                                    .sort((a, b) => Number(b) - Number(a))
+                                    .map(year => {
+                                       const yearBobsCount = bobs.filter(b => String(b.year) === String(year)).length;
+                                       return (
+                                          <div 
+                                             key={year} 
+                                             onClick={() => setSelectedYear(year)}
+                                             className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between h-36 hover:-translate-y-1 duration-300"
+                                          >
+                                             <div>
+                                                <h3 className="text-2xl font-black text-[#002147] group-hover:text-blue-600 transition-colors">
+                                                   {year}-yil
+                                                </h3>
+                                                <p className="text-sm text-gray-500 font-bold mt-2">
+                                                   {yearBobsCount} ta son
+                                                </p>
+                                             </div>
+                                             <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                                                <span className="text-xs font-black text-blue-600 uppercase tracking-wider flex items-center gap-1">
+                                                   Batafsil <FiChevronRight />
                                                 </span>
                                              </div>
-                                             <h3 className="text-lg font-black text-[#002147] group-hover:text-blue-600 transition-colors line-clamp-2">
-                                                {bob.name}
-                                             </h3>
                                           </div>
-                                          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
-                                             <span className="text-xs font-black text-blue-600 uppercase tracking-wider flex items-center gap-1">
-                                                Sonni ko'rish <FiChevronRight />
-                                             </span>
-                                             {bob.file_url && (
-                                                <span className="text-[10px] font-bold text-gray-400">PDF mavjud</span>
-                                             )}
-                                          </div>
-                                       </div>
-                                    );
-                                 })}
+                                       );
+                                    })}
                               </div>
                            )}
                         </div>
