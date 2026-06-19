@@ -374,7 +374,7 @@ const JournalDetail = () => {
 
                            <h2 className="text-2xl font-black text-[#002147] mb-6">{selectedYear}-yil sonlari (Boblar)</h2>
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {bobs.filter(bob => String(bob.year) === String(selectedYear)).map(bob => {
+                              {bobs.filter(bob => Number(bob.year) === Number(selectedYear)).map(bob => {
                                  const bobArticlesCount = articles.filter(a => Number(a.bob_id) === Number(bob.id)).length;
                                  return (
                                     <div 
@@ -418,10 +418,10 @@ const JournalDetail = () => {
                               </div>
                            ) : (
                               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                                 {Array.from(new Set(bobs.map(b => b.year).filter(Boolean)))
-                                    .sort((a, b) => Number(b) - Number(a))
+                                 {Array.from(new Set(bobs.map(b => Number(b.year)).filter(Boolean)))
+                                    .sort((a, b) => b - a)
                                     .map(year => {
-                                       const yearBobsCount = bobs.filter(b => String(b.year) === String(year)).length;
+                                       const yearBobsCount = bobs.filter(b => Number(b.year) === Number(year)).length;
                                        return (
                                           <div 
                                              key={year} 
