@@ -32,6 +32,19 @@ const emptyAuthor = {
   phone: "+998 ",
   orcidId: "",
 };
+const getDefaultAvatarFile = async () => {
+  try {
+    const res = await fetch("https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png");
+    const blob = await res.blob();
+    return new File([blob], "default-author.png", { type: "image/png" });
+  } catch (err) {
+    console.error("Default avatar fetch error, using fallback", err);
+    const base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+    const res = await fetch(`data:image/png;base64,${base64}`);
+    const blob = await res.blob();
+    return new File([blob], "default-author.png", { type: "image/png" });
+  }
+};
 
 const SubmitArticle = () => {
   const location = useLocation();
@@ -308,9 +321,17 @@ const SubmitArticle = () => {
 
       if (articleFile) formData.append("file_url", articleFile);
 
-      Object.values(authorImages).forEach((file) => {
-        formData.append("author_images", file);
-      });
+      let defaultFile = null;
+      for (let i = 0; i < authors.length; i++) {
+        if (authorImages[i]) {
+          formData.append("author_images", authorImages[i]);
+        } else {
+          if (!defaultFile) {
+            defaultFile = await getDefaultAvatarFile();
+          }
+          formData.append("author_images", defaultFile);
+        }
+      }
 
       if (isEdit) {
         await articleService.update(id, formData);

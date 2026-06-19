@@ -21,6 +21,20 @@ import { articleService, journalService, userService } from "../../../services/a
 
 const MAX_FILE_MB = 20;
 
+const getDefaultAvatarFile = async () => {
+  try {
+    const res = await fetch("https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png");
+    const blob = await res.blob();
+    return new File([blob], "default-author.png", { type: "image/png" });
+  } catch (err) {
+    console.error("Default avatar fetch error, using fallback", err);
+    const base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+    const res = await fetch(`data:image/png;base64,${base64}`);
+    const blob = await res.blob();
+    return new File([blob], "default-author.png", { type: "image/png" });
+  }
+};
+
 const emptyAuthor = {
   fullName: "",
   phone: "+998 ",
@@ -278,11 +292,18 @@ const SendOldArticle = () => {
       formData.append("file_url", pdfFile);
 
       // Append Author Photos in order
-      authors.forEach((a) => {
+      let defaultFile = null;
+      for (let i = 0; i < authors.length; i++) {
+        const a = authors[i];
         if (a.photoFile) {
           formData.append("author_images", a.photoFile);
+        } else {
+          if (!defaultFile) {
+            defaultFile = await getDefaultAvatarFile();
+          }
+          formData.append("author_images", defaultFile);
         }
-      });
+      }
 
       await articleService.create(formData);
 
