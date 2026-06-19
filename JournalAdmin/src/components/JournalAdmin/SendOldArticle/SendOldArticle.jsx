@@ -580,13 +580,20 @@ const SendOldArticle = () => {
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="block text-sm font-bold text-slate-700">Toifa *</label>
-                      <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition bg-white appearance-none cursor-pointer text-sm font-semibold">
-                        <option value="">Toifani tanlang...</option>
-                        {journalCategories.map((cat) => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                        <option value="Other">Boshqa...</option>
-                      </select>
+                      <div className="relative">
+                        <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition bg-white appearance-none cursor-pointer text-sm font-semibold">
+                          <option value="">Toifani tanlang...</option>
+                          {journalCategories.map((cat) => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                          <option value="Other">Boshqa...</option>
+                        </select>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
                       {category === "Other" && (
                         <input type="text" placeholder="Toifa nomini yozing..." value={customCategory} onChange={(e) => setCustomCategory(e.target.value)} className="w-full mt-2 rounded-xl border border-blue-300 px-5 py-3 outline-none bg-blue-50/20 text-sm font-medium" />
                       )}
