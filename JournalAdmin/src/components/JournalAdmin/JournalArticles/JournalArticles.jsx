@@ -250,6 +250,7 @@ const JournalArticles = () => {
           fullName: name,
           phone: originalAuthor?.phone || "",
           orcidId: originalAuthor?.orcidId || "",
+          doi: originalAuthor?.doi || "",
           imageUrl: originalAuthor?.imageUrl || originalAuthor?.image_url || originalAuthor?.photo || "",
         };
       });
