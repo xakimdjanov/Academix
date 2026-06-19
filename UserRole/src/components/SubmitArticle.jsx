@@ -464,6 +464,26 @@ const SubmitArticle = () => {
                         <p className="text-[#002147] text-sm flex items-center gap-2 font-medium">
                           <FiGlobe className="text-blue-500" /> Sohasi: {selectedJournal.subject_area || "—"}
                         </p>
+                        {(() => {
+                          const admin = selectedJournal?.admin || (typeof selectedJournal?.journal_admin_id === 'object' && selectedJournal?.journal_admin_id);
+                          const name = admin?.full_name || admin?.fullName;
+                          const phone = admin?.phone;
+                          if (!name && !phone) return null;
+                          return (
+                            <>
+                              {name && (
+                                <p className="text-[#002147] text-sm flex items-center gap-2 font-medium">
+                                  <FiUser className="text-blue-500" /> Muharrir: {name}
+                                </p>
+                              )}
+                              {phone && (
+                                <p className="text-[#002147] text-sm flex items-center gap-2 font-medium">
+                                  <FiPhone className="text-blue-500" /> Muharrir tel: {phone}
+                                </p>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                   )}
