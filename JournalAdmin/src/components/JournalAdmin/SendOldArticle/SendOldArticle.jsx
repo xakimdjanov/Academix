@@ -232,7 +232,6 @@ const SendOldArticle = () => {
         if (!a.fullName.trim()) return `${i + 1}-muallif: To'liq ism majburiy`;
         if ((a.phone.replace(/\D/g, "") || "").length < 9) return `${i + 1}-muallif: Telefon raqami noto'g'ri`;
         if (!/^\d{4}-\d{4}-\d{4}-\d{4}$/.test(a.orcidId)) return `${i + 1}-muallif: ORCID ID formati noto'g'ri (0000-0000-0000-0000)`;
-        if (!a.photoFile) return `${i + 1}-muallif: Rasm yuklash majburiy`;
       }
     }
     return null;
@@ -280,7 +279,9 @@ const SendOldArticle = () => {
 
       // Append Author Photos in order
       authors.forEach((a) => {
-        formData.append("author_images", a.photoFile);
+        if (a.photoFile) {
+          formData.append("author_images", a.photoFile);
+        }
       });
 
       await articleService.create(formData);
@@ -620,7 +621,7 @@ const SendOldArticle = () => {
                           <input value={author.orcidId} onChange={(e) => updateAuthor(idx, "orcidId", formatOrcid(e.target.value))} maxLength={19} className="w-full px-5 py-3 rounded-xl border border-gray-300 bg-white text-sm font-semibold" placeholder="0000-0000-0000-0000" />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Muallif Rasmi *</label>
+                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Muallif Rasmi (Ixtiyoriy)</label>
                           <div className="flex items-center gap-4">
                             {author.photoPreview && (
                               <div className="relative w-14 h-14 rounded-2xl overflow-hidden border border-slate-200 shadow-inner shrink-0 flex items-center justify-center">
