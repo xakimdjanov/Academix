@@ -108,7 +108,24 @@ const SubmitArticle = () => {
                 fullName: auth.fullName || auth.full_name || "",
                 phone: auth.phone || "",
                 orcidId: auth.orcidId || auth.orcid_id || "",
+                imageUrl: auth.imageUrl || auth.image_url || auth.photo || "",
               })));
+
+              parsedAuthors.forEach(async (auth, idx) => {
+                const imgUrl = auth.imageUrl || auth.image_url || auth.photo;
+                if (imgUrl) {
+                  try {
+                    const response = await fetch(imgUrl);
+                    if (response.ok) {
+                      const blob = await response.blob();
+                      const file = new File([blob], `author-${idx}.png`, { type: blob.type || "image/png" });
+                      setAuthorImages(prev => ({ ...prev, [idx]: file }));
+                    }
+                  } catch (err) {
+                    console.error("Error pre-fetching author image:", err);
+                  }
+                }
+              });
             }
           }
         } catch (error) {
@@ -193,8 +210,16 @@ const SubmitArticle = () => {
     if (authors.length === 1) return toast.error("Kamida bitta muallif bo'lishi shart");
     setAuthors((p) => p.filter((_, i) => i !== idx));
     setAuthorImages((prev) => {
-      const next = { ...prev };
-      delete next[idx];
+      const next = {};
+      let nextIndex = 0;
+      for (let i = 0; i < authors.length; i++) {
+        if (i !== idx) {
+          if (prev[i] !== undefined) {
+            next[nextIndex] = prev[i];
+          }
+          nextIndex++;
+        }
+      }
       return next;
     });
   };

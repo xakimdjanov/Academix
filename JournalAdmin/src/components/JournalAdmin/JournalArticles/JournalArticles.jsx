@@ -16,6 +16,20 @@ import {
   FiExternalLink,
 } from "react-icons/fi";
 
+const getDefaultAvatarFile = async () => {
+  try {
+    const res = await fetch("https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png");
+    const blob = await res.blob();
+    return new File([blob], "default-author.png", { type: "image/png" });
+  } catch (err) {
+    console.error("Default avatar fetch error, using fallback", err);
+    const base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+    const res = await fetch(`data:image/png;base64,${base64}`);
+    const blob = await res.blob();
+    return new File([blob], "default-author.png", { type: "image/png" });
+  }
+};
+
 const STATUSES = [
   "Submitted",
   "Under Review",
@@ -57,6 +71,7 @@ const JournalArticles = () => {
     apc_paid: false,
     bob_id: "",
   });
+  const [editAuthorImages, setEditAuthorImages] = useState({});
 
   const myAdminId = useMemo(() => localStorage.getItem("journal_admin_id"), []);
 
@@ -135,12 +150,32 @@ const JournalArticles = () => {
         : "",
       category: article?.category || "",
       language: article?.language || "",
-      authors: article?.authors || "",
+      authors: renderAuthor(article),
       file_url: article?.file_url || "",
       file_size: Number(article?.file_size || 0),
       apc_paid: article?.apc_paid === true,
       bob_id: article?.bob_id ? String(article.bob_id) : "",
     });
+
+    setEditAuthorImages({});
+    if (article?.authors) {
+      const parsedAuthors = Array.isArray(article.authors) ? article.authors : [];
+      parsedAuthors.forEach(async (auth, idx) => {
+        const imgUrl = auth.imageUrl || auth.image_url || auth.photo;
+        if (imgUrl) {
+          try {
+            const response = await fetch(imgUrl);
+            if (response.ok) {
+              const blob = await response.blob();
+              const file = new File([blob], `author-${idx}.png`, { type: blob.type || "image/png" });
+              setEditAuthorImages(prev => ({ ...prev, [idx]: file }));
+            }
+          } catch (err) {
+            console.error("Error pre-fetching author image in admin edit:", err);
+          }
+        }
+      });
+    }
     
     if (user?.allow_bob_creation && article?.journal_id) {
       bobService.getByJournal(article.journal_id)
@@ -195,27 +230,74 @@ const JournalArticles = () => {
     const id = getId(editArticle);
     if (!id) return toast.error("Article ID not found");
 
-    const payload = {
-      title: editForm.title,
-      abstract: editForm.abstract,
-      keywords: editForm.keywordsText
-        .split(",")
-        .map((x) => x.trim())
-        .filter(Boolean),
-      category: editForm.category,
-      language: editForm.language,
-      authors: editForm.authors,
-      file_url: editForm.file_url,
-      file_size: Number(editForm.file_size || 0),
-      apc_paid: editForm.apc_paid === true,
-      bob_id: editForm.bob_id ? parseInt(editForm.bob_id) : null,
-    };
+    const originalFormatted = renderAuthor(editArticle);
+    let finalAuthors = editArticle.authors || [];
+    if (editForm.authors !== originalFormatted) {
+      const names = editForm.authors.split(",").map(n => n.trim()).filter(Boolean);
+      finalAuthors = names.map((name, index) => {
+        const originalAuthor = editArticle.authors?.[index];
+        return {
+          fullName: name,
+          phone: originalAuthor?.phone || "",
+          orcidId: originalAuthor?.orcidId || "",
+          imageUrl: originalAuthor?.imageUrl || originalAuthor?.image_url || originalAuthor?.photo || "",
+        };
+      });
+    }
+
+    const keywordsArray = editForm.keywordsText
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean);
+
+    const formData = new FormData();
+    formData.append("title", editForm.title.trim());
+    formData.append("abstract", editForm.abstract.trim());
+    formData.append("keywords", JSON.stringify(keywordsArray));
+    formData.append("category", editForm.category.trim());
+    formData.append("language", editForm.language.trim());
+    formData.append("authors", JSON.stringify(finalAuthors));
+    formData.append("file_url", editForm.file_url);
+    formData.append("file_size", String(editForm.file_size || 0));
+    formData.append("apc_paid", editForm.apc_paid ? "true" : "false");
+    
+    if (editForm.bob_id) {
+      formData.append("bob_id", editForm.bob_id);
+    } else {
+      formData.append("bob_id", "");
+    }
+
+    let defaultFile = null;
+    for (let i = 0; i < finalAuthors.length; i++) {
+      if (editAuthorImages[i]) {
+        formData.append("author_images", editAuthorImages[i]);
+      } else {
+        if (!defaultFile) {
+          defaultFile = await getDefaultAvatarFile();
+        }
+        formData.append("author_images", defaultFile);
+      }
+    }
 
     try {
       setEditSaving(true);
-      await articleService.update(id, payload);
+      await articleService.update(id, formData);
+
+      const updatedArticleFields = {
+        title: editForm.title.trim(),
+        abstract: editForm.abstract.trim(),
+        keywords: keywordsArray,
+        category: editForm.category.trim(),
+        language: editForm.language.trim(),
+        authors: finalAuthors,
+        file_url: editForm.file_url,
+        file_size: Number(editForm.file_size || 0),
+        apc_paid: editForm.apc_paid === true,
+        bob_id: editForm.bob_id ? parseInt(editForm.bob_id) : null,
+      };
+
       setArticles((prev) =>
-        prev.map((a) => (getId(a) === id ? { ...a, ...payload } : a)),
+        prev.map((a) => (getId(a) === id ? { ...a, ...updatedArticleFields } : a)),
       );
       toast.success("Muvaffaqiyatli yangilandi");
       setEditOpen(false);
