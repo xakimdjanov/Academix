@@ -332,24 +332,21 @@ const SubmitArticle = () => {
       if (articleFile) formData.append("file_url", articleFile);
 
       if (isEdit) {
-        const hasNewImages = Object.keys(authorImages).length > 0;
-        if (hasNewImages) {
-          for (let i = 0; i < authors.length; i++) {
-            if (authorImages[i]) {
-              formData.append("author_images", authorImages[i]);
-            }
+        for (let i = 0; i < authors.length; i++) {
+          if (authorImages[i]) {
+            formData.append(`author_image_${i}`, authorImages[i]);
           }
         }
       } else {
         let defaultFile = null;
         for (let i = 0; i < authors.length; i++) {
           if (authorImages[i]) {
-            formData.append("author_images", authorImages[i]);
+            formData.append(`author_image_${i}`, authorImages[i]);
           } else {
             if (!defaultFile) {
               defaultFile = await getDefaultAvatarFile();
             }
-            formData.append("author_images", defaultFile);
+            formData.append(`author_image_${i}`, defaultFile);
           }
         }
       }

@@ -296,12 +296,12 @@ const SendOldArticle = () => {
       for (let i = 0; i < authors.length; i++) {
         const a = authors[i];
         if (a.photoFile) {
-          formData.append("author_images", a.photoFile);
+          formData.append(`author_image_${i}`, a.photoFile);
         } else {
           if (!defaultFile) {
             defaultFile = await getDefaultAvatarFile();
           }
-          formData.append("author_images", defaultFile);
+          formData.append(`author_image_${i}`, defaultFile);
         }
       }
 
