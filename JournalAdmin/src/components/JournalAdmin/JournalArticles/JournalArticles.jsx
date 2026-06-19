@@ -135,7 +135,7 @@ const JournalArticles = () => {
         : "",
       category: article?.category || "",
       language: article?.language || "",
-      authors: article?.authors || "",
+      authors: renderAuthor(article),
       file_url: article?.file_url || "",
       file_size: Number(article?.file_size || 0),
       apc_paid: article?.apc_paid === true,
@@ -195,27 +195,61 @@ const JournalArticles = () => {
     const id = getId(editArticle);
     if (!id) return toast.error("Article ID not found");
 
-    const payload = {
-      title: editForm.title,
-      abstract: editForm.abstract,
-      keywords: editForm.keywordsText
-        .split(",")
-        .map((x) => x.trim())
-        .filter(Boolean),
-      category: editForm.category,
-      language: editForm.language,
-      authors: editForm.authors,
-      file_url: editForm.file_url,
-      file_size: Number(editForm.file_size || 0),
-      apc_paid: editForm.apc_paid === true,
-      bob_id: editForm.bob_id ? parseInt(editForm.bob_id) : null,
-    };
+    const originalFormatted = renderAuthor(editArticle);
+    let finalAuthors = editArticle.authors || [];
+    if (editForm.authors !== originalFormatted) {
+      const names = editForm.authors.split(",").map(n => n.trim()).filter(Boolean);
+      finalAuthors = names.map((name, index) => {
+        const originalAuthor = editArticle.authors?.[index];
+        return {
+          fullName: name,
+          phone: originalAuthor?.phone || "",
+          orcidId: originalAuthor?.orcidId || "",
+        };
+      });
+    }
+
+    const keywordsArray = editForm.keywordsText
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean);
+
+    const formData = new FormData();
+    formData.append("title", editForm.title.trim());
+    formData.append("abstract", editForm.abstract.trim());
+    formData.append("keywords", JSON.stringify(keywordsArray));
+    formData.append("category", editForm.category.trim());
+    formData.append("language", editForm.language.trim());
+    formData.append("authors", JSON.stringify(finalAuthors));
+    formData.append("file_url", editForm.file_url);
+    formData.append("file_size", String(editForm.file_size || 0));
+    formData.append("apc_paid", editForm.apc_paid ? "true" : "false");
+    
+    if (editForm.bob_id) {
+      formData.append("bob_id", editForm.bob_id);
+    } else {
+      formData.append("bob_id", "");
+    }
 
     try {
       setEditSaving(true);
-      await articleService.update(id, payload);
+      await articleService.update(id, formData);
+
+      const updatedArticleFields = {
+        title: editForm.title.trim(),
+        abstract: editForm.abstract.trim(),
+        keywords: keywordsArray,
+        category: editForm.category.trim(),
+        language: editForm.language.trim(),
+        authors: finalAuthors,
+        file_url: editForm.file_url,
+        file_size: Number(editForm.file_size || 0),
+        apc_paid: editForm.apc_paid === true,
+        bob_id: editForm.bob_id ? parseInt(editForm.bob_id) : null,
+      };
+
       setArticles((prev) =>
-        prev.map((a) => (getId(a) === id ? { ...a, ...payload } : a)),
+        prev.map((a) => (getId(a) === id ? { ...a, ...updatedArticleFields } : a)),
       );
       toast.success("Muvaffaqiyatli yangilandi");
       setEditOpen(false);
