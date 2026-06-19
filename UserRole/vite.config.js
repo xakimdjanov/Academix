@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 const BASE_URL = 'https://akademix.uz';
-const API_URL  = 'https://academixbackend-production.up.railway.app';
+const API_URL  = 'https://academixbackend-productionn.up.railway.app';
 const today    = new Date().toISOString().split('T')[0];
 
 async function safeFetch(url) {

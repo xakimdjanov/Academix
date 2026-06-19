@@ -39,7 +39,7 @@ const Suggestions = () => {
         formData.append("images", img);
       });
 
-      await axios.post(`https://academixbackend-production.up.railway.app/suggestion/create`, formData);
+      await axios.post(`https://academixbackend-productionn.up.railway.app/suggestion/create`, formData);
       setSuccess(true);
       toast.success("Raxmat! Taklifingiz qabul qilindi.");
     } catch (error) {

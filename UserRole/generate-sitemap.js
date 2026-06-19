@@ -16,7 +16,7 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const BASE_URL = "https://akademix.uz";
-const API_URL  = "https://academixbackend-production.up.railway.app";
+const API_URL  = "https://academixbackend-productionn.up.railway.app";
 const OUTPUT   = path.join(__dirname, "public", "sitemap.xml");
 const today    = new Date().toISOString().split("T")[0];
 

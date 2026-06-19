@@ -9,7 +9,7 @@ import {
 } from "react-icons/fi";
 import { journalAdminService } from "../../../services/api";
 
-const API_BASE = "https://academixbackend-production.up.railway.app";
+const API_BASE = "https://academixbackend-productionn.up.railway.app";
 
 const Sidebar = () => {
   const navigate = useNavigate();

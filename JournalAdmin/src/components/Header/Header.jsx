@@ -10,7 +10,7 @@ const NAV_ITEMS = [
 ];
 
 // ✅ backend base url
-const API_BASE = "https://academixbackend-production.up.railway.app";
+const API_BASE = "https://academixbackend-productionn.up.railway.app";
 const UPLOADS_PATH = "/uploads";
 
 function getInitials(fullName = "") {
