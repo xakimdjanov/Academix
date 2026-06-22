@@ -127,8 +127,9 @@ const SubmitArticle = () => {
       
       try {
         const res = await journalService.getAll();
-        const jList = res?.data || [];
-        setJournals(jList);
+        const data = res?.data?.data || res?.data || [];
+        const approvedData = Array.isArray(data) ? data.filter(j => j.is_approved_by_admin && j.is_active) : [];
+        setJournals(approvedData);
         
         // If initialJournalId is provided, try to find it
         if (initialJournalId && !isEdit) {

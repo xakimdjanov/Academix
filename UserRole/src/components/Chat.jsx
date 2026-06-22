@@ -217,7 +217,7 @@ const Chat = () => {
 
       // 2) articles
       const arts = artRes?.data?.data ?? artRes?.data?.articles ?? artRes?.data ?? [];
-      const artsArr = Array.isArray(arts) ? arts : [];
+      const artsArr = Array.isArray(arts) ? arts.filter(a => a.is_approved_by_admin && a.is_active) : [];
       setArticles(artsArr);
 
       // 3) assignments
