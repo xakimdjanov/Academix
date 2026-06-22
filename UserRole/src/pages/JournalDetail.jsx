@@ -85,7 +85,9 @@ const JournalDetail = () => {
           const allArticles = Array.isArray(aRes?.data?.data) ? aRes.data.data : (Array.isArray(aRes?.data) ? aRes.data : []);
           const published = allArticles.filter(a => 
             (String(a.journal_id) === String(jId) || String(a.journal?.id) === String(jId)) && 
-            a.status === "Published"
+            a.status === "Published" &&
+            a.is_approved_by_admin &&
+            a.is_active
           );
           setArticles(published);
 

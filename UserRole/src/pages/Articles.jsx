@@ -24,7 +24,8 @@ const Articles = () => {
       try {
         const res = await articleService.getAll();
         const data = res?.data?.data || res?.data?.articles || res?.data || [];
-        setArticles(Array.isArray(data) ? data : []);
+        const approvedData = Array.isArray(data) ? data.filter(a => a.is_approved_by_admin && a.is_active) : [];
+        setArticles(approvedData);
       } catch (e) {
         console.error(e);
       } finally {

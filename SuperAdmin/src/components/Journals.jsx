@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
-import { FiCheckCircle, FiClock, FiSlash, FiPlay, FiBook, FiDollarSign } from "react-icons/fi";
+import { 
+  FiCheckCircle, FiClock, FiSlash, FiPlay, FiBook, FiDollarSign, 
+  FiEye, FiXCircle, FiUser, FiMail, FiGlobe, FiInfo, FiEdit3
+} from "react-icons/fi";
 import { journalService, adminService } from "../services/api";
 
 const normalizeStatus = (s = "") => String(s).trim().toLowerCase().replace(/\s+/g, "");
@@ -49,6 +53,65 @@ const Journals = () => {
 
   // avatar fallback (img 404 bo‘lsa)
   const [adminImgError, setAdminImgError] = useState({});
+
+  // View/Edit Modal states
+  const [selectedJournal, setSelectedJournal] = useState(null);
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const [editName, setEditName] = useState("");
+  const [editSlug, setEditSlug] = useState("");
+  const [editIssn, setEditIssn] = useState("");
+  const [editSubjectArea, setEditSubjectArea] = useState("");
+  const [editSubmissionFee, setEditSubmissionFee] = useState("");
+  const [editWebsiteUrl, setEditWebsiteUrl] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+
+  useEffect(() => {
+    if (selectedJournal) {
+      setEditName(selectedJournal.name || "");
+      setEditSlug(selectedJournal.slug || "");
+      setEditIssn(selectedJournal.issn || "");
+      setEditSubjectArea(selectedJournal.subject_area || "");
+      setEditSubmissionFee(selectedJournal.submission_fee || "");
+      setEditWebsiteUrl(selectedJournal.website_url || "");
+      setEditCategory(selectedJournal.category || "");
+      setIsEditingDetails(false);
+    }
+  }, [selectedJournal]);
+
+  const handleSaveDetails = async () => {
+    if (!editName.trim()) {
+      toast.error("Jurnal nomi bo'sh bo'lishi mumkin emas");
+      return;
+    }
+    setIsUpdating(true);
+    try {
+      const updatedFields = {
+        name: editName.trim(),
+        slug: editSlug.trim(),
+        issn: editIssn.trim(),
+        subject_area: editSubjectArea.trim(),
+        submission_fee: editSubmissionFee,
+        website_url: editWebsiteUrl.trim(),
+        category: editCategory.trim(),
+      };
+      
+      const journalId = getId(selectedJournal);
+      await journalService.update(journalId, updatedFields);
+      
+      toast.success("Jurnal ma'lumotlari yangilandi");
+      
+      // Update local state
+      setJournals(prev => prev.map(j => getId(j) === journalId ? { ...j, ...updatedFields } : j));
+      setSelectedJournal(prev => ({ ...prev, ...updatedFields }));
+      setIsEditingDetails(false);
+    } catch (error) {
+      toast.error("Yangilashda xatolik yuz berdi");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const fetchJournals = async () => {
     setLoading(true);
@@ -269,26 +332,47 @@ const Journals = () => {
                       </td>
 
                       <td className="py-4 px-6 text-center">
-                        {!j.is_approved_by_admin ? (
+                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                          {/* Ko'rish tugmasi */}
                           <button
-                            onClick={() => handleApprove(id)}
-                            disabled={busyId === id}
-                            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-white hover:bg-emerald-600 transition-all disabled:opacity-50 shadow-sm shadow-emerald-100"
+                            onClick={() => { setSelectedJournal(j); setIsEditingDetails(false); }}
+                            className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                            title="Batafsil ko'rish"
                           >
-                            <FiCheckCircle /> {busyId === id ? "..." : "Approve"}
+                            <FiEye size={14} />
                           </button>
-                        ) : (
+
+                          {/* Tahrirlash tugmasi */}
                           <button
-                            onClick={() => handleToggleStatus(id)}
-                            disabled={busyId === id}
-                            className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${j.is_active
-                              ? "bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100"
-                              : "bg-blue-700 text-white hover:bg-blue-800 shadow-sm shadow-blue-100"
-                              }`}
+                            onClick={() => { setSelectedJournal(j); setIsEditingDetails(true); }}
+                            className="p-1.5 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all shadow-sm"
+                            title="Tahrirlash"
                           >
-                            {j.is_active ? <><FiSlash /> {busyId === id ? "..." : "Disable"}</> : <><FiPlay /> {busyId === id ? "..." : "Activate"}</>}
+                            <FiEdit3 size={14} />
                           </button>
-                        )}
+
+                          {/* Tasdiqlash / Status tugmasi */}
+                          {!j.is_approved_by_admin ? (
+                            <button
+                              onClick={() => handleApprove(id)}
+                              disabled={busyId === id}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-white hover:bg-emerald-600 transition-all disabled:opacity-50 shadow-sm shadow-emerald-100"
+                            >
+                              <FiCheckCircle size={12} /> {busyId === id ? "..." : "Tasdiqlash"}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleToggleStatus(id)}
+                              disabled={busyId === id}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${j.is_active
+                                ? "bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100"
+                                : "bg-blue-700 text-white hover:bg-blue-800 shadow-sm shadow-blue-100"
+                                }`}
+                            >
+                              {j.is_active ? <><FiSlash size={12} /> {busyId === id ? "..." : "Bloklash"}</> : <><FiPlay size={12} /> {busyId === id ? "..." : "Yoqish"}</>}
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -298,6 +382,205 @@ const Journals = () => {
           </table>
         </div>
       </div>
+
+      {/* DETAIL & EDIT MODAL */}
+      {selectedJournal && createPortal(
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 md:p-10 overflow-hidden">
+              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setSelectedJournal(null)} />
+              
+              <div className="relative w-full max-w-4xl bg-white rounded-[2.5rem] shadow-2xl border border-white/20 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in duration-200">
+                  {/* Modal Header */}
+                  <div className="bg-[#002147] p-6 text-white shrink-0 relative overflow-hidden">
+                      <div className="relative z-10 flex items-start justify-between gap-6">
+                          <div className="flex-1 min-w-0">
+                                {isEditingDetails ? (
+                                    <div className="space-y-2 w-full mt-2 max-w-xl">
+                                        <input
+                                            type="text"
+                                            value={editCategory}
+                                            onChange={(e) => setEditCategory(e.target.value)}
+                                            placeholder="Kategoriya (masalan: Pedagogika)"
+                                            className="px-3 py-1 bg-white/10 text-white border border-white/20 rounded-lg text-xs w-full focus:outline-none focus:border-blue-400"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={editName}
+                                            onChange={(e) => setEditName(e.target.value)}
+                                            placeholder="Jurnal nomi"
+                                            className="px-3 py-2 bg-white/10 text-white border border-white/20 rounded-lg text-lg font-bold w-full focus:outline-none focus:border-blue-400"
+                                        />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-[10px] font-black uppercase rounded-full tracking-widest border border-blue-500/30">
+                                                {selectedJournal.category || "Kategoriyasiz"}
+                                            </span>
+                                            <StatusBadge j={selectedJournal} />
+                                        </div>
+                                        <h2 className="text-xl md:text-2xl font-bold leading-tight" title={selectedJournal.name}>
+                                            {selectedJournal.name}
+                                        </h2>
+                                    </>
+                                )}
+                          </div>
+                          <button 
+                            onClick={() => setSelectedJournal(null)}
+                            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all text-white/70 hover:text-white"
+                          >
+                            <FiXCircle size={24} />
+                          </button>
+                      </div>
+                      <FiBook className="absolute -right-8 -bottom-8 text-white/5 text-[150px] rotate-12" />
+                  </div>
+
+                  {/* Modal Body */}
+                  <div className="flex-1 overflow-auto p-6 md:p-8 space-y-8 scrollbar-none">
+                      
+                      {/* Admin Info */}
+                      <div className="p-6 bg-slate-50 border border-slate-100 rounded-[2rem] space-y-4">
+                          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                              <FiUser className="text-blue-700"/> Jurnal Boshqaruvchisi
+                          </h3>
+                          <div className="flex items-center gap-4">
+                              <AdminAvatar j={selectedJournal} />
+                              <div>
+                                  <div className="font-bold text-slate-800 text-lg">{getAdminName(selectedJournal)}</div>
+                                  <div className="text-sm text-slate-400 font-medium flex items-center gap-1.5 mt-0.5">
+                                      <FiMail size={13}/> {selectedJournal.admin?.email || "Email kiritilmagan"}
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+
+                      {/* Journal details form/grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-4">
+                              <div>
+                                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Jurnal Slugi</label>
+                                  {isEditingDetails ? (
+                                      <input
+                                          type="text"
+                                          value={editSlug}
+                                          onChange={(e) => setEditSlug(e.target.value)}
+                                          className="w-full text-sm text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 font-mono"
+                                      />
+                                  ) : (
+                                      <div className="text-sm font-mono text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-100">{selectedJournal.slug || "Yo'q"}</div>
+                                  )}
+                              </div>
+
+                              <div>
+                                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">ISSN</label>
+                                  {isEditingDetails ? (
+                                      <input
+                                          type="text"
+                                          value={editIssn}
+                                          onChange={(e) => setEditIssn(e.target.value)}
+                                          className="w-full text-sm text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500"
+                                      />
+                                  ) : (
+                                      <div className="text-sm text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-100">{selectedJournal.issn || "Yo'q"}</div>
+                                  )}
+                              </div>
+                          </div>
+
+                          <div className="space-y-4">
+                              <div>
+                                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Soha (Subject Area)</label>
+                                  {isEditingDetails ? (
+                                      <input
+                                          type="text"
+                                          value={editSubjectArea}
+                                          onChange={(e) => setEditSubjectArea(e.target.value)}
+                                          className="w-full text-sm text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500"
+                                      />
+                                  ) : (
+                                      <div className="text-sm text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-100">{selectedJournal.subject_area || "Yo'q"}</div>
+                                  )}
+                              </div>
+
+                              <div>
+                                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Raqamli ID / To'lov summasi (Submission Fee)</label>
+                                  {isEditingDetails ? (
+                                      <input
+                                          type="number"
+                                          value={editSubmissionFee}
+                                          onChange={(e) => setEditSubmissionFee(e.target.value)}
+                                          className="w-full text-sm text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500"
+                                      />
+                                  ) : (
+                                      <div className="text-sm text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-100">${selectedJournal.submission_fee || "0"}</div>
+                                  )}
+                              </div>
+                          </div>
+                      </div>
+
+                      <div>
+                          <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Veb-sayt manzili (Website URL)</label>
+                          {isEditingDetails ? (
+                              <input
+                                  type="text"
+                                  value={editWebsiteUrl}
+                                  onChange={(e) => setEditWebsiteUrl(e.target.value)}
+                                  className="w-full text-sm text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500"
+                              />
+                          ) : (
+                              selectedJournal.website_url ? (
+                                  <a 
+                                      href={selectedJournal.website_url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-sm text-blue-700 hover:underline bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center gap-2"
+                                  >
+                                      <FiGlobe size={14}/> {selectedJournal.website_url}
+                                  </a>
+                              ) : (
+                                  <div className="text-sm text-slate-400 bg-slate-50 p-4 rounded-xl border border-slate-100 italic">Sayt manzili kiritilmagan</div>
+                              )
+                          )}
+                      </div>
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-4 shrink-0 px-8">
+                        <div className="flex items-center gap-3">
+                            {isEditingDetails ? (
+                                <>
+                                    <button 
+                                        onClick={handleSaveDetails}
+                                        disabled={isUpdating}
+                                        className="px-6 py-3 bg-emerald-600 text-white rounded-[1.25rem] font-bold text-xs hover:bg-emerald-700 transition-all shadow-md disabled:opacity-50"
+                                    >
+                                        {isUpdating ? "Saqlanmoqda..." : "Saqlash"}
+                                    </button>
+                                    <button 
+                                        onClick={() => setIsEditingDetails(false)}
+                                        className="px-6 py-3 bg-gray-200 text-gray-700 rounded-[1.25rem] font-bold text-xs hover:bg-gray-300 transition-all"
+                                    >
+                                        Bekor qilish
+                                    </button>
+                                </>
+                            ) : (
+                                <button 
+                                    onClick={() => setIsEditingDetails(true)}
+                                    className="px-6 py-3 bg-blue-600 text-white rounded-[1.25rem] font-bold text-xs hover:bg-blue-700 transition-all shadow-md"
+                                >
+                                    Tahrirlash
+                                </button>
+                            )}
+                        </div>
+                        <button 
+                            onClick={() => setSelectedJournal(null)}
+                            className="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-[1.25rem] font-bold text-xs hover:bg-slate-100 transition-all"
+                        >
+                            Oynani yopish
+                        </button>
+                  </div>
+              </div>
+          </div>,
+          document.body
+      )}
     </div>
   );
 };

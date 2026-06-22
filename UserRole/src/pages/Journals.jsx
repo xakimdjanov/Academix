@@ -24,7 +24,8 @@ const Journals = () => {
       try {
         const res = await journalService.getAll();
         const data = res?.data?.data || res?.data || [];
-        setJournals(Array.isArray(data) ? data : []);
+        const approvedData = Array.isArray(data) ? data.filter(j => j.is_approved_by_admin && j.is_active) : [];
+        setJournals(approvedData);
       } catch (e) {
         console.error(e);
       } finally {

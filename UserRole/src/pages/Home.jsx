@@ -43,7 +43,8 @@ const Home = () => {
       try {
         const res = await journalService.getAll();
         const data = res?.data?.data || res?.data || [];
-        setJournals(Array.isArray(data) ? data.slice(0, 3) : []);
+        const approvedData = Array.isArray(data) ? data.filter(j => j.is_approved_by_admin && j.is_active) : [];
+        setJournals(approvedData.slice(0, 3));
 
         // 🎯 Fetch Global Stats
         try {

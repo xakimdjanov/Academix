@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { 
   FiFileText, FiCheckCircle, FiClock, FiXCircle, 
   FiEye, FiTrash2, FiDownload, FiSearch, FiFilter, FiUser, FiCalendar, FiBook, FiInfo, FiLayers, FiGlobe, FiChevronRight, FiChevronLeft,
-  FiPhone, FiMail, FiExternalLink, FiSlash, FiPlay
+  FiPhone, FiMail, FiExternalLink, FiSlash, FiPlay, FiEdit3
 } from "react-icons/fi";
 import { articleService, adminService } from "../services/api";
 
@@ -56,6 +56,59 @@ const Articles = () => {
 
   // Lightbox state
   const [selectedImg, setSelectedImg] = useState(null);
+
+  // Edit Mode state
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editAbstract, setEditAbstract] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [editKeywords, setEditKeywords] = useState("");
+
+  useEffect(() => {
+    if (selectedArticle) {
+      setEditTitle(selectedArticle.title || "");
+      setEditAbstract(selectedArticle.abstract || "");
+      setEditCategory(selectedArticle.category || "");
+      setEditKeywords(
+        Array.isArray(selectedArticle.keywords)
+          ? selectedArticle.keywords.join(", ")
+          : typeof selectedArticle.keywords === "string"
+          ? selectedArticle.keywords
+          : ""
+      );
+      setIsEditingDetails(false);
+    }
+  }, [selectedArticle]);
+
+  const handleSaveDetails = async () => {
+    if (!editTitle.trim()) {
+      toast.error("Sarlavha bo'sh bo'lishi mumkin emas");
+      return;
+    }
+    setIsUpdating(true);
+    try {
+      const updatedFields = {
+        title: editTitle.trim(),
+        abstract: editAbstract.trim(),
+        category: editCategory.trim(),
+        keywords: editKeywords.split(",").map(k => k.trim()).filter(Boolean)
+      };
+      
+      const artId = selectedArticle.id || selectedArticle._id;
+      await articleService.update(artId, updatedFields);
+      
+      toast.success("Maqola ma'lumotlari yangilandi");
+      
+      // Update local state
+      setArticles(prev => prev.map(a => (a.id === artId || a._id === artId) ? { ...a, ...updatedFields } : a));
+      setSelectedArticle(prev => ({ ...prev, ...updatedFields }));
+      setIsEditingDetails(false);
+    } catch (error) {
+      toast.error("Yangilashda xatolik yuz berdi");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const fetchArticles = async () => {
     setLoading(true);
@@ -301,7 +354,26 @@ const Articles = () => {
                             </td>
 
                             <td className="py-5 px-6">
-                            <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                                {/* Ko'rish tugmasi */}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setSelectedArticle(a); setIsEditingDetails(false); }}
+                                    className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                    title="Batafsil ko'rish"
+                                >
+                                    <FiEye size={16} />
+                                </button>
+
+                                {/* Tahrirlash tugmasi */}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setSelectedArticle(a); setIsEditingDetails(true); }}
+                                    className="p-2 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all shadow-sm"
+                                    title="Tahrirlash"
+                                >
+                                    <FiEdit3 size={16} />
+                                </button>
+
+                                {/* Tasdiqlash / Yashirish tugmasi */}
                                 {!a.is_approved_by_admin ? (
                                     <button
                                         onClick={(e) => handleApprove(e, id)}
@@ -321,13 +393,8 @@ const Articles = () => {
                                         {a.is_active ? <FiSlash size={16} /> : <FiPlay size={16} />}
                                     </button>
                                 )}
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setSelectedArticle(a); }}
-                                    className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-                                    title="Batafsil"
-                                >
-                                    <FiEye size={16} />
-                                </button>
+
+                                {/* PDF yuklab olish */}
                                 {a.file_url && (
                                 <a 
                                     href={a.file_url} 
@@ -340,6 +407,8 @@ const Articles = () => {
                                     <FiDownload size={16} />
                                 </a>
                                 )}
+
+                                {/* O'chirish tugmasi */}
                                 <button
                                 onClick={(e) => handleDelete(e, id)}
                                 className="p-2 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm"
@@ -368,15 +437,36 @@ const Articles = () => {
                   <div className="bg-[#002147] p-6 text-white shrink-0 relative overflow-hidden">
                       <div className="relative z-10 flex items-start justify-between gap-6">
                           <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-[10px] font-black uppercase rounded-full tracking-widest border border-blue-500/30">
-                                        {selectedArticle.category || "Ilmiy maqola"}
-                                    </span>
-                                    <StatusBadge a={selectedArticle} />
-                                </div>
-                                <h2 className="text-xl md:text-2xl font-bold leading-tight" title={selectedArticle.title}>
-                                    {selectedArticle.title}
-                                </h2>
+                                {isEditingDetails ? (
+                                    <div className="space-y-2 w-full mt-2 max-w-2xl">
+                                        <input
+                                            type="text"
+                                            value={editCategory}
+                                            onChange={(e) => setEditCategory(e.target.value)}
+                                            placeholder="Kategoriya (masalan: Ilmiy maqola)"
+                                            className="px-3 py-1 bg-white/10 text-white border border-white/20 rounded-lg text-xs w-full focus:outline-none focus:border-blue-400"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={editTitle}
+                                            onChange={(e) => setEditTitle(e.target.value)}
+                                            placeholder="Maqola sarlavhasi"
+                                            className="px-3 py-2 bg-white/10 text-white border border-white/20 rounded-lg text-lg font-bold w-full focus:outline-none focus:border-blue-400"
+                                        />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-[10px] font-black uppercase rounded-full tracking-widest border border-blue-500/30">
+                                                {selectedArticle.category || "Ilmiy maqola"}
+                                            </span>
+                                            <StatusBadge a={selectedArticle} />
+                                        </div>
+                                        <h2 className="text-xl md:text-2xl font-bold leading-tight" title={selectedArticle.title}>
+                                            {selectedArticle.title}
+                                        </h2>
+                                    </>
+                                )}
                           </div>
                           <button 
                             onClick={() => setSelectedArticle(null)}
@@ -492,14 +582,24 @@ const Articles = () => {
                       {/* Content Section */}
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                          <div className="lg:col-span-2 space-y-6">
-                            <div>
+                             <div>
                                 <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
                                     <FiInfo className="text-blue-600"/> Annotatsiya
                                 </h3>
-                                <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 italic relative">
-                                    <FiChevronRight className="absolute left-3 top-8 text-blue-100 text-4xl" />
-                                    <span className="relative z-10">{selectedArticle.abstract || "Annotatsiya kiritilmagan"}</span>
-                                </div>
+                                {isEditingDetails ? (
+                                    <textarea
+                                        value={editAbstract}
+                                        onChange={(e) => setEditAbstract(e.target.value)}
+                                        rows={6}
+                                        placeholder="Annotatsiya matni..."
+                                        className="w-full text-sm text-slate-700 bg-slate-50 p-6 rounded-[2rem] border border-slate-200 focus:outline-none focus:border-blue-500"
+                                    />
+                                ) : (
+                                    <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 italic relative">
+                                        <FiChevronRight className="absolute left-3 top-8 text-blue-100 text-4xl" />
+                                        <span className="relative z-10">{selectedArticle.abstract || "Annotatsiya kiritilmagan"}</span>
+                                    </div>
+                                )}
                             </div>
                          </div>
                          <div className="space-y-6">
@@ -507,14 +607,24 @@ const Articles = () => {
                                 <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
                                     <FiLayers className="text-blue-600"/> Kalit so'zlar
                                 </h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {(Array.isArray(selectedArticle.keywords) ? selectedArticle.keywords : (typeof selectedArticle.keywords === 'string' ? selectedArticle.keywords.split(',') : [])).map((kw, i) => (
-                                        <span key={i} className="px-4 py-2 bg-blue-50 text-blue-700 rounded-xl text-[10px] font-black uppercase tracking-wider border border-blue-100 transition-all hover:bg-blue-100">
-                                            {String(kw).trim()}
-                                        </span>
-                                    ))}
-                                    {!selectedArticle.keywords && <span className="text-slate-400 italic text-xs">Hali yo'q</span>}
-                                </div>
+                                {isEditingDetails ? (
+                                    <input
+                                        type="text"
+                                        value={editKeywords}
+                                        onChange={(e) => setEditKeywords(e.target.value)}
+                                        placeholder="Vergul bilan ajratilgan kalit so'zlar..."
+                                        className="w-full text-xs text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500"
+                                    />
+                                ) : (
+                                    <div className="flex flex-wrap gap-2">
+                                        {(Array.isArray(selectedArticle.keywords) ? selectedArticle.keywords : (typeof selectedArticle.keywords === 'string' ? selectedArticle.keywords.split(',') : [])).map((kw, i) => (
+                                            <span key={i} className="px-4 py-2 bg-blue-50 text-blue-700 rounded-xl text-[10px] font-black uppercase tracking-wider border border-blue-100 transition-all hover:bg-blue-100">
+                                                {String(kw).trim()}
+                                            </span>
+                                        ))}
+                                        {!selectedArticle.keywords && <span className="text-slate-400 italic text-xs">Hali yo'q</span>}
+                                    </div>
+                                )}
                             </div>
                          </div>
                       </div>
@@ -553,19 +663,46 @@ const Articles = () => {
 
                   {/* Modal Footer */}
                   <div className="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-4 shrink-0 px-8">
-                        {selectedArticle.file_url && (
-                            <a 
-                                href={selectedArticle.file_url} 
-                                target="_blank" 
-                                rel="noreferrer"
-                                className="flex items-center gap-3 bg-[#002147] text-white px-10 py-4 rounded-[1.25rem] font-black text-sm shadow-2xl shadow-blue-900/30 hover:scale-105 active:scale-95 transition-all"
-                            >
-                                <FiDownload size={18}/> PDF MAQOLANI KO'RISH
-                            </a>
-                        )}
+                        <div className="flex items-center gap-3">
+                            {selectedArticle.file_url && (
+                                <a 
+                                    href={selectedArticle.file_url} 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="flex items-center gap-3 bg-[#002147] text-white px-8 py-3 rounded-[1.25rem] font-black text-xs shadow-md hover:scale-105 active:scale-95 transition-all"
+                                >
+                                    <FiDownload size={14}/> PDF MAQOLANI KO'RISH
+                                </a>
+                            )}
+                            
+                            {isEditingDetails ? (
+                                <>
+                                    <button 
+                                        onClick={handleSaveDetails}
+                                        disabled={isUpdating}
+                                        className="px-6 py-3 bg-emerald-600 text-white rounded-[1.25rem] font-bold text-xs hover:bg-emerald-700 transition-all shadow-md disabled:opacity-50"
+                                    >
+                                        {isUpdating ? "Saqlanmoqda..." : "Saqlash"}
+                                    </button>
+                                    <button 
+                                        onClick={() => setIsEditingDetails(false)}
+                                        className="px-6 py-3 bg-gray-200 text-gray-700 rounded-[1.25rem] font-bold text-xs hover:bg-gray-300 transition-all"
+                                    >
+                                        Bekor qilish
+                                    </button>
+                                </>
+                            ) : (
+                                <button 
+                                    onClick={() => setIsEditingDetails(true)}
+                                    className="px-6 py-3 bg-blue-600 text-white rounded-[1.25rem] font-bold text-xs hover:bg-blue-700 transition-all shadow-md"
+                                >
+                                    Tahrirlash
+                                </button>
+                            )}
+                        </div>
                         <button 
                             onClick={() => setSelectedArticle(null)}
-                            className="px-8 py-4 bg-white border border-slate-200 text-slate-600 rounded-[1.25rem] font-bold text-sm hover:bg-slate-100 transition-all"
+                            className="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-[1.25rem] font-bold text-xs hover:bg-slate-100 transition-all"
                         >
                             Oynani yopish
                         </button>
@@ -603,9 +740,6 @@ const Articles = () => {
 };
 
 // SVG Icons
-const FiEdit3 = ({ className }) => (
-    <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" className={className} height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-);
 const FiAlertCircle = ({ className }) => (
     <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" className={className} height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
 );

@@ -109,8 +109,8 @@ export const userService = {
     axiosInstance.post("/users/register", data, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
-  forgotPassword: (data) => axiosInstance.post("/users/forgot-passvwrd", data),
-  resetPassword: (data) => axiosInstance.post("/users/reset-passvwrd", data),
+  forgotPassword: (data) => axiosInstance.post("/users/forgot-password", data),
+  resetPassword: (data) => axiosInstance.post("/users/reset-password", data),
   login: (credentials) => axiosInstance.post("/users/login", credentials),
   getAll: () => axiosInstance.get("/users/getUser"),
   getById: (id) => axiosInstance.get(`/users/getUserById/${id}`),
