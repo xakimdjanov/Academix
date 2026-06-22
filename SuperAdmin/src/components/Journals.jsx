@@ -66,6 +66,7 @@ const Journals = () => {
   const [editSubmissionFee, setEditSubmissionFee] = useState("");
   const [editWebsiteUrl, setEditWebsiteUrl] = useState("");
   const [editCategory, setEditCategory] = useState("");
+  const [editViewCount, setEditViewCount] = useState("");
 
   useEffect(() => {
     if (selectedJournal) {
@@ -76,6 +77,7 @@ const Journals = () => {
       setEditSubmissionFee(selectedJournal.submission_fee || "");
       setEditWebsiteUrl(selectedJournal.website_url || "");
       setEditCategory(selectedJournal.category || "");
+      setEditViewCount(selectedJournal.view_count ?? 0);
       setIsEditingDetails(false);
     }
   }, [selectedJournal]);
@@ -95,6 +97,7 @@ const Journals = () => {
         submission_fee: editSubmissionFee,
         website_url: editWebsiteUrl.trim(),
         category: editCategory.trim(),
+        view_count: Number(editViewCount) || 0,
       };
       
       const journalId = getId(selectedJournal);
@@ -529,29 +532,55 @@ const Journals = () => {
                           </div>
                       </div>
 
-                      <div>
-                          <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Veb-sayt manzili (Website URL)</label>
-                          {isEditingDetails ? (
-                              <input
-                                  type="text"
-                                  value={editWebsiteUrl}
-                                  onChange={(e) => setEditWebsiteUrl(e.target.value)}
-                                  className="w-full text-sm text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500"
-                              />
-                          ) : (
-                              selectedJournal.website_url ? (
-                                  <a 
-                                      href={selectedJournal.website_url}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="text-sm text-blue-700 hover:underline bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center gap-2"
-                                  >
-                                      <FiGlobe size={14}/> {selectedJournal.website_url}
-                                  </a>
+                      {/* View Count + Website URL */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* View Count */}
+                          <div>
+                              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                  <FiEye size={12} className="text-blue-500" /> Ko'rishlar soni (View Count)
+                              </label>
+                              {isEditingDetails ? (
+                                  <input
+                                      type="number"
+                                      min="0"
+                                      value={editViewCount}
+                                      onChange={(e) => setEditViewCount(e.target.value)}
+                                      className="w-full text-sm text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500"
+                                  />
                               ) : (
-                                  <div className="text-sm text-slate-400 bg-slate-50 p-4 rounded-xl border border-slate-100 italic">Sayt manzili kiritilmagan</div>
-                              )
-                          )}
+                                  <div className="flex items-center gap-2 text-sm text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-black border border-blue-100">
+                                          <FiEye size={12} /> {selectedJournal.view_count ?? 0} marta ko'rildi
+                                      </span>
+                                  </div>
+                              )}
+                          </div>
+
+                          {/* Website URL */}
+                          <div>
+                              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Veb-sayt manzili (Website URL)</label>
+                              {isEditingDetails ? (
+                                  <input
+                                      type="text"
+                                      value={editWebsiteUrl}
+                                      onChange={(e) => setEditWebsiteUrl(e.target.value)}
+                                      className="w-full text-sm text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500"
+                                  />
+                              ) : (
+                                  selectedJournal.website_url ? (
+                                      <a
+                                          href={selectedJournal.website_url}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="text-sm text-blue-700 hover:underline bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center gap-2"
+                                      >
+                                          <FiGlobe size={14}/> {selectedJournal.website_url}
+                                      </a>
+                                  ) : (
+                                      <div className="text-sm text-slate-400 bg-slate-50 p-4 rounded-xl border border-slate-100 italic">Sayt manzili kiritilmagan</div>
+                                  )
+                              )}
+                          </div>
                       </div>
                   </div>
 
