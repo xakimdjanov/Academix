@@ -164,9 +164,20 @@ const Articles = () => {
     const admin_id = localStorage.getItem("admin_id");
     try {
       const res = await adminService.toggleArticleStatus(id, { admin_id });
-      const updated = res.data.article;
-      toast.success(updated.is_active ? "Maqola yoqildi" : "Maqola yashirildi");
-      setArticles(prev => prev.map(a => (a.id === id || a._id === id) ? { ...a, is_active: updated.is_active } : a));
+      const updated = res?.data?.article || res?.data?.data || res?.data || null;
+      
+      setArticles(prev => prev.map(a => {
+        if (a.id === id || a._id === id) {
+          const newIsActive = updated?.is_active !== undefined ? updated.is_active : !a.is_active;
+          return { ...a, is_active: newIsActive };
+        }
+        return a;
+      }));
+      
+      // Yangi holat qanday ekanligi: updated dan yoki local state dan
+      const currentArticle = articles.find(a => a.id === id || a._id === id);
+      const newState = updated?.is_active !== undefined ? updated.is_active : !currentArticle?.is_active;
+      toast.success(newState ? "Maqola yoqildi" : "Maqola yashirildi");
     } catch (error) {
       toast.error("Statusni o'zgartirishda xatolik");
     } finally {
