@@ -162,17 +162,16 @@ const JournalAdminProfile = () => {
           {/* Avatar Section */}
           <div className="flex flex-col items-center sm:flex-row gap-6 pb-6 border-b border-slate-100">
             <div className="relative group w-32 h-32 rounded-full overflow-hidden border-4 border-slate-100 shadow-md">
-              {avatarPreview ? (
-                <img
-                  src={avatarPreview}
-                  alt="avatar"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-3xl font-bold">
-                  {form.full_name ? form.full_name.charAt(0).toUpperCase() : "A"}
-                </div>
-              )}
+              <img
+                src={avatarPreview || "/image.png"}
+                alt="avatar"
+                className="w-full h-full object-cover"
+                loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "/image.png";
+                }}
+              />
               
               <label className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-bold cursor-pointer">
                 <FiCamera size={20} className="mb-1" />

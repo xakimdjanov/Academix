@@ -4,6 +4,7 @@ import { FiEye, FiRefreshCw, FiSearch, FiX, FiCheckCircle, FiClock, FiMessageSqu
 import toast, { Toaster } from "react-hot-toast";
 import { articleService } from "../services/api";
 import { getUserIdFromToken } from "../utils/getUserIdFromToken";
+import { formatTitle } from "../utils/textFormatter";
 
 const Timeline = ({ status }) => {
   const steps = [
@@ -226,7 +227,7 @@ const MyArticles = () => {
                   <tr key={a.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-5 py-4">
                       <div className="font-medium text-gray-900">
-                        {a?.title || "—"}
+                        {a?.title ? formatTitle(a.title) : "—"}
                       </div>
                       <div className="mt-1 text-xs text-gray-500">
                         Toifa: {a?.category || "—"}
@@ -234,7 +235,7 @@ const MyArticles = () => {
                     </td>
 
                     <td className="px-5 py-4 text-gray-700">
-                      {a?.journal?.name || "—"}
+                      {a?.journal?.name ? formatTitle(a.journal.name) : "—"}
                     </td>
 
                     <td className="px-5 py-4">
@@ -303,10 +304,10 @@ const MyArticles = () => {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <h2 className="text-xl sm:text-2xl font-bold line-clamp-2">
-                    {selected?.title || "Maqola tafsilotlari"}
+                    {selected?.title ? formatTitle(selected.title) : "Maqola tafsilotlari"}
                   </h2>
                   <p className="mt-2 text-sm text-gray-300 opacity-90">
-                    {selected?.journal?.name || "—"}
+                    {selected?.journal?.name ? formatTitle(selected.journal.name) : "—"}
                   </p>
                 </div>
 

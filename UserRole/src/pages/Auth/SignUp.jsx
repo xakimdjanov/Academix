@@ -241,6 +241,7 @@ const SignUp = () => {
                         src={avatarPreview}
                         alt="preview"
                         className="w-full h-full object-cover"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center">

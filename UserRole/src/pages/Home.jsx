@@ -15,6 +15,7 @@ import {
 } from "react-icons/fi";
 import { journalService, tariffService } from "../services/api";
 import { useSEO } from "../hooks/useSEO";
+import { formatTitle } from "../utils/textFormatter";
 
 const Home = () => {
   const [journals, setJournals] = useState([]);
@@ -214,7 +215,7 @@ const Home = () => {
                   <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <FiLayers size={24} />
                   </div>
-                  <h3 className="text-xl font-bold text-[#002147] mb-2">{journal.journal_name || journal.name}</h3>
+                  <h3 className="text-xl font-bold text-[#002147] mb-2">{formatTitle(journal.journal_name || journal.name)}</h3>
                   <p className="text-[#6B7280] text-sm line-clamp-3 mb-4">{journal.short_description || journal.description || "No description available."}</p>
                   <div className="flex items-center gap-4 text-xs font-semibold text-gray-500 mb-6">
                     <span className="px-2 py-1 bg-gray-100 rounded">ISSN: {journal.issn || "N/A"}</span>

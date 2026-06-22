@@ -100,6 +100,7 @@ const JournalList = () => {
               src={profile.avatar_url || `https://ui-avatars.com/api/?name=${profile.full_name}&background=0D8ABC&color=fff`}
               className="w-32 h-32 rounded-2xl object-cover ring-4 ring-slate-50 shadow-lg transition-transform duration-300 group-hover:scale-105"
               alt="Profile"
+              loading="lazy"
             />
             <div className="absolute -bottom-2 -right-2 bg-green-500 w-6 h-6 rounded-full border-4 border-white"></div>
           </div>

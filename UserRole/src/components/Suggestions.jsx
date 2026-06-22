@@ -158,6 +158,7 @@ const Suggestions = () => {
                         src={URL.createObjectURL(img)} 
                         alt="Preview" 
                         className="w-full h-full object-cover transition-transform group-hover:scale-110" 
+                        loading="lazy"
                       />
                       <button 
                         type="button"

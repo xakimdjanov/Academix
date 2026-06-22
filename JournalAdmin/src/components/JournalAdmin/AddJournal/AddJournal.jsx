@@ -336,7 +336,7 @@ const AddJournal = () => {
                 />
                 {coverPreview ? (
                   <div className="relative w-full h-24 rounded-lg overflow-hidden flex items-center justify-center">
-                    <img src={coverPreview} alt="Cover Preview" className="w-full h-full object-cover" />
+                    <img src={coverPreview} alt="Cover Preview" className="w-full h-full object-cover" loading="lazy" />
                     <button
                       type="button"
                       onClick={(e) => {
@@ -386,7 +386,7 @@ const AddJournal = () => {
                 />
                 {bannerPreview ? (
                   <div className="relative w-full h-24 rounded-lg overflow-hidden flex items-center justify-center">
-                    <img src={bannerPreview} alt="Banner Preview" className="w-full h-full object-cover" />
+                    <img src={bannerPreview} alt="Banner Preview" className="w-full h-full object-cover" loading="lazy" />
                     <button
                       type="button"
                       onClick={(e) => {

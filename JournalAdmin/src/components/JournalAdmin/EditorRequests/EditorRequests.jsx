@@ -237,6 +237,7 @@ const EditorRequests = () => {
                       src={ed.profile_img}
                       alt={ed.fullname}
                       className="w-16 h-16 rounded-2xl object-cover border-4 border-white shadow-sm"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center border-4 border-white shadow-sm">
@@ -321,6 +322,7 @@ const EditorRequests = () => {
                           src={ed.profile_img}
                           alt=""
                           className="w-10 h-10 rounded-xl object-cover border border-slate-200"
+                          loading="lazy"
                         />
                       ) : (
                         <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center border border-slate-200 text-gray-400">

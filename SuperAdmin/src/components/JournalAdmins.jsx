@@ -269,11 +269,16 @@ const JournalAdmins = () => {
                     <td className="py-5 px-8">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-100 uppercase overflow-hidden ring-2 ring-white">
-                          {admin.avatar_url ? (
-                            <img src={admin.avatar_url} alt="avatar" className="w-full h-full object-cover" />
-                          ) : (
-                            (admin.full_name || "A")[0]
-                          )}
+                          <img
+                            src={admin.avatar_url || "/image.png"}
+                            alt="avatar"
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = "/image.png";
+                            }}
+                          />
                         </div>
                         <div>
                           <p className="font-bold text-gray-800">{admin.full_name || "Noma'lum"}</p>
@@ -369,11 +374,16 @@ const JournalAdmins = () => {
               <div className="md:col-span-4 flex flex-col items-center gap-6 border-r border-gray-100 pr-8">
                 <div className="relative group">
                   <div className="w-40 h-40 rounded-[2.5rem] bg-gray-50 border-4 border-white shadow-xl overflow-hidden flex items-center justify-center">
-                    {avatarPreview ? (
-                      <img src={avatarPreview} alt="preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <FiUser className="w-16 h-16 text-gray-200" />
-                    )}
+                    <img
+                      src={avatarPreview || "/image.png"}
+                      alt="preview"
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/image.png";
+                      }}
+                    />
                   </div>
                   <label className="absolute bottom-2 right-2 w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white cursor-pointer shadow-lg hover:scale-110 active:scale-95 transition-all ring-4 ring-white">
                     <FiCamera size={18} />

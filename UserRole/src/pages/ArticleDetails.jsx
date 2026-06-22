@@ -20,6 +20,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { articleService, commentService } from "../services/api";
 import { getUserIdFromToken } from "../utils/getUserIdFromToken";
 import { useSEO } from "../hooks/useSEO";
+import { formatTitle } from "../utils/textFormatter";
 
 const formatDate = (iso) => {
   if (!iso) return "-";
@@ -189,14 +190,14 @@ const ArticleDetails = () => {
                    </span>
                    {article.journal && (
                      <Link to={`/journals/${article.journal.slug}`} className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase rounded-full tracking-widest border border-white/20 transition-colors">
-                        Jurnal: {article.journal.name}
+                        Jurnal: {formatTitle(article.journal.name)}
                      </Link>
                    )}
                    <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-black uppercase rounded-full tracking-widest border border-white/20 flex items-center gap-1">
                       <FiEye size={12}/> {article.view_count || 0} ko'rishlar
                    </span>
                 </div>
-                <h1 className="text-2xl md:text-4xl font-black mb-4 leading-tight">{article.title}</h1>
+                <h1 className="text-2xl md:text-4xl font-black mb-4 leading-tight">{formatTitle(article.title)}</h1>
                 <div className="flex flex-wrap gap-4 text-sm text-blue-200/60 font-medium">
                    <span>Nashr etilgan: {formatDate(article.createdAt)}</span>
                 </div>
@@ -256,7 +257,7 @@ const ArticleDetails = () => {
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {Array.isArray(article.authors) ? article.authors.map((auth, idx) => (
                     <div key={idx} className="flex items-center gap-5 p-4 rounded-2xl border border-gray-50 hover:border-blue-100 transition-colors group">
-                       <img src={auth.imageUrl || "https://ui-avatars.com/api/?name="+auth.fullName} alt={auth.fullName} className="w-16 h-16 rounded-2xl object-cover shadow-md group-hover:scale-105 transition-transform" loading="lazy" />
+                       <img src={auth.imageUrl || "/image.png"} alt={auth.fullName} className="w-16 h-16 rounded-2xl object-cover shadow-md group-hover:scale-105 transition-transform" loading="lazy" />
                        <div>
                           <div className="font-bold text-[#002147]">{auth.fullName}</div>
                           <div className="text-xs text-blue-600 font-medium mb-1">{auth.orcidId}</div>
@@ -309,15 +310,9 @@ const ArticleDetails = () => {
                        .filter(c => c.visibility === "Public" || c.visibility === "public")
                        .map(c => (
                         <div key={c.id} className="flex gap-4">
-                           <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-gray-100 shadow-sm">
-                              {c.author?.avatar_url ? (
-                                <img src={c.author.avatar_url} alt="Foydalanuvchi" className="w-full h-full object-cover" loading="lazy" />
-                              ) : (
-                                <div className="w-full h-full bg-gray-100 flex items-center justify-center text-[#002147] font-black text-xs">
-                                   {c.author?.full_name ? c.author.full_name[0] : (c.author?.fullName ? c.author.fullName[0] : "?")}
-                                </div>
-                              )}
-                           </div>
+                            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-gray-100 shadow-sm">
+                               <img src={c.author?.avatar_url || "/image.png"} alt="Foydalanuvchi" className="w-full h-full object-cover" loading="lazy" />
+                            </div>
                            <div className="flex-1 bg-gray-50/50 p-5 rounded-3xl rounded-tl-none border border-gray-100 relative group">
                               <div className="flex justify-between items-center mb-2">
                                  <div className="flex items-center gap-2">

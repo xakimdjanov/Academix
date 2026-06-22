@@ -162,16 +162,13 @@ const Header = () => {
                   title={fullName || "Foydalanuvchi profili"}
                 >
                   <div className="w-9 h-9 rounded-lg bg-white/10 overflow-hidden flex items-center justify-center font-bold">
-                    {avatarUrl ? (
                       <img
-                        src={avatarUrl}
+                        src={avatarUrl || "/image.png"}
                         alt="avatar"
                         className="w-full h-full object-cover"
-                        onError={(e) => (e.currentTarget.style.display = "none")}
+                        loading="lazy"
+                        onError={(e) => (e.currentTarget.src = "/image.png")}
                       />
-                    ) : (
-                      <span className="text-sm">{initials}</span>
-                    )}
                   </div>
                   <div className="leading-tight">
                     <div className="text-sm font-semibold">Boshqaruv paneli</div>
@@ -206,16 +203,13 @@ const Header = () => {
                 className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/10"
               >
                 <div className="w-8 h-8 rounded-lg bg-white/10 overflow-hidden flex items-center justify-center font-bold">
-                  {avatarUrl ? (
                     <img
-                      src={avatarUrl}
+                      src={avatarUrl || "/image.png"}
                       alt="avatar"
                       className="w-full h-full object-cover"
-                      onError={(e) => (e.currentTarget.style.display = "none")}
+                      loading="lazy"
+                      onError={(e) => (e.currentTarget.src = "/image.png")}
                     />
-                  ) : (
-                    <span className="text-xs">{initials}</span>
-                  )}
                 </div>
               </Link>
             )}
@@ -279,16 +273,13 @@ const Header = () => {
             {isLoggedIn && (
               <div className="mb-4 p-3 rounded-xl bg-white/10 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-white/10 overflow-hidden flex items-center justify-center font-bold">
-                  {avatarUrl ? (
                     <img
-                      src={avatarUrl}
+                      src={avatarUrl || "/image.png"}
                       alt="avatar"
                       className="w-full h-full object-cover"
-                      onError={(e) => (e.currentTarget.style.display = "none")}
+                      loading="lazy"
+                      onError={(e) => (e.currentTarget.src = "/image.png")}
                     />
-                  ) : (
-                    <span>{initials}</span>
-                  )}
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-semibold">Boshqaruv paneli</div>

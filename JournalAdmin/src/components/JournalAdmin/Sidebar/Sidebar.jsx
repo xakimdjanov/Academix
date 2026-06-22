@@ -132,6 +132,7 @@ const Sidebar = () => {
                         src={avatarUrl} 
                         alt="profile" 
                         className="w-full h-full object-cover"
+                        loading="lazy"
                         onError={(e) => { e.target.style.display = 'none'; }}
                       />
                     ) : (

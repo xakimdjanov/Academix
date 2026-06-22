@@ -104,11 +104,16 @@ const Profile = () => {
           <div className="md:w-1/3 bg-[#002147] p-10 flex flex-col items-center justify-center text-white relative">
             <div className="relative group mb-6">
               <div className="h-40 w-40 rounded-[2.5rem] bg-white/10 border-4 border-white/20 overflow-hidden flex items-center justify-center backdrop-blur-sm">
-                {user.profile_img ? (
-                  <img src={user.profile_img} alt="Avatar" className="h-full w-full object-cover" />
-                ) : (
-                  <FiUser size={60} className="text-white/40" />
-                )}
+                <img
+                  src={user.profile_img || "/image.png"}
+                  alt="Avatar"
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = "/image.png";
+                  }}
+                />
               </div>
               <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-[2.5rem] opacity-0 group-hover:opacity-100 cursor-pointer transition-all">
                 <FiCamera size={30} />
