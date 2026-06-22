@@ -161,9 +161,22 @@ const Journals = () => {
     const admin_id = localStorage.getItem("admin_id");
     try {
       const res = await adminService.toggleJournalStatus(id, { admin_id });
-      const updatedJournal = res.data.journal;
-      setJournals((prev) => prev.map((j) => (getId(j) === id ? { ...j, is_active: updatedJournal.is_active } : j)));
-      toast.success(`Jurnal holati o'zgartirildi: ${updatedJournal.is_active ? "Yoqildi" : "Bloklandi"}`);
+      // Backend turli struktura qaytarishi mumkin — barcha variantlarni qo'llab-quvvatlaymiz
+      const updatedJournal = res?.data?.journal || res?.data?.data || res?.data || null;
+      
+      setJournals((prev) => prev.map((j) => {
+        if (getId(j) === id) {
+          // Agar backend yangilangan ma'lumot qaytarsa — undan foydalanamiz
+          // Aks holda mavjud holatni teskari qilamiz (toggle)
+          const newIsActive = updatedJournal?.is_active !== undefined ? updatedJournal.is_active : !j.is_active;
+          return { ...j, is_active: newIsActive };
+        }
+        return j;
+      }));
+      
+      const currentJournal = journals.find(j => getId(j) === id);
+      const newState = updatedJournal?.is_active !== undefined ? updatedJournal.is_active : !currentJournal?.is_active;
+      toast.success(`Jurnal holati o'zgartirildi: ${newState ? "Yoqildi" : "Bloklandi"}`);
     } catch (e) {
       toast.error("Failed to toggle status");
     } finally {
