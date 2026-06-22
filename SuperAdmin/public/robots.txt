@@ -1,0 +1,22 @@
+# https://akademix.uz/ robots.txt
+User-agent: *
+Allow: /
+Allow: /journals
+Allow: /journals/*
+Allow: /articles
+Allow: /articles/*
+Allow: /about
+Allow: /contact
+Allow: /pricing
+
+# Disallow authenticated dashboards and authentication pathways to prevent duplicate indexing
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /profile
+Disallow: /notifications
+Disallow: /submit-article
+
+# Sitemaps
+Sitemap: https://akademix.uz/sitemap.xml
