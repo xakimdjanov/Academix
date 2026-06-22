@@ -3,6 +3,7 @@ import { articleService } from "../services/api";
 import { FiSearch, FiFilter, FiFileText, FiArrowRight, FiBookOpen, FiEye, FiClock } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { useSEO } from "../hooks/useSEO";
+import { formatTitle } from "../utils/textFormatter";
 
 const Articles = () => {
   const [articles, setArticles] = useState([]);
@@ -124,7 +125,7 @@ const ArticleCard = ({ article }) => (
     </div>
     
     <h3 className="text-xl font-bold text-[#002147] leading-tight mb-4 group-hover:text-blue-600 transition-colors line-clamp-2">
-      {article.title}
+      {formatTitle(article.title)}
     </h3>
     
     <p className="text-[#6B7280] text-sm line-clamp-3 mb-6 flex-grow leading-relaxed italic">

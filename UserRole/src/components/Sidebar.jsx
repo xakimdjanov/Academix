@@ -185,18 +185,15 @@ const Sidebar = () => {
                     className={`shrink-0 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 overflow-hidden flex items-center justify-center font-bold border border-white/20 shadow-lg transition-all duration-300 ${isCollapsed && !isMobileOpen ? "w-12 h-12" : "w-11 h-11"
                       }`}
                   >
-                    {avatarUrl ? (
                       <img
-                        src={avatarUrl}
+                        src={avatarUrl || "/image.png"}
                         alt="profile"
                         className="w-full h-full object-cover"
+                        loading="lazy"
                         onError={(e) => {
-                          e.currentTarget.style.display = "none";
+                          e.currentTarget.src = "/image.png";
                         }}
                       />
-                    ) : (
-                      <span className="text-sm">{initials}</span>
-                    )}
                   </div>
 
                   {(!isCollapsed || isMobileOpen) && (

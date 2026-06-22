@@ -30,32 +30,19 @@ const StatusBadge = ({ status }) => {
 
 const Avatar = ({ src, name, size = 48 }) => {
   const [error, setError] = useState(false);
-  const initial = name?.trim()?.charAt(0)?.toUpperCase() || "?";
-
-  const colors = [
-    "bg-blue-100 text-blue-700",
-    "bg-emerald-100 text-emerald-700",
-    "bg-rose-100 text-rose-700",
-    "bg-amber-100 text-amber-700",
-    "bg-indigo-100 text-indigo-700",
-  ];
-  const color = colors[(name?.charCodeAt(0) || 0) % colors.length];
 
   return (
     <div
       style={{ width: size, height: size }}
-      className={`flex items-center justify-center overflow-hidden rounded-2xl border border-gray-200 font-semibold ${color}`}
+      className="flex items-center justify-center overflow-hidden rounded-2xl border border-gray-200 font-semibold"
     >
-      {src && !error ? (
-        <img
-          src={src}
-          alt={name || "avatar"}
-          onError={() => setError(true)}
-          className="h-full w-full object-cover"
-        />
-      ) : (
-        <span className="text-sm">{initial}</span>
-      )}
+      <img
+        src={src && !error ? src : "/image.png"}
+        alt={name || "avatar"}
+        onError={() => setError(true)}
+        className="h-full w-full object-cover"
+        loading="lazy"
+      />
     </div>
   );
 };

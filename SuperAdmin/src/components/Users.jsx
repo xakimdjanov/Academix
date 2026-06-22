@@ -103,18 +103,20 @@ const Users = () => {
                       {/* User Info */}
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3 min-w-0">
-                          {showImage ? (
                             <img
-                              src={user.avatar_url}
+                              src={user.avatar_url && !user.avatarError ? user.avatar_url : "/image.png"}
                               alt="avatar"
                               className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100 shrink-0"
-                              onError={() => markAvatarError(uid)} // ✅ rasm yiqilsa harfga o‘tadi
+                              loading="lazy"
+                              onError={(e) => {
+                                if (!user.avatarError) {
+                                  markAvatarError(uid);
+                                } else {
+                                  e.currentTarget.onerror = null;
+                                  e.currentTarget.src = "";
+                                }
+                              }}
                             />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-sm ring-2 ring-gray-100 shrink-0">
-                              {firstLetter}
-                            </div>
-                          )}
 
                           <span className="font-semibold text-gray-700 truncate max-w-[150px]">
                             {name}

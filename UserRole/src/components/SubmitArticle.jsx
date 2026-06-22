@@ -690,6 +690,7 @@ const SubmitArticle = () => {
                                            src={authorImages[idx] ? URL.createObjectURL(authorImages[idx]) : author.imageUrl} 
                                            alt="Preview" 
                                            className="w-full h-full object-cover"
+                                           loading="lazy"
                                         />
                                      </div>
                                   )}

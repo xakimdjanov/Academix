@@ -266,11 +266,16 @@ const Articles = () => {
                             <td className="py-5 px-6">
                                 <div className="flex items-center gap-3">
                                     <div className="h-8 w-8 bg-slate-100 rounded-full overflow-hidden flex items-center justify-center font-bold text-slate-500 text-[10px] shrink-0">
-                                        {a.author?.avatar_url ? (
-                                          <img src={a.author.avatar_url} alt="avatar" className="w-full h-full object-cover" onError={(e)=>e.currentTarget.style.display='none'} />
-                                        ) : (
-                                          <span>{a.author?.full_name?.[0] || "?"}</span>
-                                        )}
+                                        <img
+                                          src={a.author?.avatar_url || "/image.png"}
+                                          alt="avatar"
+                                          className="w-full h-full object-cover"
+                                          loading="lazy"
+                                          onError={(e) => {
+                                            e.currentTarget.onerror = null;
+                                            e.currentTarget.src = "/image.png";
+                                          }}
+                                        />
                                     </div>
                                     <div className="min-w-0">
                                         <div className="font-bold text-gray-700 text-xs truncate max-w-[120px]">{a.author?.full_name || "Noma'lum"}</div>
@@ -394,11 +399,16 @@ const Articles = () => {
                             </h3>
                             <div className="flex items-center gap-4">
                                 <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center font-bold text-blue-600 shadow-sm border border-slate-100 text-xl overflow-hidden shrink-0">
-                                    {selectedArticle.author?.avatar_url ? (
-                                        <img src={selectedArticle.author.avatar_url} alt="avatar" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <span>{selectedArticle.author?.full_name?.[0] || "?"}</span>
-                                    )}
+                                    <img
+                                      src={selectedArticle.author?.avatar_url || "/image.png"}
+                                      alt="avatar"
+                                      className="w-full h-full object-cover"
+                                      loading="lazy"
+                                      onError={(e) => {
+                                        e.currentTarget.onerror = null;
+                                        e.currentTarget.src = "/image.png";
+                                      }}
+                                    />
                                 </div>
                                 <div>
                                     <div className="font-bold text-slate-800 text-lg">{selectedArticle.author?.full_name || "Noma'lum"}</div>
@@ -448,11 +458,16 @@ const Articles = () => {
                                             className="h-14 w-14 bg-white rounded-2xl flex items-center justify-center font-bold text-blue-600 shadow-sm border border-slate-100 shrink-0 overflow-hidden cursor-zoom-in group/img"
                                             onClick={() => auth.imageUrl && setSelectedImg(auth.imageUrl)}
                                           >
-                                              {auth.imageUrl ? (
-                                                  <img src={auth.imageUrl} alt={auth.fullName} className="w-full h-full object-cover group-hover/img:scale-110 transition-transform" />
-                                              ) : (
-                                                  <span className="text-xl">{auth.fullName?.[0] || auth.name?.[0] || "?"}</span>
-                                              )}
+                                              <img
+                                                src={auth.imageUrl || "/image.png"}
+                                                alt={auth.fullName}
+                                                className="w-full h-full object-cover group-hover/img:scale-110 transition-transform"
+                                                loading="lazy"
+                                                onError={(e) => {
+                                                  e.currentTarget.onerror = null;
+                                                  e.currentTarget.src = "/image.png";
+                                                }}
+                                              />
                                           </div>
                                           <div className="min-w-0">
                                               <div className="font-bold text-slate-800 truncate mb-1">{auth.fullName || auth.name}</div>

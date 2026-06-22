@@ -16,6 +16,7 @@ import {
 import { journalService, articleService, settingsService, bobService } from "../services/api";
 import { useSEO } from "../hooks/useSEO";
 import toast, { Toaster } from "react-hot-toast";
+import { formatTitle } from "../utils/textFormatter";
 
 const JournalDetail = () => {
   const { slug } = useParams();
@@ -168,7 +169,7 @@ const JournalDetail = () => {
                       <FiEye size={12}/> {journal.view_count || 0} ko'rildi
                    </span>
                 </div>
-                <h1 className="text-3xl md:text-5xl font-black mb-4 leading-tight">{journal.journal_name || journal.name}</h1>
+                <h1 className="text-3xl md:text-5xl font-black mb-4 leading-tight">{formatTitle(journal.journal_name || journal.name)}</h1>
                 <p className="text-blue-100/70 text-lg max-w-3xl italic">
                    "{journal.short_description || "Ilmiy tadqiqotlar va akademik mukammallik uchun yetakchi nashriyot maydoni."}"
                 </p>
@@ -334,7 +335,7 @@ const JournalDetail = () => {
                                        </div>
                                        <div className="flex-1 min-w-0">
                                           <h3 className="text-lg font-bold text-[#002147] mb-2 leading-snug group-hover:text-blue-600 transition-colors truncate">
-                                             {article.title}
+                                             {formatTitle(article.title)}
                                           </h3>
                                           <p className="text-xs text-gray-500 mb-3">
                                              Muallif: {article.authors ? (typeof article.authors === 'string' ? article.authors : (Array.isArray(article.authors) ? article.authors.map(x => x.fullName || x.name || x).join(', ') : '')) : '-'}
@@ -464,7 +465,7 @@ const JournalDetail = () => {
                                  </div>
                                  <div className="flex-1">
                                     <h3 className="text-lg font-bold text-[#002147] mb-2 leading-snug group-hover:text-blue-600 transition-colors">
-                                       {article.title}
+                                       {formatTitle(article.title)}
                                     </h3>
                                     <div className="flex items-center gap-4 mb-3">
                                        <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest">{new Date(article.createdAt).toLocaleDateString()}</p>

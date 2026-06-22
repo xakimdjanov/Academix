@@ -17,6 +17,7 @@ import toast from "react-hot-toast";
 
 import { chatService, articleService, ReviewAssignments } from "../services/api";
 import { getUserIdFromToken } from "../utils/getUserIdFromToken";
+import { formatTitle } from "../utils/textFormatter";
 
 // ---- Helpers ----
 const safeDate = (d) => (d ? new Date(d) : new Date(0));
@@ -261,7 +262,7 @@ const Chat = () => {
         if (!articleExists && article) {
           editorData.articles.push({
             articleId,
-            title: article?.title || article?.name || `Article #${articleId}`,
+            title: formatTitle(article?.title || article?.name || `Article #${articleId}`),
             assigned_at: r?.createdAt || r?.created_at
           });
         }
@@ -798,6 +799,7 @@ const Chat = () => {
                                   alt="attachment"
                                   className="mb-2 max-h-64 w-full rounded-lg object-cover shadow-sm cursor-pointer hover:opacity-90 transition"
                                   onClick={() => window.open(m.image_url, '_blank')}
+                                  loading="lazy"
                                 />
                               )}
 
@@ -884,6 +886,7 @@ const Chat = () => {
                               src={imagePreview} 
                               className="h-20 w-20 rounded-lg object-cover border-2 border-gray-200" 
                               alt="preview" 
+                              loading="lazy"
                             />
                             <button
                               onClick={clearImage}

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { formatTitle } from "../utils/textFormatter";
 import { 
   FiArrowLeft, 
   FiFileText, 
@@ -112,7 +113,7 @@ const MyArticleDetail = () => {
                     <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest">{article.status}</span>
                     <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1"><FiEye size={12}/> {article.view_count || 0}</span>
                  </div>
-                 <h1 className="text-3xl font-black mb-4 leading-tight">{article.title}</h1>
+                 <h1 className="text-3xl font-black mb-4 leading-tight">{formatTitle(article.title)}</h1>
                  <p className="text-blue-200/60 font-medium">Topshirilgan sana: {formatDate(article.createdAt)}</p>
               </div>
               <div className="flex gap-3">
@@ -148,7 +149,7 @@ const MyArticleDetail = () => {
 
             {/* Details Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <DetailCard icon={<FiLayers/>} label="Jurnal" value={article.journal?.name || "Global Science Journal"} />
+               <DetailCard icon={<FiLayers/>} label="Jurnal" value={formatTitle(article.journal?.name || "Global Science Journal")} />
                <DetailCard icon={<FiUser/>} label="Toifa" value={article.category || "Ilmiy maqola"} />
                <DetailCard icon={<FiClock/>} label="Oxirgi tahrir" value={formatDate(article.updatedAt)} />
                <DetailCard icon={<FiUser/>} label="Maqola tili" value={article.language || "O'zbek"} />

@@ -163,7 +163,7 @@ const Suggestions = () => {
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                            {selected.images.map((img, i) => (
                               <a key={i} href={img} target="_blank" rel="noreferrer" className="aspect-video rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:ring-4 hover:ring-blue-50 transition-all">
-                                 <img src={img} alt="" className="w-full h-full object-cover" />
+                                 <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
                               </a>
                            ))}
                         </div>

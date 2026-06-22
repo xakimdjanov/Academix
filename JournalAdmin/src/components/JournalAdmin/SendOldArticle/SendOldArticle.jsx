@@ -666,6 +666,7 @@ const SendOldArticle = () => {
                                   src={author.photoPreview} 
                                   alt="Preview" 
                                   className="w-full h-full object-cover"
+                                  loading="lazy"
                                 />
                               </div>
                             )}

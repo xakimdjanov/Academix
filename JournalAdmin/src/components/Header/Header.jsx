@@ -173,6 +173,7 @@ const Header = () => {
                         src={avatarUrl}
                         alt="avatar"
                         className="w-full h-full object-cover"
+                        loading="lazy"
                         onError={(e) => (e.currentTarget.style.display = "none")}
                       />
                     ) : (
@@ -217,6 +218,7 @@ const Header = () => {
                       src={avatarUrl}
                       alt="avatar"
                       className="w-full h-full object-cover"
+                      loading="lazy"
                       onError={(e) => (e.currentTarget.style.display = "none")}
                     />
                   ) : (
@@ -298,6 +300,7 @@ const Header = () => {
                       src={avatarUrl}
                       alt="avatar"
                       className="w-full h-full object-cover"
+                      loading="lazy"
                       onError={(e) => (e.currentTarget.style.display = "none")}
                     />
                   ) : (

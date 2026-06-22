@@ -3,6 +3,7 @@ import { journalService } from "../services/api";
 import { FiSearch, FiFilter, FiLayers, FiArrowRight, FiBookOpen, FiEye } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { useSEO } from "../hooks/useSEO";
+import { formatTitle } from "../utils/textFormatter";
 
 const Journals = () => {
   const [journals, setJournals] = useState([]);
@@ -124,7 +125,7 @@ const JournalCard = ({ journal }) => (
     </div>
     
     <h3 className="text-2xl font-bold text-[#002147] leading-tight mb-4 group-hover:text-blue-600 transition-colors">
-      {journal.journal_name || journal.name}
+      {formatTitle(journal.journal_name || journal.name)}
     </h3>
     
     <p className="text-[#6B7280] text-sm line-clamp-3 mb-6 flex-grow leading-relaxed">

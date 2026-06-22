@@ -160,7 +160,7 @@ const SuggestionDetail = () => {
                           rel="noreferrer" 
                           className="group relative aspect-video rounded-3xl overflow-hidden border border-gray-100 shadow-lg hover:ring-8 hover:ring-blue-50 transition-all bg-gray-100"
                        >
-                          <img src={img} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                          <img src={img} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
                           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-bold">
                              Kattalashtirish
                           </div>

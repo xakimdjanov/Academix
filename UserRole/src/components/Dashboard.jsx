@@ -13,6 +13,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { articleService, notificationService } from "../services/api";
 import { getUserIdFromToken } from "../utils/getUserIdFromToken";
 import { useNavigate } from "react-router-dom";
+import { formatTitle } from "../utils/textFormatter";
 
 const formatBadge = (n) => (n > 99 ? "99+" : String(n));
 
@@ -259,7 +260,7 @@ const Dashboard = () => {
                 >
                   <div className="min-w-0">
                     <div className="truncate text-sm font-semibold text-gray-900">
-                      {a.title}
+                      {formatTitle(a.title)}
                     </div>
                     <div className="text-xs text-gray-500">
                       {new Date(a.createdAt).toLocaleDateString()}
