@@ -63,6 +63,7 @@ const Articles = () => {
   const [editAbstract, setEditAbstract] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editKeywords, setEditKeywords] = useState("");
+  const [editViewCount, setEditViewCount] = useState(0);
 
   useEffect(() => {
     if (selectedArticle) {
@@ -76,6 +77,7 @@ const Articles = () => {
           ? selectedArticle.keywords
           : ""
       );
+      setEditViewCount(selectedArticle.view_count ?? 0);
       setIsEditingDetails(false);
     }
   }, [selectedArticle]);
@@ -91,7 +93,8 @@ const Articles = () => {
         title: editTitle.trim(),
         abstract: editAbstract.trim(),
         category: editCategory.trim(),
-        keywords: editKeywords.split(",").map(k => k.trim()).filter(Boolean)
+        keywords: editKeywords.split(",").map(k => k.trim()).filter(Boolean),
+        view_count: Number(editViewCount) || 0,
       };
       
       const artId = selectedArticle.id || selectedArticle._id;
@@ -637,8 +640,31 @@ const Articles = () => {
                                     </div>
                                 )}
                             </div>
-                         </div>
-                      </div>
+
+                             {/* View Count */}
+                             <div>
+                                 <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                                     <FiEye className="text-blue-600"/> Ko'rishlar soni
+                                 </h3>
+                                 {isEditingDetails ? (
+                                     <input
+                                         type="number"
+                                         min="0"
+                                         value={editViewCount}
+                                         onChange={(e) => setEditViewCount(e.target.value)}
+                                         placeholder="Ko'rishlar soni..."
+                                         className="w-full text-xs text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500"
+                                     />
+                                 ) : (
+                                     <div className="flex items-center">
+                                         <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-50 text-blue-700 rounded-xl text-[11px] font-black border border-blue-100">
+                                             <FiEye size={13} /> {selectedArticle.view_count ?? 0} marta ko'rildi
+                                         </span>
+                                     </div>
+                                 )}
+                             </div>
+                          </div>
+                       </div>
 
                       {/* Status Management */}
                       <div className="pt-6 border-t border-slate-100">
