@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import { 
   FiCheckCircle, FiClock, FiSlash, FiPlay, FiBook, FiDollarSign, 
-  FiEye, FiXCircle, FiUser, FiMail, FiGlobe, FiInfo 
+  FiEye, FiXCircle, FiUser, FiMail, FiGlobe, FiInfo, FiEdit3
 } from "react-icons/fi";
 import { journalService, adminService } from "../services/api";
 
@@ -331,34 +331,48 @@ const Journals = () => {
                         <StatusBadge j={j} />
                       </td>
 
-                      <td className="py-4 px-6 text-center flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => setSelectedJournal(j)}
-                          className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-                          title="Tahrirlash / Batafsil"
-                        >
-                          <FiEye size={14} />
-                        </button>
-                        {!j.is_approved_by_admin ? (
+                      <td className="py-4 px-6 text-center">
+                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                          {/* Ko'rish tugmasi */}
                           <button
-                            onClick={() => handleApprove(id)}
-                            disabled={busyId === id}
-                            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-white hover:bg-emerald-600 transition-all disabled:opacity-50 shadow-sm shadow-emerald-100"
+                            onClick={() => { setSelectedJournal(j); setIsEditingDetails(false); }}
+                            className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                            title="Batafsil ko'rish"
                           >
-                            <FiCheckCircle /> {busyId === id ? "..." : "Approve"}
+                            <FiEye size={14} />
                           </button>
-                        ) : (
+
+                          {/* Tahrirlash tugmasi */}
                           <button
-                            onClick={() => handleToggleStatus(id)}
-                            disabled={busyId === id}
-                            className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${j.is_active
-                              ? "bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100"
-                              : "bg-blue-700 text-white hover:bg-blue-800 shadow-sm shadow-blue-100"
-                              }`}
+                            onClick={() => { setSelectedJournal(j); setIsEditingDetails(true); }}
+                            className="p-1.5 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all shadow-sm"
+                            title="Tahrirlash"
                           >
-                            {j.is_active ? <><FiSlash /> {busyId === id ? "..." : "Disable"}</> : <><FiPlay /> {busyId === id ? "..." : "Activate"}</>}
+                            <FiEdit3 size={14} />
                           </button>
-                        )}
+
+                          {/* Tasdiqlash / Status tugmasi */}
+                          {!j.is_approved_by_admin ? (
+                            <button
+                              onClick={() => handleApprove(id)}
+                              disabled={busyId === id}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-white hover:bg-emerald-600 transition-all disabled:opacity-50 shadow-sm shadow-emerald-100"
+                            >
+                              <FiCheckCircle size={12} /> {busyId === id ? "..." : "Tasdiqlash"}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleToggleStatus(id)}
+                              disabled={busyId === id}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${j.is_active
+                                ? "bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100"
+                                : "bg-blue-700 text-white hover:bg-blue-800 shadow-sm shadow-blue-100"
+                                }`}
+                            >
+                              {j.is_active ? <><FiSlash size={12} /> {busyId === id ? "..." : "Bloklash"}</> : <><FiPlay size={12} /> {busyId === id ? "..." : "Yoqish"}</>}
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

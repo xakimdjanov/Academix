@@ -354,7 +354,26 @@ const Articles = () => {
                             </td>
 
                             <td className="py-5 px-6">
-                            <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                                {/* Ko'rish tugmasi */}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setSelectedArticle(a); setIsEditingDetails(false); }}
+                                    className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                    title="Batafsil ko'rish"
+                                >
+                                    <FiEye size={16} />
+                                </button>
+
+                                {/* Tahrirlash tugmasi */}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setSelectedArticle(a); setIsEditingDetails(true); }}
+                                    className="p-2 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all shadow-sm"
+                                    title="Tahrirlash"
+                                >
+                                    <FiEdit3 size={16} />
+                                </button>
+
+                                {/* Tasdiqlash / Yashirish tugmasi */}
                                 {!a.is_approved_by_admin ? (
                                     <button
                                         onClick={(e) => handleApprove(e, id)}
@@ -374,13 +393,8 @@ const Articles = () => {
                                         {a.is_active ? <FiSlash size={16} /> : <FiPlay size={16} />}
                                     </button>
                                 )}
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setSelectedArticle(a); }}
-                                    className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-                                    title="Batafsil"
-                                >
-                                    <FiEye size={16} />
-                                </button>
+
+                                {/* PDF yuklab olish */}
                                 {a.file_url && (
                                 <a 
                                     href={a.file_url} 
@@ -393,6 +407,8 @@ const Articles = () => {
                                     <FiDownload size={16} />
                                 </a>
                                 )}
+
+                                {/* O'chirish tugmasi */}
                                 <button
                                 onClick={(e) => handleDelete(e, id)}
                                 className="p-2 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm"
@@ -724,9 +740,6 @@ const Articles = () => {
 };
 
 // SVG Icons
-const FiEdit3 = ({ className }) => (
-    <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" className={className} height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-);
 const FiAlertCircle = ({ className }) => (
     <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" className={className} height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
 );
