@@ -56,6 +56,37 @@ const Articles = () => {
 
   // Lightbox state
   const [selectedImg, setSelectedImg] = useState(null);
+  
+  // Author Avatar component with fallback
+  const [authorImgError, setAuthorImgError] = useState({});
+  const AuthorAvatar = ({ author, size = "w-8 h-8", fontSize = "text-xs", isZoomable = false }) => {
+    const name = author?.full_name || author?.fullName || author?.name || "Noma'lum";
+    const letter = name.charAt(0).toUpperCase();
+    const avatarUrl = author?.avatar_url || author?.imageUrl;
+    const key = author?.id || author?._id || author?.email || name;
+    const showImg = Boolean(avatarUrl && String(avatarUrl).trim()) && !authorImgError[key];
+    const content = showImg ? (
+      <img
+        src={avatarUrl}
+        alt={name}
+        className="w-full h-full object-cover group-hover/img:scale-110 transition-transform"
+        loading="lazy"
+        onError={() => setAuthorImgError((p) => ({ ...p, [key]: true }))}
+      />
+    ) : (
+      <div className="w-full h-full bg-gradient-to-tr from-blue-700 to-indigo-600 text-white flex items-center justify-center font-bold shadow-sm">
+        <span className={fontSize}>{letter}</span>
+      </div>
+    );
+    return (
+      <div 
+        className={`${size} bg-white rounded-2xl flex items-center justify-center font-bold text-blue-600 shadow-sm border border-slate-100 shrink-0 overflow-hidden ${isZoomable && showImg ? 'cursor-zoom-in group/img' : ''}`}
+        onClick={isZoomable && showImg ? () => setSelectedImg(avatarUrl) : undefined}
+      >
+        {content}
+      </div>
+    );
+  };
 
   // Edit Mode state
   const [isEditingDetails, setIsEditingDetails] = useState(false);
@@ -332,18 +363,7 @@ const Articles = () => {
 
                             <td className="py-5 px-6">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-8 w-8 bg-slate-100 rounded-full overflow-hidden flex items-center justify-center font-bold text-slate-500 text-[10px] shrink-0">
-                                        <img
-                                          src={a.author?.avatar_url || "/image.png"}
-                                          alt="avatar"
-                                          className="w-full h-full object-cover"
-                                          loading="lazy"
-                                          onError={(e) => {
-                                            e.currentTarget.onerror = null;
-                                            e.currentTarget.src = "/image.png";
-                                          }}
-                                        />
-                                    </div>
+                                    <AuthorAvatar author={a.author} size="h-8 w-8" />
                                     <div className="min-w-0">
                                         <div className="font-bold text-gray-700 text-xs truncate max-w-[120px]">{a.author?.full_name || "Noma'lum"}</div>
                                         <div className="text-[10px] text-gray-400 truncate max-w-[120px]">{a.author?.email || "Email yo'q"}</div>
@@ -502,18 +522,7 @@ const Articles = () => {
                                 <FiUser className="text-blue-600"/> Maqola yuboruvchi
                             </h3>
                             <div className="flex items-center gap-4">
-                                <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center font-bold text-blue-600 shadow-sm border border-slate-100 text-xl overflow-hidden shrink-0">
-                                    <img
-                                      src={selectedArticle.author?.avatar_url || "/image.png"}
-                                      alt="avatar"
-                                      className="w-full h-full object-cover"
-                                      loading="lazy"
-                                      onError={(e) => {
-                                        e.currentTarget.onerror = null;
-                                        e.currentTarget.src = "/image.png";
-                                      }}
-                                    />
-                                </div>
+                                <AuthorAvatar author={selectedArticle.author} size="h-16 w-16" fontSize="text-xl" isZoomable={true} />
                                 <div>
                                     <div className="font-bold text-slate-800 text-lg">{selectedArticle.author?.full_name || "Noma'lum"}</div>
                                     <div className="text-sm text-slate-400 font-medium flex items-center gap-1.5 mt-0.5">
@@ -558,21 +567,6 @@ const Articles = () => {
                               {selectedArticle.authors?.map((auth, i) => (
                                   <div key={i} className="flex flex-col gap-4 p-5 rounded-[2rem] bg-slate-50 border border-slate-100 group hover:border-blue-100 transition-all">
                                       <div className="flex items-center gap-4">
-                                          <div 
-                                            className="h-14 w-14 bg-white rounded-2xl flex items-center justify-center font-bold text-blue-600 shadow-sm border border-slate-100 shrink-0 overflow-hidden cursor-zoom-in group/img"
-                                            onClick={() => auth.imageUrl && setSelectedImg(auth.imageUrl)}
-                                          >
-                                              <img
-                                                src={auth.imageUrl || "/image.png"}
-                                                alt={auth.fullName}
-                                                className="w-full h-full object-cover group-hover/img:scale-110 transition-transform"
-                                                loading="lazy"
-                                                onError={(e) => {
-                                                  e.currentTarget.onerror = null;
-                                                  e.currentTarget.src = "/image.png";
-                                                }}
-                                              />
-                                          </div>
                                           <div className="min-w-0">
                                               <div className="font-bold text-slate-800 truncate mb-1">{auth.fullName || auth.name}</div>
                                               {auth.phone && (
