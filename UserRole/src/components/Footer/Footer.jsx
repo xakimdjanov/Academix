@@ -95,11 +95,11 @@ const Footer = () => {
               <div className="text-sm space-y-3 pb-6 md:pb-0">
                 <p className="flex flex-col">
                   <span className="text-gray-500 text-xs font-bold uppercase mb-1">Elektron pochta</span>
-                  <a href="mailto:support@academix.uz" className="text-white hover:text-blue-400">support@academix.uz</a>
+                  <a href="mailto:stacknowa@gmail.com" className="text-white hover:text-blue-400">stacknowa@gmail.com</a>
                 </p>
                 <p className="flex flex-col">
                   <span className="text-gray-500 text-xs font-bold uppercase mb-1">Telefon</span>
-                  <a href="tel:+998711234567" className="text-white hover:text-blue-400">+998 (71) 123-45-67</a>
+                  <a href="tel:+998200146667" className="text-white hover:text-blue-400">+998 (20) 014-66-67</a>
                 </p>
               </div>
             </div>

@@ -78,7 +78,7 @@ const Suggestions = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         {/* Info Column */}
-        <div className="lg:col-span-5 space-y-8 sticky top-24">
+        <div className="lg:col-span-5 space-y-8 lg:sticky lg:top-24">
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-xs font-black uppercase tracking-widest mb-6">
                <FiMessageSquare /> Takliflar oynasi

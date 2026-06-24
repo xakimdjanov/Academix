@@ -12,6 +12,8 @@ import Contact from "./pages/Contact";
 import About from "./pages/About";
 import Pricing from "./pages/Pricing";
 import JournalDetail from "./pages/JournalDetail";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 
 import Dashboard from "./components/Dashboard";
 import MyArticles from "./components/MyArticles";
@@ -59,6 +61,8 @@ const App = () => {
           <Route path="/forgot-password" element={<ForgotPass />} />
           <Route path="/reset-password" element={<ResetPass />} />
           <Route path="/suggestions" element={<Suggestions />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
         </Route>
 
         {/* ✅ Auth routes (Layoutsiz olib tashlandi, MainLayout ga ko'chirildi) */}
