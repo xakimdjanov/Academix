@@ -73,6 +73,7 @@ const SubmitArticle = () => {
   const [articleFile, setArticleFile] = useState(null);
 
   const [submitting, setSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
@@ -133,7 +134,7 @@ const SubmitArticle = () => {
         
         // If initialJournalId is provided, try to find it
         if (initialJournalId && !isEdit) {
-           const found = jList.find(j => String(j.id) === String(initialJournalId));
+           const found = approvedData.find(j => String(j.id) === String(initialJournalId));
            if (found) setSelectedJournalId(initialJournalId);
         }
       } catch {
@@ -360,27 +361,14 @@ const SubmitArticle = () => {
       if (isEdit) {
         await articleService.update(id, formData);
         toast.success("Maqola muvaffaqiyatli yangilandi!");
+        setTimeout(() => {
+          navigate("/dashboard/my-articles");
+        }, 2000);
       } else {
         await articleService.create(formData);
         toast.success("Maqola muvaffaqiyatli yuborildi!", { duration: 5000 });
+        setIsSubmitted(true);
       }
-
-      setTimeout(() => {
-        if (isEdit) {
-          navigate("/dashboard/my-articles");
-        } else {
-          setSelectedJournalId("");
-          setSelectedBobId("");
-          setTitle("");
-          setAbstract("");
-          setKeywords([]);
-          setCategory("");
-          setLanguage("");
-          setAuthors([{ ...emptyAuthor }]);
-          setAuthorImages({});
-          setArticleFile(null);
-        }
-      }, 2000);
     } catch (err) {
       const msg = err?.response?.data?.message || "Xato yuz berdi";
       toast.error(msg);
@@ -389,6 +377,88 @@ const SubmitArticle = () => {
       setSubmitting(false);
     }
   };
+
+  if (isSubmitted) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8 flex items-center justify-center animate-in fade-in zoom-in-95 duration-300">
+        <div className="max-w-xl w-full bg-white shadow-2xl rounded-3xl border border-gray-100 overflow-hidden mt-10">
+          <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-8 text-center text-white relative">
+            {/* Decorative shapes */}
+            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-xl -mr-6 -mt-6"></div>
+            <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/10 rounded-full blur-lg -ml-6 -mb-6"></div>
+            
+            <div className="mx-auto w-20 h-20 bg-white text-emerald-600 rounded-full flex items-center justify-center shadow-lg mb-4">
+              <FiCheck size={40} className="stroke-[3]" />
+            </div>
+            <h2 className="text-2xl font-extrabold tracking-wide">Tabriklaymiz!</h2>
+            <p className="mt-2 text-emerald-50 font-medium">Maqola muvaffaqiyatli yuborildi.</p>
+          </div>
+          
+          <div className="p-8 space-y-6 text-center">
+            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 text-slate-700">
+              <p className="text-base font-semibold mb-4 text-[#002147]">
+                Taklif va shikoyatlar uchun:
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a
+                  href="https://t.me/stacknowa_admin"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all"
+                >
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.24-5.52 3.64-.52.36-.99.53-1.4.52-.46-.01-1.34-.26-2-.48-.8-.27-1.45-.42-1.39-.89.03-.24.37-.49 1.02-.74 4-1.74 6.67-2.88 8-3.43 3.82-1.57 4.61-1.84 5.13-1.85.11 0 .37.03.54.17.14.12.18.28.2.44-.02.07-.02.13-.03.2z" />
+                  </svg>
+                  @stacknowa_admin
+                </a>
+                
+                <a
+                  href="https://t.me/academix1_bot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all"
+                >
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.24-5.52 3.64-.52.36-.99.53-1.4.52-.46-.01-1.34-.26-2-.48-.8-.27-1.45-.42-1.39-.89.03-.24.37-.49 1.02-.74 4-1.74 6.67-2.88 8-3.43 3.82-1.57 4.61-1.84 5.13-1.85.11 0 .37.03.54.17.14.12.18.28.2.44-.02.07-.02.13-.03.2z" />
+                  </svg>
+                  @academix1_bot
+                </a>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <button
+                onClick={() => {
+                  setSelectedJournalId("");
+                  setSelectedBobId("");
+                  setTitle("");
+                  setAbstract("");
+                  setKeywords([]);
+                  setCategory("");
+                  setCustomCategory("");
+                  setLanguage("");
+                  setAuthors([{ ...emptyAuthor }]);
+                  setAuthorImages({});
+                  setArticleFile(null);
+                  setStep(1);
+                  setIsSubmitted(false);
+                }}
+                className="flex-1 px-6 py-3.5 border-2 border-[#002147] text-[#002147] hover:bg-[#002147]/5 font-bold rounded-2xl transition"
+              >
+                Yangi maqola yuborish
+              </button>
+              <button
+                onClick={() => navigate("/dashboard/my-articles")}
+                className="flex-1 px-6 py-3.5 bg-[#002147] text-white hover:bg-[#001a3a] font-bold rounded-2xl transition shadow-lg"
+              >
+                Mening maqolalarim
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
