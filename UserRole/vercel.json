@@ -1,5 +1,13 @@
 {
+  "functions": {
+    "api/seo-handler.js": {
+      "includeFiles": "dist/index.html"
+    }
+  },
   "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    { "source": "/articles/:id", "destination": "/api/seo-handler?type=article&id=:id" },
+    { "source": "/journals/:slug", "destination": "/api/seo-handler?type=journal&slug=:slug" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

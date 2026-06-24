@@ -77,7 +77,19 @@ const ArticleDetails = () => {
       : undefined,
     image: article?.journal?.banner_url || article?.journal?.cover_image_url,
     url: `https://akademix.uz/articles/${article?.slug || id}`,
-    type: "article"
+    type: "article",
+    googleScholar: article ? {
+      title: article.title,
+      authors: Array.isArray(article.authors) ? article.authors.map(a => a.fullName).filter(Boolean) : [],
+      publicationDate: article.createdAt,
+      journalTitle: article.journal?.name,
+      pdfUrl: article.file_url,
+      doi: article.doi || (Array.isArray(article.authors) && article.authors[0]?.doi) || undefined,
+      language: article.language,
+      issn: article.journal?.issn,
+      volume: article.bob?.volume,
+      issue: article.bob?.name
+    } : undefined
   });
 
   const fetchAll = async () => {

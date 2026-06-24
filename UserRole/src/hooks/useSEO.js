@@ -14,7 +14,7 @@ import { useEffect } from "react";
  * @param {string} url         — Canonical URL (https://akademix.uz/...)
  * @param {string} type        — OG type: 'website' | 'article' (default: 'website')
  */
-export const useSEO = ({ title, description, keywords, image, url, type = "website" }) => {
+export const useSEO = ({ title, description, keywords, image, url, type = "website", googleScholar }) => {
   useEffect(() => {
     const SITE_NAME = "Academix | Akademix.uz";
     const FALLBACK_DESC =
@@ -38,7 +38,11 @@ export const useSEO = ({ title, description, keywords, image, url, type = "websi
 
     // ── Helper: upsert any <meta> tag ─────────────────────────────────
     const setMeta = (attr, attrValue, contentValue) => {
-      if (!contentValue) return;
+      if (contentValue === undefined || contentValue === null) {
+        let el = document.querySelector(`meta[${attr}="${attrValue}"]`);
+        if (el) el.remove();
+        return;
+      }
       let el = document.querySelector(`meta[${attr}="${attrValue}"]`);
       if (!el) {
         el = document.createElement("meta");
@@ -90,5 +94,43 @@ export const useSEO = ({ title, description, keywords, image, url, type = "websi
       setMeta("property", "article:publisher", "https://akademix.uz");
     }
 
-  }, [title, description, keywords, image, url, type]);
+    // ── 7. Google Scholar citation tags ─────────────────────────────
+    // Clean up any old Scholar tags first to prevent page-to-page pollution
+    document.querySelectorAll('meta[name^="citation_"]').forEach(el => el.remove());
+
+    if (googleScholar) {
+      setMeta("name", "citation_title", googleScholar.title);
+      
+      if (googleScholar.publicationDate) {
+        const dateObj = new Date(googleScholar.publicationDate);
+        if (!isNaN(dateObj.getTime())) {
+          const yyyy = dateObj.getFullYear();
+          const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const dd = String(dateObj.getDate()).padStart(2, '0');
+          setMeta("name", "citation_publication_date", `${yyyy}/${mm}/${dd}`);
+        }
+      }
+      
+      setMeta("name", "citation_journal_title", googleScholar.journalTitle);
+      setMeta("name", "citation_pdf_url", googleScholar.pdfUrl);
+      setMeta("name", "citation_doi", googleScholar.doi);
+      setMeta("name", "citation_language", googleScholar.language);
+      setMeta("name", "citation_issn", googleScholar.issn);
+      setMeta("name", "citation_volume", googleScholar.volume);
+      setMeta("name", "citation_issue", googleScholar.issue);
+
+      // Multiple citation_author tags
+      if (Array.isArray(googleScholar.authors)) {
+        googleScholar.authors.forEach(author => {
+          if (author) {
+            const el = document.createElement("meta");
+            el.setAttribute("name", "citation_author");
+            el.setAttribute("content", author);
+            document.head.appendChild(el);
+          }
+        });
+      }
+    }
+
+  }, [title, description, keywords, image, url, type, googleScholar]);
 };
