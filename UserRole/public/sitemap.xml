@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-  <!-- ===== Asosiy sahifalar ===== -->
+  <!-- Asosiy sahifalar -->
   <url>
     <loc>https://akademix.uz/</loc>
     <lastmod>2026-06-24</lastmod>
@@ -39,26 +38,8 @@
     <changefreq>monthly</changefreq>
     <priority>0.60</priority>
   </url>
-  <url>
-    <loc>https://akademix.uz/suggestions</loc>
-    <lastmod>2026-06-24</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.50</priority>
-  </url>
-  <url>
-    <loc>https://akademix.uz/privacy</loc>
-    <lastmod>2026-06-24</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.50</priority>
-  </url>
-  <url>
-    <loc>https://akademix.uz/terms</loc>
-    <lastmod>2026-06-24</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.50</priority>
-  </url>
 
-  <!-- ===== Jurnallar: 1 ta ===== -->
+  <!-- Jurnallar: 1 ta -->
   <url>
     <loc>https://akademix.uz/journals/ilm-tadqiqot-va-taraqqiyot</loc>
     <lastmod>2026-06-24</lastmod>
@@ -66,39 +47,39 @@
     <priority>0.85</priority>
   </url>
 
-  <!-- ===== Maqolalar: 6 ta ===== -->
+  <!-- Maqolalar: 6 ta -->
   <url>
-    <loc>https://akademix.uz/articles/treshchinostojkost-vnetsentrenno-szhatykh-zhelezobetonnykh-elementov-v-prirodnykh-usloviyakh-respubliki-uzbekistan</loc>
+    <loc>https://akademix.uz/articles/7</loc>
     <lastmod>2026-06-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://akademix.uz/articles/paxta-xom-ashyosini-quritishda-isiqlik-sarfi-taqsimlanishi-va-foydali-ish-koeffisentini-aniqlash</loc>
+    <loc>https://akademix.uz/articles/6</loc>
     <lastmod>2026-06-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://akademix.uz/articles/turli-hududlarda-yetishtirilgan-soyaning-olcham-massa-korsatkichlari</loc>
+    <loc>https://akademix.uz/articles/5</loc>
     <lastmod>2026-06-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://akademix.uz/articles/case-study-metodidan-foydalanish-orqali-talabalarning-kasbiy-kompetentligini-oshirish</loc>
+    <loc>https://akademix.uz/articles/4</loc>
     <lastmod>2026-06-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://akademix.uz/articles/ishlab-chiqilgan-kompozit-polimer-yopishtiruvchilarining-yopishqoqlik-va-yopishqoqlik-xususiyatlarining-muntazamligi-natijalari</loc>
+    <loc>https://akademix.uz/articles/2</loc>
     <lastmod>2026-06-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://akademix.uz/articles/kombinatsiyalashgan-polat-va-bazalt-tolalarni-dispers-armaturalangan-betonning-chozilishdagi-mustahkamligi</loc>
+    <loc>https://akademix.uz/articles/1</loc>
     <lastmod>2026-06-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
