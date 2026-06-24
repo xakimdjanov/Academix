@@ -267,7 +267,7 @@ const AddJournal = () => {
               onChange={(e) => setForm(p => ({ ...p, slug: slugify(e.target.value) }))}
             />
             <Input icon={FiTag} label="ISSN" required name="issn" value={form.issn} onChange={onChange} />
-            <Input icon={FiInfo} label="Soha (Subject area)" required name="subject_area" value={form.subject_area} onChange={onChange} />
+            <Input icon={FiInfo} label="Soha (Yo'nalish)" required name="subject_area" value={form.subject_area} onChange={onChange} />
           </div>
 
           <Textarea icon={FiInfo} label="Tavsif (Description)" required name="description" value={form.description} onChange={onChange} rows={3} />
@@ -281,7 +281,7 @@ const AddJournal = () => {
                 value={langInput}
                 onChange={(e) => setLangInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addLanguage(); } }}
-                placeholder="Masalan: Uzbek"
+                placeholder="Masalan: O'zbekcha"
                 className="flex-1 rounded-lg border border-slate-200 px-4 py-2 outline-none focus:border-blue-400"
               />
               <button type="button" onClick={addLanguage} className="bg-white border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-100 transition flex items-center gap-2">
@@ -300,10 +300,10 @@ const AddJournal = () => {
 
           <div className="grid gap-6 sm:grid-cols-2">
             <Input icon={FiGlobe} label="Veb-sayt URL" name="website_url" value={form.website_url} onChange={onChange} />
-            <Select icon={FiInfo} label="Holati (Status)" name="status" value={form.status} onChange={onChange}>
-              <option value="Active">Faol (Active)</option>
-              <option value="Inactive">Nofaol (Inactive)</option>
-              <option value="Draft">Qoralama (Draft)</option>
+            <Select icon={FiInfo} label="Holati" name="status" value={form.status} onChange={onChange}>
+              <option value="Active">Faol</option>
+              <option value="Inactive">Nofaol</option>
+              <option value="Draft">Qoralama</option>
             </Select>
             <Input icon={FiDollarSign} label="Maqola yuborish narxi ($)" type="number" step="0.01" name="submission_fee" value={form.submission_fee} onChange={onChange} className="sm:col-span-2" />
           </div>

@@ -44,7 +44,7 @@ const SignUp = () => {
     e.preventDefault();
 
     if (!form.fullname || !form.email || !form.password || !form.journal_id) {
-      toast.error("Please fill in all required fields.");
+      toast.error("Iltimos, barcha majburiy maydonlarni to'ldiring.");
       return;
     }
 
@@ -62,7 +62,7 @@ const SignUp = () => {
     setLoading(true);
     try {
       await editorService.register(formData);
-      toast.success("Account created successfully! Please sign in.");
+      toast.success("Hisob muvaffaqiyatli yaratildi! Iltimos, tizimga kiring.");
       navigate("/signin");
     } catch (error) {
       toast.error(error?.response?.data?.message || "Registration failed.");
@@ -80,8 +80,8 @@ const SignUp = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
             <FiUser className="text-3xl" />
           </div>
-          <h1 className="text-3xl font-bold">Create Editor Account</h1>
-          <p className="text-white/80 mt-2">Join Academix as an Editor</p>
+          <h1 className="text-3xl font-bold">Muharrir hisobini yaratish</h1>
+          <p className="text-white/80 mt-2">Academix-ga muharrir sifatida qo'shiling</p>
         </div>
 
         {/* FORM */}
@@ -89,7 +89,7 @@ const SignUp = () => {
           
           {/* FULLNAME */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">To'liq ism-sharif *</label>
             <div className="relative">
               <input
                 type="text"
@@ -106,7 +106,7 @@ const SignUp = () => {
 
           {/* EMAIL */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Elektron pochta manzili *</label>
             <div className="relative">
               <input
                 type="email"
@@ -123,7 +123,7 @@ const SignUp = () => {
 
           {/* PASSWORD */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Parol *</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -147,7 +147,7 @@ const SignUp = () => {
 
           {/* PHONE */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Telefon raqami</label>
             <div className="relative">
               <input
                 type="text"
@@ -163,7 +163,7 @@ const SignUp = () => {
 
           {/* AGE */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Age</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Yosh</label>
             <div className="relative">
               <input
                 type="number"
@@ -179,7 +179,7 @@ const SignUp = () => {
 
           {/* JOURNAL SELECT */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Select Journal *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Jurnalni tanlang *</label>
             <div className="relative">
               <select
                 name="journal_id"
@@ -188,7 +188,7 @@ const SignUp = () => {
                 className="w-full rounded-xl border border-gray-300 pl-12 pr-4 py-3 text-sm focus:ring-2 focus:ring-[#1F4F8F] appearance-none transition-all"
                 required
               >
-                <option value="">Choose a journal...</option>
+                <option value="">Jurnalni tanlang...</option>
                 {journals.map((j) => (
                   <option key={j.id} value={j.id}>
                     {j.name}
@@ -201,7 +201,7 @@ const SignUp = () => {
 
           {/* PROFILE IMAGE */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Profile Image</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Profil rasmi</label>
             <div className="relative">
               <input
                 type="file"
@@ -221,12 +221,12 @@ const SignUp = () => {
               disabled={loading}
               className="w-full bg-gradient-to-r from-[#1F4F8F] to-blue-600 text-white rounded-xl py-3.5 font-bold shadow-lg hover:shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-70"
             >
-              {loading ? "Creating Account..." : "Create Account"}
+              {loading ? "Hisob yaratilmoqda..." : "Hisob yaratish"}
             </button>
             <p className="text-center text-sm text-gray-500 mt-6">
-              Already have an account?{" "}
+              Hisobingiz bormi?{" "}
               <Link to="/signin" className="text-[#1F4F8F] font-semibold hover:underline">
-                Sign In
+                Kirish
               </Link>
             </p>
           </div>

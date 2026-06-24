@@ -323,7 +323,10 @@ const Chat = () => {
           articlesCount: articlesList.length,
           lastMessage: last?.message || (last?.image_url ? "📷 Rasm" : "Hozircha xabarlar yo'q"),
           lastAt: last?.createdAt || group.latestDate,
-          unreadCount: msgs.filter((m) => !m.is_from_user && !isReadMessage(m)).length,
+          unreadCount: msgs.filter((m) => {
+            const isFromUser = m.is_from_user === true || m.is_from_user === "true" || m.is_from_user === 1 || m.is_from_user === "1";
+            return !isFromUser && !isReadMessage(m);
+          }).length,
           messages: msgs,
         };
       })
@@ -387,7 +390,8 @@ const Chat = () => {
 
     const unreadIncoming = allMessages.filter((m) => {
       const sameEditor = String(getEditorIdFromMsg(m)) === String(activeEditorId);
-      const incoming = !m.is_from_user;
+      const isFromUser = m.is_from_user === true || m.is_from_user === "true" || m.is_from_user === 1 || m.is_from_user === "1";
+      const incoming = !isFromUser;
       const unread = !isReadMessage(m);
       const hasId = !!getMsgId(m);
       return sameEditor && incoming && unread && hasId;
@@ -397,7 +401,8 @@ const Chat = () => {
 
     setAllMessages((prev) =>
       prev.map((m) => {
-        if (String(getEditorIdFromMsg(m)) === String(activeEditorId) && !m.is_from_user) {
+        const isFromUser = m.is_from_user === true || m.is_from_user === "true" || m.is_from_user === 1 || m.is_from_user === "1";
+        if (String(getEditorIdFromMsg(m)) === String(activeEditorId) && !isFromUser) {
           return { ...m, status: "read", is_read: true };
         }
         return m;
@@ -471,7 +476,8 @@ const Chat = () => {
 
   // Delete message
   const deleteMessage = async (m) => {
-    if (!m.is_from_user) {
+    const isFromUser = m.is_from_user === true || m.is_from_user === "true" || m.is_from_user === 1 || m.is_from_user === "1";
+    if (!isFromUser) {
       toast.error("Faqat o'zingizning xabarlaringizni o'chirishingiz mumkin");
       return;
     }
@@ -486,7 +492,7 @@ const Chat = () => {
       toast.success("Xabar o'chirildi");
     } catch (e) {
       console.error(e);
-      toast.error("Failed to delete message");
+      toast.error("Xabarni o'chirishda xatolik yuz berdi");
       loadAll(true);
     }
   };
@@ -508,7 +514,8 @@ const Chat = () => {
 
   // Select toggle
   const toggleSelect = (m) => {
-    if (!m.is_from_user) {
+    const isFromUser = m.is_from_user === true || m.is_from_user === "true" || m.is_from_user === 1 || m.is_from_user === "1";
+    if (!isFromUser) {
       toast.error("Faqat o'zingizning xabarlaringizni tanlashingiz mumkin");
       return;
     }
@@ -538,7 +545,7 @@ const Chat = () => {
       toast.success(`${ids.length} ta xabar o'chirildi`);
     } catch (e) {
       console.error(e);
-      toast.error("Some messages could not be deleted");
+      toast.error("Ba'zi xabarlarni o'chirib bo'lmadi");
       loadAll(true);
     }
   };
@@ -548,7 +555,10 @@ const Chat = () => {
     if (!activeThread) return;
     
     const myMessageIds = activeThread.messages
-      .filter(m => m.is_from_user && !m.temp)
+      .filter(m => {
+        const isFromUser = m.is_from_user === true || m.is_from_user === "true" || m.is_from_user === 1 || m.is_from_user === "1";
+        return isFromUser && !m.temp;
+      })
       .map(m => getMsgId(m))
       .filter(id => id);
     
@@ -721,7 +731,7 @@ const Chat = () => {
                           : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}
                     >
-                      {selectMode ? "Cancel" : "Select"}
+                      {selectMode ? "Bekor qilish" : "Tanlash"}
                     </button>
 
                     {selectMode && (
@@ -766,7 +776,7 @@ const Chat = () => {
                         }
 
                         const m = item.data;
-                        const isMine = !!m.is_from_user;
+                        const isMine = m.is_from_user === true || m.is_from_user === "true" || m.is_from_user === 1 || m.is_from_user === "1";
                         const id = getMsgId(m);
                         const checked = id ? selectedIds.has(id) : false;
 
@@ -796,7 +806,7 @@ const Chat = () => {
                               {m.image_url && (
                                 <img
                                   src={m.image_url}
-                                  alt="attachment"
+                                  alt="ilova"
                                   className="mb-2 max-h-64 w-full rounded-lg object-cover shadow-sm cursor-pointer hover:opacity-90 transition"
                                   onClick={() => window.open(m.image_url, '_blank')}
                                   loading="lazy"

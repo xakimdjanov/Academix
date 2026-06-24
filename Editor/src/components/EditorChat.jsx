@@ -36,9 +36,9 @@ const formatDayLabel = (date) => {
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
-  if (isSameDay(d, today)) return "Today";
-  if (isSameDay(d, yesterday)) return "Yesterday";
-  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+  if (isSameDay(d, today)) return "Bugun";
+  if (isSameDay(d, yesterday)) return "Kecha";
+  return d.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
 const formatTime = (date) => {
@@ -87,7 +87,7 @@ const ArticleListModal = ({ articles, isOpen, onClose }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FiFileText size={20} />
-              <h4 className="font-semibold text-base">Articles ({articles.length})</h4>
+              <h4 className="font-semibold text-base">Maqolalar ({articles.length})</h4>
             </div>
             <button
               onClick={onClose}
@@ -128,7 +128,7 @@ const ArticleListModal = ({ articles, isOpen, onClose }) => {
             onClick={onClose}
             className="w-full py-3 px-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 active:bg-blue-800 transition-colors font-medium"
           >
-            Close
+            Yopish
           </button>
         </div>
       </div>
@@ -226,7 +226,7 @@ const EditorChat = () => {
       setLoadingChat(initialLoading);
       
     } catch (err) {
-      toast.error("Failed to load assignments");
+      toast.error("Topshiriqlarni yuklashda xatolik yuz berdi");
     }
   };
 
@@ -308,9 +308,9 @@ const EditorChat = () => {
         }));
       }
       
-      toast.success("Message deleted");
+      toast.success("Xabar o'chirildi");
     } catch (error) {
-      toast.error("Failed to delete message");
+      toast.error("Xabarni o'chirishda xatolik yuz berdi");
     }
   };
 
@@ -335,15 +335,15 @@ const EditorChat = () => {
       setSelectionMode(false);
       setShowDeleteConfirm(false);
       
-      toast.success(`${selectedMessages.size} messages deleted`);
+      toast.success(`${selectedMessages.size} ta xabar o'chirildi`);
     } catch (error) {
-      toast.error("Failed to delete messages");
+      toast.error("Xabarlarni o'chirishda xatolik yuz berdi");
     }
   };
 
   const copyMessage = (text) => {
     navigator.clipboard.writeText(text);
-    toast.success("Message copied");
+    toast.success("Xabar nusxalandi");
   };
 
   const toggleMessageSelection = (messageId) => {
@@ -374,7 +374,7 @@ const EditorChat = () => {
 
   const send = async () => {
     if (!activeUserId) {
-      toast.error("Please select a user first");
+      toast.error("Iltimos, avval foydalanuvchini tanlang");
       return;
     }
     
@@ -440,7 +440,7 @@ const EditorChat = () => {
       setImageFile(currentImageFile);
       setImagePreview(currentImagePreview);
       
-      toast.error("Failed to send message");
+      toast.error("Xabarni yuborishda xatolik yuz berdi");
     }
   };
 
@@ -465,7 +465,7 @@ const EditorChat = () => {
     const f = e.target.files[0];
     if (f) {
       if (f.size > 5 * 1024 * 1024) {
-        toast.error("Image size should be less than 5MB");
+        toast.error("Rasm hajmi 5MB dan kam bo'lishi kerak");
         return;
       }
       setImageFile(f);
@@ -520,16 +520,17 @@ const EditorChat = () => {
       );
       
       const last = msgs[msgs.length - 1];
-      const unreadCount = msgs.filter(m => 
-        m.is_from_user === true && !isReadMessage(m)
-      ).length;
+      const unreadCount = msgs.filter(m => {
+        const isFromUser = m.is_from_user === true || m.is_from_user === "true" || m.is_from_user === 1 || m.is_from_user === "1";
+        return isFromUser && !isReadMessage(m);
+      }).length;
 
       return {
         userId: userId,
-        primaryTitle: sortedArticles[0]?.title || "Untitled Article",
+        primaryTitle: sortedArticles[0]?.title || "Nomsiz maqola",
         allArticles: sortedArticles,
         articlesCount: articles.length,
-        lastMessage: last?.message || (last?.image_url ? "📷 Image" : "No messages yet"),
+        lastMessage: last?.message || (last?.image_url ? "📷 Rasm" : "Hozircha xabarlar yo'q"),
         lastAt: last?.createdAt || articles[0]?.assigned_at,
         unreadCount: unreadCount,
         loading: loadingChat[userId] || false
@@ -625,29 +626,25 @@ const EditorChat = () => {
 
   // ============ 7. RETURN JSX ============
   return (
-    <div className="flex h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-50 md:p-4">
+    <div className="flex h-full w-full bg-gradient-to-br from-blue-50 to-indigo-50 md:p-4 overflow-hidden">
       <div className="flex h-full w-full bg-white md:rounded-3xl overflow-hidden border-0 md:border border-blue-100 shadow-2xl">
         
         {/* ---- SIDEBAR - ONLY ARTICLE TITLES (Mobile Optimized) ---- */}
         <div 
           className={`
-            ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} 
-            md:translate-x-0
-            fixed md:relative
-            w-[85%] md:w-[380px] 
+            ${sidebarOpen ? "flex" : "hidden"} 
+            md:flex md:relative
+            w-full md:w-[380px] flex-shrink-0
             flex-col 
             border-r border-blue-100
             bg-white
-            z-20 
             h-full
-            transition-transform duration-300 ease-in-out
-            shadow-2xl md:shadow-none
           `}
         >
           {/* Header */}
           <div className="p-4 border-b border-blue-100 bg-gradient-to-r from-blue-600 to-blue-700 sticky top-0">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-xl md:text-2xl font-bold text-white">Articles</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-white">Maqolalar</h2>
               {isMobile && (
                 <button
                   onClick={() => setSidebarOpen(false)}
@@ -658,14 +655,14 @@ const EditorChat = () => {
               )}
             </div>
             <p className="text-sm text-blue-100">
-              {filteredThreads.length} {filteredThreads.length === 1 ? 'conversation' : 'conversations'}
+              {filteredThreads.length} ta suhbat
             </p>
             
             <div className="mt-3 relative">
               <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-300" size={18} />
               <input
                 type="text"
-                placeholder="Search by article title..."
+                placeholder="Maqola sarlavhasi bo'yicha qidirish..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-white/10 backdrop-blur-sm border border-blue-400/30 rounded-xl text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white text-sm"
@@ -678,14 +675,14 @@ const EditorChat = () => {
             {loading ? (
               <div className="p-8 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
-                <p className="text-gray-600">Loading...</p>
+                <p className="text-gray-600">Yuklanmoqda...</p>
               </div>
             ) : filteredThreads.length === 0 ? (
               <div className="p-8 text-center">
                 <div className="text-5xl mb-4 text-blue-300">📭</div>
-                <p className="text-gray-700 font-medium">No articles found</p>
+                <p className="text-gray-700 font-medium">Maqolalar topilmadi</p>
                 <p className="text-sm text-gray-500 mt-2">
-                  {searchTerm ? 'Try a different search term' : 'No articles assigned to you'}
+                  {searchTerm ? 'Boshqa qidiruv so\'zini sinab ko\'ring' : 'Sizga biriktirilgan maqolalar yo\'q'}
                 </p>
               </div>
             ) : (
@@ -757,34 +754,30 @@ const EditorChat = () => {
           </div>
         </div>
 
-        {/* Overlay for mobile sidebar */}
-        {isMobile && sidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-black/50 z-10 md:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
         {/* ---- CHAT WINDOW (Mobile Optimized) ---- */}
-        <div className="flex-1 flex flex-col bg-gradient-to-b from-blue-50 to-white relative">
+        <div className={`
+          ${!sidebarOpen ? "flex" : "hidden"} 
+          md:flex flex-1 min-w-0
+          flex-col bg-gradient-to-b from-blue-50 to-white relative
+        `}>
           {!activeThread ? (
             <div className="flex flex-1 items-center justify-center p-4">
               <div className="text-center">
                 <div className="text-6xl md:text-7xl mb-4 text-blue-300">💬</div>
                 <h3 className="text-xl md:text-2xl font-semibold text-gray-700 mb-2">
-                  {filteredThreads.length === 0 ? 'No articles yet' : 'Select an article'}
+                  {filteredThreads.length === 0 ? 'Hozircha maqolalar yo\'q' : 'Maqolani tanlang'}
                 </h3>
                 <p className="text-sm md:text-base text-gray-500 max-w-md">
                   {filteredThreads.length === 0 
-                    ? 'No articles have been assigned to you yet' 
-                    : 'Choose an article from the sidebar to start messaging'}
+                    ? 'Sizga hali hech qanday maqola biriktirilmagan' 
+                    : 'Xabar yuborishni boshlash uchun yon paneldan maqolani tanlang'}
                 </p>
                 {filteredThreads.length > 0 && isMobile && (
                   <button
                     onClick={() => setSidebarOpen(true)}
                     className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 active:bg-blue-800 transition-colors font-medium shadow-lg"
                   >
-                    View Articles
+                    Maqolalarni ko'rish
                   </button>
                 )}
               </div>
@@ -800,7 +793,7 @@ const EditorChat = () => {
                         onClick={() => setSidebarOpen(true)}
                         className="p-2 hover:bg-blue-50 active:bg-blue-100 rounded-full text-blue-600 flex-shrink-0"
                       >
-                        <FiMenu size={22} />
+                        <FiChevronLeft size={24} />
                       </button>
                     )}
 
@@ -819,7 +812,7 @@ const EditorChat = () => {
                           className="text-xs text-blue-600 hover:text-blue-700 active:text-blue-800 mt-0.5 flex items-center gap-1"
                         >
                           <FiFileText size={10} />
-                          <span className="truncate">+{activeThread.articlesCount - 1} more</span>
+                          <span className="truncate">yana +{activeThread.articlesCount - 1} ta</span>
                           <FiChevronDown size={10} />
                         </button>
                       )}
@@ -831,7 +824,7 @@ const EditorChat = () => {
                       <button
                         onClick={() => setSelectionMode(true)}
                         className="p-2 hover:bg-blue-50 active:bg-blue-100 rounded-full text-blue-600"
-                        title="Select messages"
+                        title="Xabarlarni tanlash"
                       >
                         <FiCheckSquare size={18} className="md:hidden" />
                         <FiCheckSquare size={20} className="hidden md:block" />
@@ -841,7 +834,7 @@ const EditorChat = () => {
                         <button
                           onClick={selectAllMessages}
                           className="p-2 hover:bg-blue-50 active:bg-blue-100 rounded-full text-blue-600"
-                          title="Select all"
+                          title="Hammasini tanlash"
                         >
                           <FiCheckSquare size={18} className="md:hidden" />
                           <FiCheckSquare size={20} className="hidden md:block" />
@@ -849,7 +842,7 @@ const EditorChat = () => {
                         <button
                           onClick={clearSelection}
                           className="p-2 hover:bg-blue-50 active:bg-blue-100 rounded-full text-blue-600"
-                          title="Cancel"
+                          title="Bekor qilish"
                         >
                           <FiX size={18} className="md:hidden" />
                           <FiX size={20} className="hidden md:block" />
@@ -858,7 +851,7 @@ const EditorChat = () => {
                           <button
                             onClick={() => setShowDeleteConfirm(true)}
                             className="p-2 hover:bg-red-50 active:bg-red-100 rounded-full text-red-500"
-                            title="Delete selected"
+                            title="Tanlanganlarni o'chirish"
                           >
                             <FiTrash2 size={18} className="md:hidden" />
                             <FiTrash2 size={20} className="hidden md:block" />
@@ -880,16 +873,16 @@ const EditorChat = () => {
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
-                      <p className="text-gray-600 text-sm">Loading messages...</p>
+                      <p className="text-gray-600 text-sm">Xabarlar yuklanmoqda...</p>
                     </div>
                   </div>
                 ) : groupedMsgs.length === 0 ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center">
-                      <div className="text-4xl md:text-5xl mb-3 text-blue-300">💭</div>
-                      <p className="text-gray-700 font-medium text-sm md:text-base">No messages yet</p>
+                      <div className="text-4xl md:text-5xl mb-3 text-blue-300">💬</div>
+                      <p className="text-gray-700 font-medium text-sm md:text-base">Hozircha xabarlar yo'q</p>
                       <p className="text-xs md:text-sm text-gray-500 mt-2">
-                        Send the first message
+                        Birinchi xabarni yuboring
                       </p>
                     </div>
                   </div>
@@ -926,13 +919,13 @@ const EditorChat = () => {
               {selectionMode && selectedMessages.size > 0 && (
                 <div className="bg-blue-600 text-white px-4 py-2 md:py-3 flex items-center justify-between sticky bottom-0 z-10 shadow-lg">
                   <span className="text-xs md:text-sm">
-                    {selectedMessages.size} {selectedMessages.size === 1 ? 'message' : 'messages'} selected
+                    {selectedMessages.size} ta xabar tanlandi
                   </span>
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
                     className="text-xs md:text-sm bg-red-500 hover:bg-red-600 active:bg-red-700 px-3 py-1.5 rounded-full font-medium"
                   >
-                    Delete
+                    O'chirish
                   </button>
                 </div>
               )}
@@ -985,7 +978,7 @@ const EditorChat = () => {
                           send();
                         }
                       }}
-                      placeholder="Type a message..."
+                      placeholder="Xabar yozing..."
                       className="w-full bg-transparent outline-none resize-none max-h-32 text-sm md:text-base text-gray-700 placeholder-gray-400"
                       style={{ minHeight: '20px', maxHeight: '120px' }}
                     />
@@ -1029,22 +1022,22 @@ const EditorChat = () => {
             onClick={() => setShowDeleteConfirm(false)}
           />
           <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-white rounded-2xl p-5 md:p-6 z-50 shadow-xl border border-blue-100 animate-fadeIn">
-            <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-2">Delete Messages</h3>
+            <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-2">Xabarlarni o'chirish</h3>
             <p className="text-sm md:text-base text-gray-600 mb-5 md:mb-6">
-              Are you sure you want to delete {selectedMessages.size} {selectedMessages.size === 1 ? 'message' : 'messages'}? This action cannot be undone.
+              Haqiqatan ham {selectedMessages.size} ta xabarni o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi.
             </p>
             <div className="flex gap-2 md:gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 className="flex-1 py-2.5 md:py-2 px-4 border border-blue-200 rounded-xl text-sm md:text-base text-gray-700 hover:bg-blue-50 active:bg-blue-100"
               >
-                Cancel
+                Bekor qilish
               </button>
               <button
                 onClick={deleteSelectedMessages}
                 className="flex-1 py-2.5 md:py-2 px-4 bg-red-600 text-white rounded-xl text-sm md:text-base hover:bg-red-700 active:bg-red-800"
               >
-                Delete
+                O'chirish
               </button>
             </div>
           </div>
@@ -1056,7 +1049,8 @@ const EditorChat = () => {
 
 // ------------ MESSAGE BUBBLE COMPONENT (Mobile Optimized) ------------
 const MessageBubble = ({ msg, isSelected, selectionMode, onSelect, onDelete, onCopy, onVisible }) => {
-  const isMine = msg.is_from_user === false;
+  const isFromUser = msg.is_from_user === true || msg.is_from_user === "true" || msg.is_from_user === 1 || msg.is_from_user === "1";
+  const isMine = !isFromUser;
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [longPressTimer, setLongPressTimer] = useState(null);
@@ -1174,7 +1168,7 @@ const MessageBubble = ({ msg, isSelected, selectionMode, onSelect, onDelete, onC
               }}
               className="w-full px-4 py-3 md:py-2 text-left text-sm hover:bg-blue-50 active:bg-blue-100 flex items-center gap-2 text-gray-700"
             >
-              <FiCopy size={14} className="text-blue-600" /> Copy
+              <FiCopy size={14} className="text-blue-600" /> Nusxalash
             </button>
             <button
               onClick={() => {
@@ -1183,7 +1177,7 @@ const MessageBubble = ({ msg, isSelected, selectionMode, onSelect, onDelete, onC
               }}
               className="w-full px-4 py-3 md:py-2 text-left text-sm hover:bg-red-50 active:bg-red-100 flex items-center gap-2 text-red-600"
             >
-              <FiTrash2 size={14} /> Delete
+              <FiTrash2 size={14} /> O'chirish
             </button>
           </div>
           <div 

@@ -68,7 +68,7 @@ const JournalSettings = () => {
 
       setJournals(mine);
     } catch (err) {
-      toast.error("Failed to load journals");
+      toast.error("Jurnallarni yuklab bo'lmadi");
       setJournals([]);
     } finally {
       setLoadingJournals(false);
@@ -121,7 +121,7 @@ const JournalSettings = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (!canSubmit) return toast.error("Please fill in all required fields!");
+    if (!canSubmit) return toast.error("Iltimos, barcha majburiy maydonlarni to'ldiring!");
 
     const journalIdRaw = String(form.journal_id).trim();
     const journal_id = /^\d+$/.test(journalIdRaw) ? Number(journalIdRaw) : journalIdRaw;
@@ -181,13 +181,13 @@ const JournalSettings = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this configuration?")) return;
+    if (!window.confirm("Haqiqatan ham ushbu sozlamani o'chirmoqchimisiz?")) return;
     try {
       await settingsService.delete(id);
-      toast.success("Deleted successfully");
+      toast.success("Muvaffaqiyatli o'chirildi");
       fetchSettings();
     } catch (e) {
-      toast.error("Failed to delete");
+      toast.error("O'chirish muvaffaqiyatsiz tugadi");
     }
   };
 
@@ -279,14 +279,14 @@ const JournalSettings = () => {
                           <button 
                             onClick={() => handleEdit(item)}
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-                            title="Edit"
+                            title="Tahrirlash"
                           >
                             <FiEdit2 size={16} />
                           </button>
                           <button 
                             onClick={() => handleDelete(item.id)}
                             className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
-                            title="Delete"
+                            title="O'chirish"
                           >
                             <FiTrash2 size={16} />
                           </button>
@@ -506,7 +506,7 @@ const JournalSettings = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <CustomInput
                   icon={<FiImage className="text-blue-500" />}
-                  label="Cover Image URL"
+                  label="Muqova rasmi URL manzili"
                   name="image_url"
                   value={editForm.image_url}
                   onChange={onEditChange}
@@ -514,7 +514,7 @@ const JournalSettings = () => {
                 <CustomInput
                   icon={<FiHash className="text-blue-500" />}
                   type="number"
-                  label="Display Order"
+                  label="Tartib raqami"
                   name="order"
                   value={editForm.order}
                   onChange={onEditChange}

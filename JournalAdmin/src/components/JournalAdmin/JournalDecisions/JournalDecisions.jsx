@@ -46,7 +46,7 @@ const JournalDecisions = () => {
           setArticleId(String(firstId));
         }
       } catch {
-        toast.error("Articles load failed");
+        toast.error("Maqolalarni yuklash muvaffaqiyatsiz tugadi");
       } finally {
         setLoading(false);
       }
@@ -79,8 +79,8 @@ const JournalDecisions = () => {
   }, [articles, articleId]);
 
   const sendDecision = async () => {
-    if (!articleId) return toast.error("Select an article");
-    if (!comment.trim()) return toast.error("Write a comment first");
+    if (!articleId) return toast.error("Maqolani tanlang");
+    if (!comment.trim()) return toast.error("Avval izoh yozing");
 
     setSending(true);
     try {
@@ -111,19 +111,19 @@ const JournalDecisions = () => {
 
   const deleteComment = async (row) => {
     const id = getId(row);
-    if (!id) return toast.error("Comment ID not found");
-    if (!confirm("Delete this comment?")) return;
+    if (!id) return toast.error("Izoh IDsi topilmadi");
+    if (!confirm("Ushbu izohni o'chirib tashlaysizmi?")) return;
 
     try {
       await commentService.delete(id);
-      toast.success("Deleted");
+      toast.success("O'chirildi");
       setComments((prev) => prev.filter((x) => getId(x) !== id));
     } catch {
-      toast.error("Delete failed");
+      toast.error("O'chirish muvaffaqiyatsiz tugadi");
     }
   };
 
-  if (loading) return <div className="p-6">Loading...</div>;
+  if (loading) return <div className="p-6">Yuklanmoqda...</div>;
 
   return (
     <div className="space-y-6">
@@ -235,7 +235,7 @@ const JournalDecisions = () => {
             rows={6}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="Write review comment here..."
+            placeholder="Taqriz izohini shu yerga yozing..."
             className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1F4F8F] focus:border-transparent"
           />
         </div>

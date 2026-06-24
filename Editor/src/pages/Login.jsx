@@ -30,7 +30,7 @@ const SignIn = () => {
     e.preventDefault();
 
     if (!form.email || !form.password) {
-      toast.error("Please fill in all fields.");
+      toast.error("Iltimos, barcha maydonlarni to'ldiring.");
       return;
     }
 
@@ -41,7 +41,7 @@ const SignIn = () => {
       // Backenddan token olish
       const token = res?.data?.token || res?.data?.data?.token;
       if (!token) {
-        toast.error("Login failed: Token missing.");
+        toast.error("Kirish muvaffaqiyatsiz tugadi: Token topilmadi.");
         return;
       }
 
@@ -67,7 +67,7 @@ const SignIn = () => {
         localStorage.setItem("editorId", String(editorId));
       }
 
-      toast.success("Welcome back!");
+      toast.success("Xush kelibsiz!");
       navigate("/dashboard");
     } catch (error) {
       const status = error?.response?.status;
@@ -100,8 +100,8 @@ const SignIn = () => {
           <div className="inline-flex items-center justify-center w-14 h-14 bg-white/20 rounded-full mb-3">
             <FiEdit3 className="text-white text-2xl" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Editor Login</h1>
-          <p className="text-white/90 text-sm mt-1">Manage journals and reviews</p>
+          <h1 className="text-2xl font-bold text-white">Muharrir kirishi</h1>
+          <p className="text-white/90 text-sm mt-1">Jurnallar va taqrizlarni boshqarish</p>
         </div>
 
         {/* FORM */}
@@ -109,7 +109,7 @@ const SignIn = () => {
           
           {/* EMAIL INPUT */}
           <div>
-            <label className="block text-sm font-medium text-[#1F2937] mb-2">Email</label>
+            <label className="block text-sm font-medium text-[#1F2937] mb-2">Elektron pochta</label>
             <div className="relative">
               <input
                 type="email"
@@ -127,7 +127,7 @@ const SignIn = () => {
 
           {/* PASSWORD INPUT */}
           <div>
-            <label className="block text-sm font-medium text-[#1F2937] mb-2">Password</label>
+            <label className="block text-sm font-medium text-[#1F2937] mb-2">Parol</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -158,11 +158,11 @@ const SignIn = () => {
             className="w-full bg-gradient-to-r from-[#1F4F8F] to-blue-600 text-white rounded-xl py-3 font-semibold
             shadow-md active:scale-[0.98] disabled:opacity-60"
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? "Tizimga kirilmoqda..." : "Kirish"}
           </button>
 
           <p className="text-center text-sm text-gray-500 mt-6">
-            Don't have an account?{" "}
+            Hisobingiz yo'qmi?{" "}
             <Link to="/signup" className="text-[#1F4F8F] font-semibold hover:underline">
               Sign Up
             </Link>

@@ -123,7 +123,7 @@ const JournalArticles = () => {
       setJournals(Array.isArray(j) ? j : []);
       setArticles(Array.isArray(a) ? a : []);
     } catch (e) {
-      toast.error("Failed to load data");
+      toast.error("Ma'lumotlarni yuklab bo'lmadi");
       setJournals([]);
       setArticles([]);
     } finally {
@@ -238,7 +238,7 @@ const JournalArticles = () => {
 
   const saveEdit = async () => {
     const id = getId(editArticle);
-    if (!id) return toast.error("Article ID not found");
+    if (!id) return toast.error("Maqola ID topilmadi");
 
     const originalFormatted = renderAuthor(editArticle);
     let finalAuthors = editArticle.authors || [];
@@ -470,21 +470,21 @@ const JournalArticles = () => {
 
               <div className="mt-3 flex items-center justify-between">
                 <div className="text-xs text-slate-600">
-                  <span className="font-bold">Author:</span> {renderAuthor(a)}
+                  <span className="font-bold">Muallif:</span> {renderAuthor(a)}
                 </div>
 
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => navigate(`/admin/articles/${getId(a)}`)}
                     className="p-2.5 rounded-2xl bg-slate-100 text-slate-600 hover:bg-[#002147] hover:text-white transition-all"
-                    title="View"
+                    title="Ko'rish"
                   >
                     <FiEye size={18} />
                   </button>
                   <button
                     onClick={() => openEdit(a)}
                     className="p-2.5 rounded-2xl bg-slate-100 text-slate-600 hover:bg-amber-500 hover:text-white transition-all"
-                    title="Edit"
+                    title="Tahrirlash"
                   >
                     <FiEdit2 size={18} />
                   </button>
@@ -492,7 +492,7 @@ const JournalArticles = () => {
                     <button
                       onClick={() => handlePublishClick(a)}
                       className="p-2.5 rounded-2xl bg-emerald-100 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all font-bold"
-                      title="Publish Now"
+                      title="Chop etish"
                     >
                       <FiGlobe size={18} />
                     </button>
@@ -571,7 +571,7 @@ const JournalArticles = () => {
                             navigate(`/articledetails/${getId(a)}`)
                           }
                           className="p-2.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-[#002147] hover:text-white transition-all shadow-sm"
-                          title="View Details"
+                          title="Batafsil ko'rish"
                         >
                           <FiEye size={18} />
                         </button>
@@ -672,7 +672,7 @@ const JournalArticles = () => {
             }
           />
           <CustomInput
-            label="File URL"
+            label="Fayl URL manzili"
             value={editForm.file_url}
             onChange={(e) =>
               setEditForm({ ...editForm, file_url: e.target.value })
