@@ -1,6 +1,10 @@
 import { jwtDecode } from "jwt-decode";
 
 export const getEditorIdFromToken = () => {
+  // Check localStorage first
+  const localId = localStorage.getItem("editorId");
+  if (localId) return localId;
+
   const token = localStorage.getItem("token");
   if (!token) return null;
 

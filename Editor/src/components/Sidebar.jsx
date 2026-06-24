@@ -67,7 +67,10 @@ const EditorSidebar = ({ isOpen, toggleSidebar }) => {
           try {
             const chatRes = await chatService.getChat(userId, editorId);
             const messages = chatRes.data || [];
-            totalUnread += messages.filter(m => m.is_from_user === true && (m.status !== 'read' && m.status !== 'seen')).length;
+            totalUnread += messages.filter(m => {
+              const isFromUser = m.is_from_user === true || m.is_from_user === "true" || m.is_from_user === 1 || m.is_from_user === "1";
+              return isFromUser && (m.status !== 'read' && m.status !== 'seen');
+            }).length;
           } catch (e) {}
         }
       }
@@ -166,7 +169,7 @@ const EditorSidebar = ({ isOpen, toggleSidebar }) => {
             className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-bold text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all"
           >
             <FiLogOut className="text-xl" />
-            <span>Sign Out</span>
+            <span>Chiqish</span>
           </button>
         </div>
       </aside>
@@ -177,11 +180,11 @@ const EditorSidebar = ({ isOpen, toggleSidebar }) => {
             {/* Modal mazmuni... */}
             <div className="bg-white rounded-[2rem] shadow-2xl max-w-sm w-full overflow-hidden p-10 text-center">
                  <FiAlertTriangle size={40} className="text-rose-500 mx-auto mb-6" />
-                 <h3 className="text-2xl font-black text-slate-900">Sign Out</h3>
-                 <p className="text-slate-500 mt-3">Are you sure you want to exit?</p>
+                 <h3 className="text-2xl font-black text-slate-900">Chiqish</h3>
+                 <p className="text-slate-500 mt-3">Haqiqatan ham chiqmoqchimisiz?</p>
                  <div className="flex gap-3 mt-8">
-                    <button onClick={() => setConfirmOpen(false)} className="flex-1 py-4 text-slate-600 font-bold bg-slate-50 rounded-2xl">Cancel</button>
-                    <button onClick={doLogout} className="flex-1 py-4 bg-slate-900 text-white font-bold rounded-2xl">Yes, Exit</button>
+                    <button onClick={() => setConfirmOpen(false)} className="flex-1 py-4 text-slate-600 font-bold bg-slate-50 rounded-2xl">Bekor qilish</button>
+                    <button onClick={doLogout} className="flex-1 py-4 bg-slate-900 text-white font-bold rounded-2xl">Ha, chiqish</button>
                  </div>
             </div>
         </div>

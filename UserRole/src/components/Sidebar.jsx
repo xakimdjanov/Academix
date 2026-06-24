@@ -89,7 +89,8 @@ const Sidebar = () => {
         );
 
         const unreadChats = myChats.filter((m) => {
-          const fromEditor = !m?.is_from_user; // editor yozgan
+          const isFromUser = m?.is_from_user === true || m?.is_from_user === "true" || m?.is_from_user === 1 || m?.is_from_user === "1";
+          const fromEditor = !isFromUser; // editor yozgan
           const s = (m?.status ?? m?.message_status ?? "").toString().toLowerCase();
           const isRead = m?.is_read === true || s === "read" || s === "seen" || s === "viewed";
           return fromEditor && !isRead;

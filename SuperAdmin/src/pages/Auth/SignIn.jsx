@@ -47,15 +47,15 @@ const SignIn = () => {
       text.includes("password incorrect") ||
       text.includes("incorrect password");
 
-    if (looksLikeEmailNotFound) return "Email is incorrect (not found).";
-    if (looksLikeWrongPassword) return "Password is incorrect.";
+    if (looksLikeEmailNotFound) return "Email noto'g'ri (topilmadi).";
+    if (looksLikeWrongPassword) return "Parol noto'g'ri.";
 
     // Agar backend hech narsa bermasa, status bo‘yicha taxmin qilamiz
-    if (status === 401) return "Email or password is incorrect.";
-    if (status === 400) return "Invalid login data. Please check your email and password.";
-    if (status === 500) return "Server error. Please try again later.";
+    if (status === 401) return "Email yoki parol noto'g'ri.";
+    if (status === 400) return "Noto'g'ri login ma'lumotlari. Email va parolingizni tekshiring.";
+    if (status === 500) return "Server xatoligi. Keyinroq qayta urinib ko'ring.";
 
-    return msg || "Email or password is incorrect.";
+    return msg || "Email yoki parol noto'g'ri.";
   };
 
   const handleSubmit = async (e) => {
@@ -65,7 +65,7 @@ const SignIn = () => {
     const password = form.password;
 
     if (!email || !password) {
-      toast.error("Please enter your email and password.");
+      toast.error("Iltimos, email va parolingizni kiriting.");
       return;
     }
 
@@ -80,7 +80,7 @@ const SignIn = () => {
         res?.data?.data?.accessToken;
 
       if (!token) {
-        toast.error("Login error: Token not found.");
+        toast.error("Kirish xatoligi: Token topilmadi.");
         return;
       }
 
@@ -91,7 +91,7 @@ const SignIn = () => {
         localStorage.setItem("admin", JSON.stringify(adminData));
       }
 
-      toast.success("Successfully signed in!");
+      toast.success("Muvaffaqiyatli kirdingiz!");
       setTimeout(() => navigate("/dashboard"), 800);
     } catch (error) {
       toast.error(pickLoginErrorMessage(error));
@@ -107,14 +107,14 @@ const SignIn = () => {
           <div className="inline-flex items-center justify-center w-14 h-14 bg-white/20 rounded-full mb-3">
             <FiShield className="text-white text-2xl" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Admin Login</h1>
-          <p className="text-white/90 text-sm mt-1">Access the admin dashboard</p>
+          <h1 className="text-2xl font-bold text-white">Admin kirishi</h1>
+          <p className="text-white/90 text-sm mt-1">Boshqaruv paneliga kirish</p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-[#1F2937] mb-2">Email</label>
+            <label className="block text-sm font-medium text-[#1F2937] mb-2">Elektron pochta</label>
             <div className="relative">
               <input
                 type="email"
@@ -131,14 +131,14 @@ const SignIn = () => {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-[#1F2937] mb-2">Password</label>
+            <label className="block text-sm font-medium text-[#1F2937] mb-2">Parol</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
                 value={form.password}
                 onChange={onChange}
-                placeholder="Enter your password"
+                placeholder="Parolingizni kiriting"
                 className="w-full rounded-xl border border-gray-300 bg-white pl-12 pr-12 py-3 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#1F4F8F] focus:border-transparent transition-all"
                 required
               />
@@ -158,7 +158,7 @@ const SignIn = () => {
             disabled={loading}
             className="w-full bg-gradient-to-r from-[#1F4F8F] to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl py-3 font-semibold text-sm transition-all shadow-md active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? "Please wait..." : "Sign In"}
+            {loading ? "Iltimos, kuting..." : "Kirish"}
           </button>
 
           <div className="text-center pt-2">

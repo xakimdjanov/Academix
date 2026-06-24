@@ -278,13 +278,13 @@ const Dashboard = () => {
 
                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-gray-600">
                   <div>
-                    <p className="text-[11px] text-gray-400">Author</p>
+                    <p className="text-[11px] text-gray-400">Muallif</p>
                     <p className="break-words line-clamp-1">
                       {renderAuthor(a)}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[11px] text-gray-400">Language</p>
+                    <p className="text-[11px] text-gray-400">Til</p>
                     <p className="break-words line-clamp-1">
                       {a?.language || "—"}
                     </p>
@@ -308,7 +308,7 @@ const Dashboard = () => {
           })}
 
           {articles.length === 0 && (
-            <p className="text-gray-400 mt-2">No submissions yet.</p>
+            <p className="text-gray-400 mt-2">Hozircha arizalar yo'q.</p>
           )}
         </div>
 
@@ -379,7 +379,7 @@ const Dashboard = () => {
           </table>
 
           {articles.length === 0 && (
-            <p className="text-gray-400 mt-4">No submissions yet.</p>
+            <p className="text-gray-400 mt-4">Hozircha arizalar yo'q.</p>
           )}
         </div>
       </div>

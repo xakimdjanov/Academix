@@ -22,7 +22,7 @@ const Users = () => {
 
       setUsers(formatted);
     } catch (error) {
-      toast.error("Failed to fetch users list");
+      toast.error("Foydalanuvchilar ro'yxatini yuklab bo'lmadi");
     } finally {
       setLoading(false);
     }
@@ -61,7 +61,7 @@ const Users = () => {
           <h1 className="text-xl md:text-2xl font-bold text-gray-800">
             User Management
           </h1>
-          <p className="text-sm text-gray-500">View and manage system users</p>
+          <p className="text-sm text-gray-500">Tizim foydalanuvchilarini ko'rish va boshqarish</p>
         </div>
         <div className="text-sm font-medium bg-indigo-50 text-indigo-600 px-4 py-2 rounded-lg self-start sm:self-center">
           Total: {users.length}
@@ -71,17 +71,17 @@ const Users = () => {
       {/* Users Table Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
-          <div className="p-10 text-center text-gray-400">Loading users...</div>
+          <div className="p-10 text-center text-gray-400">Foydalanuvchilar yuklanmoqda...</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left min-w-[700px]">
               <thead className="bg-gray-50 text-[11px] uppercase text-gray-500 font-bold tracking-wider">
                 <tr>
-                  <th className="py-4 px-6 italic">Full Name</th>
-                  <th className="py-4 px-6 italic">Email Address</th>
-                  <th className="py-4 px-6 italic text-center">Role</th>
-                  <th className="py-4 px-6 italic text-center">Status</th>
-                  <th className="py-4 px-6 italic text-right">Actions</th>
+                  <th className="py-4 px-6 italic">To'liq ism-sharif</th>
+                  <th className="py-4 px-6 italic">Elektron pochta manzili</th>
+                  <th className="py-4 px-6 italic text-center">Rol</th>
+                  <th className="py-4 px-6 italic text-center">Holat</th>
+                  <th className="py-4 px-6 italic text-right">Amallar</th>
                 </tr>
               </thead>
 

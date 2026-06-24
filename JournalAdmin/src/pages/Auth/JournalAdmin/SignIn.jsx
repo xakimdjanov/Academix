@@ -20,7 +20,7 @@ const SignIn = () => {
     const password = form.password;
 
     if (!email || !password) {
-      toast.error("Please enter email and password.");
+      toast.error("Iltimos, email va parolingizni kiriting.");
       return;
     }
 
@@ -34,7 +34,7 @@ const SignIn = () => {
 
       if (!token) {
         console.log("LOGIN RESPONSE:", res?.data);
-        toast.error("Login failed. No token received.");
+        toast.error("Kirish muvaffaqiyatsiz tugadi: Token topilmadi.");
         return;
       }
 
@@ -69,7 +69,7 @@ const SignIn = () => {
       // ✅ admin id saqlab qo'yamiz
       localStorage.setItem("journal_admin_id", String(id));
 
-      toast.success("Login successful!");
+      toast.success("Muvaffaqiyatli kirdingiz!");
       navigate("/journal-dashboard");
     } catch (error) {
       const msg =
@@ -87,8 +87,8 @@ const SignIn = () => {
     <div className="min-h-screen bg-[#F6F8FB] flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
         <div className="bg-gradient-to-r from-[#1F4F8F] to-blue-600 px-6 py-7">
-          <h1 className="text-2xl font-bold text-white">Sign In</h1>
-          <p className="text-white/90 text-sm mt-1">Access your dashboard</p>
+          <h1 className="text-2xl font-bold text-white">Kirish</h1>
+          <p className="text-white/90 text-sm mt-1">Boshqaruv paneliga kirish</p>
         </div>
 
         <form onSubmit={onSubmit} className="p-6 space-y-5">
@@ -119,7 +119,7 @@ const SignIn = () => {
                 name="password"
                 value={form.password}
                 onChange={onChange}
-                placeholder="Enter your password"
+                placeholder="Parolingizni kiriting"
                 className="w-full rounded-xl border border-gray-300 bg-white pl-12 pr-12 py-3 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#1F4F8F] focus:border-transparent"
               />
               <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1F4F8F]" />
@@ -139,7 +139,7 @@ const SignIn = () => {
               className="text-sm text-[#1F4F8F] hover:text-blue-700 font-medium inline-flex items-center gap-1"
             >
               <FiKey className="text-sm" />
-              Forgot password?
+              Parolni unutdingizmi?
             </Link>
           </div>
 
@@ -148,14 +148,14 @@ const SignIn = () => {
             disabled={loading}
             className="w-full bg-gradient-to-r from-[#1F4F8F] to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl py-3 font-semibold text-sm transition disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? "Tizimga kirilmoqda..." : "Kirish"}
           </button> 
           
           <div className="text-center pt-4">
             <p className="text-sm text-gray-500">
-              Don't have an account?{" "}
+              Hisobingiz yo'qmi?{" "}
               <Link to="/journal-signup" className="text-[#1F4F8F] font-bold hover:underline">
-                Register
+                Ro'yxatdan o'tish
               </Link>
             </p>
           </div>

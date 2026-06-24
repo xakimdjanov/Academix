@@ -1,10 +1,12 @@
 import React from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { FiMenu } from "react-icons/fi";
 import Sidebar from "../components/Sidebar";
 
 const Layout = () => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const location = useLocation();
+  const isChat = location.pathname === "/chat";
 
   return (
     // h-screen va overflow-hidden sahifani ekran balandligiga qulflaydi
@@ -30,12 +32,18 @@ const Layout = () => {
           </span>
         </header>
 
-        {/* Asosiy kontent - Faqat shu qism skroll bo'ladi */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-10 scroll-smooth">
-          <div className="max-w-7xl mx-auto">
+        {/* Asosiy kontent */}
+        {isChat ? (
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             <Outlet />
           </div>
-        </main>
+        ) : (
+          <main className="flex-1 overflow-y-auto p-4 lg:p-10 scroll-smooth">
+            <div className="max-w-7xl mx-auto">
+              <Outlet />
+            </div>
+          </main>
+        )}
       </div>
     </div>
   );
