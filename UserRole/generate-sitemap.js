@@ -63,6 +63,9 @@ async function generate() {
     { loc: `${BASE_URL}/pricing`,  changefreq: "monthly", priority: "0.70" },
     { loc: `${BASE_URL}/about`,    changefreq: "monthly", priority: "0.70" },
     { loc: `${BASE_URL}/contact`,  changefreq: "monthly", priority: "0.60" },
+    { loc: `${BASE_URL}/suggestions`, changefreq: "monthly", priority: "0.50" },
+    { loc: `${BASE_URL}/privacy`,  changefreq: "monthly", priority: "0.50" },
+    { loc: `${BASE_URL}/terms`,    changefreq: "monthly", priority: "0.50" },
   ].map(urlEntry);
 
   // 2. Dynamic journals
