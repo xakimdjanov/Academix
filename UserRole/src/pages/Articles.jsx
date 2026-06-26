@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { articleService } from "../services/api";
+import { articleService, incrementArticleViewOnce } from "../services/api";
 import { FiSearch, FiFilter, FiFileText, FiArrowRight, FiBookOpen, FiEye, FiClock } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { useSEO } from "../hooks/useSEO";
@@ -43,7 +43,9 @@ const Articles = () => {
   const filtered = articles
     .filter(a => {
       const matchesSearch = (a.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            (a.abstract || "").toLowerCase().includes(searchQuery.toLowerCase());
+                            (a.abstract || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            (Array.isArray(a.keywords) && a.keywords.some(k => String(k).toLowerCase().includes(searchQuery.toLowerCase()))) ||
+                            (typeof a.keywords === "string" && a.keywords.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchesStatus = selectedStatus === "Barchasi" || (a.status || "Noma'lum") === selectedStatus;
       return matchesSearch && matchesStatus && (a.status === "Published" || a.status === "published");
     })
@@ -116,50 +118,58 @@ const Articles = () => {
   );
 };
 
-const ArticleCard = ({ article }) => (
-  <div className="bg-white rounded-[2rem] p-8 shadow-sm hover:shadow-2xl transition-all border border-gray-50 group flex flex-col h-full">
-    <div className="flex justify-between items-start mb-6">
-       <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-          <FiFileText size={28} />
-       </div>
-       <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-full tracking-widest">{article.status || "Nashr etilgan"}</span>
-    </div>
-    
-    <h3 className="text-xl font-bold text-[#002147] leading-tight mb-4 group-hover:text-blue-600 transition-colors line-clamp-2">
-      {formatTitle(article.title)}
-    </h3>
-    
-    <p className="text-[#6B7280] text-sm line-clamp-3 mb-6 flex-grow leading-relaxed italic">
-      {article.abstract || "Maqola haqida qisqacha ma'lumot mavjud emas."}
-    </p>
-    
-    <div className="flex flex-col gap-4 pt-6 border-t border-gray-50">
-       <div className="flex items-center justify-between text-[11px] font-bold text-gray-400">
-          <span className="flex items-center gap-1"><FiClock size={12}/> {new Date(article.createdAt).toLocaleDateString()}</span>
-          <span className="flex items-center gap-1 text-blue-600">
-             <FiEye size={14}/> {article.view_count || 0} KO'RILDI
-          </span>
-       </div>
-       <div className="flex gap-2">
-         <Link 
-            to={`/articles/${article.slug || article._id || article.id}`} 
-            className="flex-1 py-3 text-center text-xs font-black text-[#002147] bg-[#F6F8FB] hover:bg-gray-200 rounded-xl transition-all"
-         >
-            O'QISH
-         </Link>
-         {article.file_url && (
-           <a 
-              href={article.file_url} 
-              target="_blank"
-              rel="noreferrer"
-              className="flex-1 py-3 text-center text-xs font-black text-white bg-[#002147] hover:bg-[#001a33] rounded-xl transition-all shadow-lg active:scale-95"
+const ArticleCard = ({ article }) => {
+  useEffect(() => {
+    if (article.id) {
+      incrementArticleViewOnce(article.id);
+    }
+  }, [article.id]);
+
+  return (
+    <div className="bg-white rounded-[2rem] p-8 shadow-sm hover:shadow-2xl transition-all border border-gray-50 group flex flex-col h-full">
+      <div className="flex justify-between items-start mb-6">
+         <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+            <FiFileText size={28} />
+         </div>
+         <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-full tracking-widest">{article.status || "Nashr etilgan"}</span>
+      </div>
+      
+      <h3 className="text-xl font-bold text-[#002147] leading-tight mb-4 group-hover:text-blue-600 transition-colors line-clamp-2">
+        {formatTitle(article.title)}
+      </h3>
+      
+      <p className="text-[#6B7280] text-sm line-clamp-3 mb-6 flex-grow leading-relaxed italic">
+        {article.abstract || "Maqola haqida qisqacha ma'lumot mavjud emas."}
+      </p>
+      
+      <div className="flex flex-col gap-4 pt-6 border-t border-gray-50">
+         <div className="flex items-center justify-between text-[11px] font-bold text-gray-400">
+            <span className="flex items-center gap-1"><FiClock size={12}/> {new Date(article.createdAt).toLocaleDateString()}</span>
+            <span className="flex items-center gap-1 text-blue-600">
+               <FiEye size={14}/> {article.view_count || 0} KO'RILDI
+            </span>
+         </div>
+         <div className="flex gap-2">
+           <Link 
+              to={`/articles/${article.slug || article._id || article.id}`} 
+              className="flex-1 py-3 text-center text-xs font-black text-[#002147] bg-[#F6F8FB] hover:bg-gray-200 rounded-xl transition-all"
            >
-              PDF
-           </a>
-         )}
-       </div>
+              O'QISH
+           </Link>
+           {article.file_url && (
+             <a 
+                href={article.file_url} 
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 py-3 text-center text-xs font-black text-white bg-[#002147] hover:bg-[#001a33] rounded-xl transition-all shadow-lg active:scale-95"
+             >
+                PDF
+             </a>
+           )}
+         </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default Articles;

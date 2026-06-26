@@ -42,7 +42,6 @@ export const editorService = {
   delete: (id) => axiosInstance.delete(`/editor/deleteEditor/${id}`),
 };
 
-// --- 4. MAQOLALAR (ARTICLES) ---
 export const articleService = {
   create: (data) =>
     axiosInstance.post("/article/create", data, {
@@ -55,6 +54,18 @@ export const articleService = {
     headers: data instanceof FormData ? { "Content-Type": "multipart/form-data" } : {}
   }),
   delete: (id) => axiosInstance.delete(`/article/delete/${id}`),
+  incrementView: (id) => axiosInstance.post(`/article/increment-view/${id}`),
+};
+
+const trackedViews = new Set();
+export const incrementArticleViewOnce = async (id) => {
+  if (!id || trackedViews.has(id)) return;
+  trackedViews.add(id);
+  try {
+    await articleService.incrementView(id);
+  } catch (err) {
+    console.error("Failed to increment view for article:", id, err);
+  }
 };
 
 // --- 5. JURNALLAR (JOURNALS) ---
