@@ -177,8 +177,21 @@ const SendOldArticle = () => {
     setAuthors((p) => p.filter((_, i) => i !== idx));
   };
 
+  const formatOrcid = (value) => {
+    const clean = value.replace(/[^0-9X]/gi, "");
+    const parts = [];
+    for (let i = 0; i < clean.length && i < 16; i += 4) {
+      parts.push(clean.substring(i, i + 4));
+    }
+    return parts.join("-");
+  };
+
   const updateAuthor = (idx, field, value) => {
-    setAuthors((p) => p.map((a, i) => (i === idx ? { ...a, [field]: value } : a)));
+    let finalValue = value;
+    if (field === "orcidId") {
+      finalValue = formatOrcid(value);
+    }
+    setAuthors((p) => p.map((a, i) => (i === idx ? { ...a, [field]: finalValue } : a)));
   };
 
   const handleAuthorPhotoChange = (idx, file) => {
