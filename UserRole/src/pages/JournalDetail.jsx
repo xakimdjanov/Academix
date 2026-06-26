@@ -13,10 +13,48 @@ import {
   FiMessageSquare,
   FiCopy
 } from "react-icons/fi";
-import { journalService, articleService, settingsService, bobService } from "../services/api";
+import { journalService, articleService, settingsService, bobService, incrementArticleViewOnce } from "../services/api";
 import { useSEO } from "../hooks/useSEO";
 import toast, { Toaster } from "react-hot-toast";
 import { formatTitle } from "../utils/textFormatter";
+
+const ArticleRow = ({ article, showAuthors = false }) => {
+  useEffect(() => {
+    if (article.id) {
+      incrementArticleViewOnce(article.id);
+    }
+  }, [article.id]);
+
+  return (
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-55 flex gap-4 hover:shadow-md transition-shadow group">
+       <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors flex-shrink-0">
+          <FiFileText size={20} />
+       </div>
+       <div className="flex-1 min-w-0">
+          <h3 className="text-lg font-bold text-[#002147] mb-2 leading-snug group-hover:text-blue-600 transition-colors truncate">
+             {formatTitle(article.title)}
+          </h3>
+          {showAuthors && (
+             <p className="text-xs text-gray-500 mb-3">
+                Muallif: {article.authors ? (typeof article.authors === 'string' ? article.authors : (Array.isArray(article.authors) ? article.authors.map(x => x.fullName || x.name || x).join(', ') : '')) : '-'}
+             </p>
+          )}
+          <div className="flex items-center gap-4 mb-3">
+             <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest">{new Date(article.createdAt).toLocaleDateString()}</p>
+             <span className="flex items-center gap-1 text-[10px] sm:text-xs text-blue-600 font-black">
+                <FiEye size={12}/> {article.view_count || 0} KO'RILDI
+             </span>
+          </div>
+          <div className="flex gap-4">
+             <Link to={`/articles/${article.slug || article._id || article.id}`} className="inline-flex items-center gap-1 text-xs font-black text-blue-600 hover:text-blue-800 tracking-wider">
+                MAQOLANI O'QISH <FiChevronRight />
+             </Link>
+             <a href={article.file_url} target="_blank" rel="noreferrer" className="text-xs font-black text-gray-400 hover:text-gray-600 tracking-wider">PDF YUKLAB OLISH</a>
+          </div>
+       </div>
+    </div>
+  );
+};
 
 const JournalDetail = () => {
   const { slug } = useParams();
@@ -331,32 +369,8 @@ const JournalDetail = () => {
                            ) : (
                               <div className="space-y-4">
                                  {articles.filter(a => Number(a.bob_id) === Number(selectedBob.id)).map(article => (
-                                    <div key={article._id || article.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-55 flex gap-4 hover:shadow-md transition-shadow group">
-                                       <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors flex-shrink-0">
-                                          <FiFileText size={20} />
-                                       </div>
-                                       <div className="flex-1 min-w-0">
-                                          <h3 className="text-lg font-bold text-[#002147] mb-2 leading-snug group-hover:text-blue-600 transition-colors truncate">
-                                             {formatTitle(article.title)}
-                                          </h3>
-                                          <p className="text-xs text-gray-500 mb-3">
-                                             Muallif: {article.authors ? (typeof article.authors === 'string' ? article.authors : (Array.isArray(article.authors) ? article.authors.map(x => x.fullName || x.name || x).join(', ') : '')) : '-'}
-                                          </p>
-                                          <div className="flex items-center gap-4 mb-3">
-                                             <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest">{new Date(article.createdAt).toLocaleDateString()}</p>
-                                             <span className="flex items-center gap-1 text-[10px] sm:text-xs text-blue-600 font-black">
-                                                <FiEye size={12}/> {article.view_count || 0} KO'RILDI
-                                             </span>
-                                          </div>
-                                          <div className="flex gap-4">
-                                             <Link to={`/articles/${article.slug || article._id || article.id}`} className="inline-flex items-center gap-1 text-xs font-black text-blue-600 hover:text-blue-800 tracking-wider">
-                                                MAQOLANI O'QISH <FiChevronRight />
-                                             </Link>
-                                             <a href={article.file_url} target="_blank" rel="noreferrer" className="text-xs font-black text-gray-400 hover:text-gray-600 tracking-wider">PDF YUKLAB OLISH</a>
-                                          </div>
-                                       </div>
-                                    </div>
-                                 ))}
+                                     <ArticleRow key={article._id || article.id} article={article} showAuthors={true} />
+                                  ))}
                               </div>
                            )}
                         </div>
@@ -461,29 +475,8 @@ const JournalDetail = () => {
                            </div>
                         ) : (
                            articles.map(article => (
-                              <div key={article._id || article.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-50 flex gap-4 hover:shadow-md transition-shadow group">
-                                 <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
-                                    <FiFileText size={20} />
-                                 </div>
-                                 <div className="flex-1">
-                                    <h3 className="text-lg font-bold text-[#002147] mb-2 leading-snug group-hover:text-blue-600 transition-colors">
-                                       {formatTitle(article.title)}
-                                    </h3>
-                                    <div className="flex items-center gap-4 mb-3">
-                                       <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest">{new Date(article.createdAt).toLocaleDateString()}</p>
-                                       <span className="flex items-center gap-1 text-[10px] sm:text-xs text-blue-600 font-black">
-                                          <FiEye size={12}/> {article.view_count || 0} KO'RILDI
-                                       </span>
-                                    </div>
-                                    <div className="flex gap-4">
-                                       <Link to={`/articles/${article.slug || article.id}`} className="inline-flex items-center gap-1 text-xs font-black text-blue-600 hover:text-blue-800 tracking-wider">
-                                          MAQOLANI O'QISH <FiChevronRight />
-                                       </Link>
-                                       <a href={article.file_url} target="_blank" rel="noreferrer" className="text-xs font-black text-gray-400 hover:text-gray-600 tracking-wider">PDF YUKLAB OLISH</a>
-                                    </div>
-                                 </div>
-                              </div>
-                           ))
+                               <ArticleRow key={article._id || article.id} article={article} showAuthors={false} />
+                            ))
                         )}
                      </div>
                   )}
