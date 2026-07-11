@@ -1,7 +1,9 @@
   import axios from "axios";
 
-  const API_BASE_URL = "https://academixbackend-productionn.up.railway.app";
-  // const API_BASE_URL = "http://localhost:5000"; // development uchun
+  const API_BASE_URL =
+    window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+      ? "http://localhost:5000"
+      : "https://academixbackend-productionn.up.railway.app";
 
   const axiosInstance = axios.create({
     baseURL: API_BASE_URL,

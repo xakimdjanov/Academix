@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FiCreditCard, FiSearch, FiRefreshCw, FiClock, FiCheckCircle } from "react-icons/fi";
-import { paymentService } from "../../../../services/api";
+import { paymentService } from "../../../services/api";
 import toast from "react-hot-toast";
 
 const JournalPayments = () => {
