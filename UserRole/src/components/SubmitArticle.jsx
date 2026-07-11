@@ -87,7 +87,7 @@ const SubmitArticle = () => {
       return;
     }
     const target = journals.find((j) => String(j.id) === String(journalId));
-    if (!target || target.submission_price === 0) {
+    if (!target || !target.submission_price || Number(target.submission_price) === 0) {
       setHasPaid(true);
       return;
     }
