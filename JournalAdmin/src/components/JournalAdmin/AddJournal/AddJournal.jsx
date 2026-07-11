@@ -17,7 +17,7 @@ const initialState = {
   website_url: "",
   cover_image_url: "",
   status: "Active",
-  submission_fee: 0,
+  submission_price: 0,
 };
 
 function slugify(text) {
@@ -182,7 +182,7 @@ const AddJournal = () => {
     fd.append("aims_scope", form.aims_scope || "");
     fd.append("website_url", form.website_url || "");
     fd.append("status", form.status || "Active");
-    fd.append("submission_fee", form.submission_fee || 0);
+    fd.append("submission_price", form.submission_price || 0);
 
     // Send languages as JSON string or comma-separated string
     fd.append("languages", JSON.stringify(form.languages));
@@ -305,7 +305,7 @@ const AddJournal = () => {
               <option value="Inactive">Nofaol</option>
               <option value="Draft">Qoralama</option>
             </Select>
-            <Input icon={FiDollarSign} label="Maqola yuborish narxi ($)" type="number" step="0.01" name="submission_fee" value={form.submission_fee} onChange={onChange} className="sm:col-span-2" />
+            <Input icon={FiDollarSign} label="Maqola yuborish narxi (UZS)" type="number" step="1" name="submission_price" value={form.submission_price} onChange={onChange} className="sm:col-span-2" />
           </div>
 
           {/* Cover & Banner File Uploads */}

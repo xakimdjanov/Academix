@@ -16,6 +16,7 @@ import {
   FiPlus,
   FiShield,
   FiGlobe,
+  FiCreditCard,
 } from "react-icons/fi";
 
 const links = [
@@ -28,6 +29,7 @@ const links = [
   { name: "Loglar", path: "/logs", icon: <FiFileText /> },
   { name: "Takliflar", path: "/suggestions", icon: <FiAlertTriangle /> },
   { name: "Tariflar", path: "/tariffs", icon: <FiPlus /> },
+  { name: "To'lovlar", path: "/payments", icon: <FiCreditCard /> },
   { name: "Sozlamalar", path: "/settings", icon: <FiSettings /> },
 ];
 

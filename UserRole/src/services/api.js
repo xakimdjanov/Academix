@@ -171,4 +171,11 @@ export const suggestionService = {
 // --- 13. BOBS (Nashrlar/Issues) ---
 export const bobService = {
   getByJournal: (journalId) => axiosInstance.get(`/bob/by-journal/${journalId}`),
-};
+};
+export const paymentService = {
+  create: (data) => axiosInstance.post('/payment/create', data),
+  getStatus: (journalId) => axiosInstance.get('/payment/status/' + journalId),
+  getJournalPayments: () => axiosInstance.get('/payment/journal-payments'),
+  getAllPayments: () => axiosInstance.get('/payment/all-payments'),
+};
+

@@ -45,6 +45,22 @@ const Users = () => {
     );
   };
 
+  const togglePremium = async (id) => {
+    try {
+      const res = await axiosInstance.put(`/users/toggle-premium/${id}`);
+      toast.success(res.data.message || "Premium statusi yangilandi");
+      setUsers((prev) =>
+        prev.map((user) =>
+          (user.id ?? user._id) === id
+            ? { ...user, has_premium: res.data.has_premium }
+            : user
+        )
+      );
+    } catch (error) {
+      toast.error("Premium statusini o'zgartirib bo'lmadi");
+    }
+  };
+
   const markAvatarError = (id) => {
     setUsers((prev) =>
       prev.map((user) =>
@@ -81,6 +97,7 @@ const Users = () => {
                   <th className="py-4 px-6 italic">Elektron pochta manzili</th>
                   <th className="py-4 px-6 italic text-center">Rol</th>
                   <th className="py-4 px-6 italic text-center">Holat</th>
+                  <th className="py-4 px-6 italic text-center">Premium</th>
                   <th className="py-4 px-6 italic text-right">Amallar</th>
                 </tr>
               </thead>
@@ -149,18 +166,43 @@ const Users = () => {
                         </span>
                       </td>
 
-                      {/* Action */}
-                      <td className="py-4 px-6 text-right">
-                        <button
-                          onClick={() => toggleStatus(uid)}
-                          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
-                            user.status === "Active"
-                              ? "bg-rose-500 text-white hover:bg-rose-600"
-                              : "bg-emerald-500 text-white hover:bg-emerald-600"
+                      {/* Premium */}
+                      <td className="py-4 px-6 text-center">
+                        <span
+                          className={`px-3 py-1 text-[11px] font-bold rounded-md border ${
+                            user.has_premium
+                              ? "bg-amber-50 text-amber-600 border-amber-100"
+                              : "bg-gray-50 text-gray-500 border-gray-100"
                           }`}
                         >
-                          {user.status === "Active" ? "Block" : "Activate"}
-                        </button>
+                          {user.has_premium ? "Faol" : "Yo'q"}
+                        </span>
+                      </td>
+
+                      {/* Action */}
+                      <td className="py-4 px-6 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => togglePremium(uid)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                              user.has_premium
+                                ? "bg-amber-500 hover:bg-amber-600 text-white"
+                                : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
+                            }`}
+                          >
+                            {user.has_premium ? "Bekor qilish" : "Premium berish"}
+                          </button>
+                          <button
+                            onClick={() => toggleStatus(uid)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                              user.status === "Active"
+                                ? "bg-rose-500 text-white hover:bg-rose-600"
+                                : "bg-emerald-500 text-white hover:bg-emerald-600"
+                            }`}
+                          >
+                            {user.status === "Active" ? "Block" : "Activate"}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -168,7 +210,7 @@ const Users = () => {
 
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan="5" className="text-center py-12 text-gray-400 font-medium">
+                    <td colSpan="6" className="text-center py-12 text-gray-400 font-medium">
                       No records found in the system
                     </td>
                   </tr>

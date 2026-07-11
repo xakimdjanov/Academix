@@ -147,3 +147,8 @@ export const suggestionService = {
   getAll: () => axiosInstance.get("/suggestion/getAll"),
   updateStatus: (id, status) => axiosInstance.put(`/suggestion/update-status/${id}`, { status }),
 };
+
+export const paymentService = {
+  getAllPayments: () => axiosInstance.get('/payment/all-payments'),
+};
+

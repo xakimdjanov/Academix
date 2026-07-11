@@ -162,3 +162,8 @@ export const bobService = {
   }),
   delete: (id) => axiosInstance.delete(`/bob/delete/${id}`),
 };
+
+export const paymentService = {
+  getJournalPayments: () => axiosInstance.get('/payment/journal-payments'),
+};
+

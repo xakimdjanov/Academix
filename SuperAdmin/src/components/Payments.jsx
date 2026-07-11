@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { FiCreditCard, FiSearch, FiRefreshCw, FiClock, FiCheckCircle } from "react-icons/fi";
-import { paymentService } from "../../../../services/api";
+import { paymentService } from "../../services/api";
 import toast from "react-hot-toast";
 
-const JournalPayments = () => {
+const Payments = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -11,7 +11,7 @@ const JournalPayments = () => {
   const fetchPayments = async () => {
     setLoading(true);
     try {
-      const res = await paymentService.getJournalPayments();
+      const res = await paymentService.getAllPayments();
       if (res.data && res.data.success) {
         setPayments(res.data.payments);
       }
@@ -37,9 +37,9 @@ const JournalPayments = () => {
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <FiCreditCard className="text-blue-600" /> Jurnal To'lovlari
+            <FiCreditCard className="text-blue-600" /> Barcha To'lovlar
           </h1>
-          <p className="text-gray-500 text-sm mt-1">Mualliflar tomonidan amalga oshirilgan barcha to'lovlar tarixi</p>
+          <p className="text-gray-500 text-sm mt-1">Platformadagi barcha jurnallar bo'yicha to'lovlar tarixi</p>
         </div>
         <button
           onClick={fetchPayments}
@@ -128,4 +128,4 @@ const JournalPayments = () => {
   );
 };
 
-export default JournalPayments;
+export default Payments;

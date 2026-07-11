@@ -16,7 +16,7 @@ import {
 } from "react-icons/fi";
 import { useLocation } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
-import { articleService, journalService, bobService } from "../services/api";
+import { articleService, journalService, bobService, paymentService } from "../services/api";
 import { getUserIdFromToken } from "../utils/getUserIdFromToken";
 import { convertToWebP } from "../utils/webpHelper";
 
@@ -74,6 +74,7 @@ const SubmitArticle = () => {
 
   const [submitting, setSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
@@ -286,9 +287,34 @@ const SubmitArticle = () => {
 
   const [step, setStep] = useState(1);
 
-  const nextStep = () => {
+  const nextStep = async () => {
      const err = validateStep(step);
      if (err) return toast.error(err);
+
+     if (step === 2 && selectedJournal?.submission_price > 0 && !isEdit) {
+       try {
+         setPaymentLoading(true);
+         const res = await paymentService.getStatus(selectedJournalId);
+         if (!res.data.hasValidPayment) {
+           toast("Jurnal uchun to'lov talab qilinadi. To'lov sahifasiga yo'naltirilmoqdasiz...", { icon: '💰' });
+           const payRes = await paymentService.create({ journalId: selectedJournalId });
+           if (payRes.data.success && payRes.data.pay_url) {
+             window.location.href = payRes.data.pay_url;
+             return;
+           } else {
+             toast.error("To'lovni yaratishda xatolik");
+             setPaymentLoading(false);
+             return;
+           }
+         }
+       } catch (error) {
+         setPaymentLoading(false);
+         return toast.error("To'lov holatini tekshirishda xatolik yuz berdi");
+       } finally {
+         setPaymentLoading(false);
+       }
+     }
+
      setStep(p => p + 1);
   };
   const prevStep = () => setStep(p => p - 1);
@@ -721,7 +747,9 @@ const SubmitArticle = () => {
 
                 <div className="flex justify-between gap-4 pt-6 border-t">
                    <button onClick={prevStep} className="px-8 py-3 rounded-xl border border-gray-300 font-bold text-gray-600 hover:bg-gray-50 transition">Orqaga</button>
-                   <button onClick={nextStep} className="flex-1 bg-[#002147] text-white py-4 rounded-xl font-bold hover:bg-[#001a3a] transition shadow-lg flex items-center justify-center gap-2">Keyingisi <FiArrowRight /></button>
+                   <button onClick={nextStep} disabled={paymentLoading} className="flex-1 bg-[#002147] text-white py-4 rounded-xl font-bold hover:bg-[#001a3a] transition shadow-lg flex items-center justify-center gap-2">
+                     {paymentLoading ? "Tekshirilmoqda..." : "Keyingisi"} <FiArrowRight />
+                   </button>
                 </div>
               </div>
             )}

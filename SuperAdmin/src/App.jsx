@@ -15,6 +15,7 @@ import JournalAdmins from "./components/JournalAdmins";
 import Tariffs from "./components/Tariffs";
 import Suggestions from "./components/Suggestions";
 import SuggestionDetail from "./components/SuggestionDetail";
+import Payments from "./components/Payments";
 
 import AdminLayout from "./Layout/AdminLayout";
 
@@ -49,6 +50,7 @@ const App = () => {
           <Route path="/tariffs" element={<Tariffs />} />
           <Route path="/suggestions" element={<Suggestions />} />
           <Route path="/suggestions/:id" element={<SuggestionDetail />} />
+          <Route path="/payments" element={<Payments />} />
         </Route>
 
         {/* Not found */}
