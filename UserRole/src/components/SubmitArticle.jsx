@@ -99,6 +99,13 @@ const SubmitArticle = () => {
         setHasPaid(true);
       } else {
         setHasPaid(false);
+        toast("To'lov sahifasiga yo'naltirilmoqdasiz...", { icon: '💰' });
+        const payRes = await paymentService.create({ journalId });
+        if (payRes.data.success && payRes.data.pay_url) {
+          window.location.href = payRes.data.pay_url;
+        } else {
+          toast.error("To'lovni yaratishda xatolik");
+        }
       }
     } catch (err) {
       console.error("Error checking payment status:", err);
@@ -715,7 +722,13 @@ const SubmitArticle = () => {
                     </div>
                     <div className="bg-white border border-amber-100 rounded-2xl p-4 inline-block shadow-sm">
                       <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block font-bold">To'lov miqdori</span>
-                      <span className="text-2xl font-black text-slate-800">{selectedJournal?.submission_price?.toLocaleString()} UZS</span>
+                      <span className="text-2xl font-black text-slate-800">
+                        {selectedJournal?.submission_price < 1000 ? (
+                          `${selectedJournal?.submission_price?.toLocaleString()} USD (${(selectedJournal?.submission_price * 13000).toLocaleString()} UZS)`
+                        ) : (
+                          `${selectedJournal?.submission_price?.toLocaleString()} UZS`
+                        )}
+                      </span>
                     </div>
                     <div>
                       <button
