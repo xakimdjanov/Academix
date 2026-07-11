@@ -75,9 +75,59 @@ const SubmitArticle = () => {
   const [submitting, setSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [hasPaid, setHasPaid] = useState(false);
+  const [checkingPayment, setCheckingPayment] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
+
+  const checkJournalPayment = async (journalId) => {
+    if (!journalId || isEdit) {
+      setHasPaid(true);
+      return;
+    }
+    const target = journals.find((j) => String(j.id) === String(journalId));
+    if (!target || target.submission_price === 0) {
+      setHasPaid(true);
+      return;
+    }
+
+    try {
+      setCheckingPayment(true);
+      const res = await paymentService.getStatus(journalId);
+      if (res.data && res.data.hasValidPayment) {
+        setHasPaid(true);
+      } else {
+        setHasPaid(false);
+      }
+    } catch (err) {
+      console.error("Error checking payment status:", err);
+      setHasPaid(false);
+    } finally {
+      setCheckingPayment(false);
+    }
+  };
+
+  const handleRedirectToPayment = async () => {
+    if (!selectedJournalId) return;
+    try {
+      setPaymentLoading(true);
+      const payRes = await paymentService.create({ journalId: selectedJournalId });
+      if (payRes.data.success && payRes.data.pay_url) {
+        window.location.href = payRes.data.pay_url;
+      } else {
+        toast.error("To'lovni yaratishda xatolik");
+      }
+    } catch (error) {
+      toast.error("To'lovni boshlashda xatolik yuz berdi");
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    checkJournalPayment(selectedJournalId);
+  }, [selectedJournalId, journals, isEdit]);
 
   useEffect(() => {
     if (isEdit) {
@@ -291,28 +341,8 @@ const SubmitArticle = () => {
      const err = validateStep(step);
      if (err) return toast.error(err);
 
-     if (step === 2 && selectedJournal?.submission_price > 0 && !isEdit) {
-       try {
-         setPaymentLoading(true);
-         const res = await paymentService.getStatus(selectedJournalId);
-         if (!res.data.hasValidPayment) {
-           toast("Jurnal uchun to'lov talab qilinadi. To'lov sahifasiga yo'naltirilmoqdasiz...", { icon: '💰' });
-           const payRes = await paymentService.create({ journalId: selectedJournalId });
-           if (payRes.data.success && payRes.data.pay_url) {
-             window.location.href = payRes.data.pay_url;
-             return;
-           } else {
-             toast.error("To'lovni yaratishda xatolik");
-             setPaymentLoading(false);
-             return;
-           }
-         }
-       } catch (error) {
-         setPaymentLoading(false);
-         return toast.error("To'lov holatini tekshirishda xatolik yuz berdi");
-       } finally {
-         setPaymentLoading(false);
-       }
+     if (step === 2 && !hasPaid && !isEdit) {
+       return toast.error("Iltimos, avval to'lovni amalga oshiring");
      }
 
      setStep(p => p + 1);
@@ -667,90 +697,124 @@ const SubmitArticle = () => {
                   )}
                 </div>
 
-                <div className="space-y-6">
-                  <h2 className="text-xl font-bold text-[#002147] pb-2 border-b border-gray-200">2. Maqola ma'lumotlari</h2>
-                  <div className="space-y-2">
-                    <label className="block font-medium text-gray-700">Sarlavha *</label>
-                    <input
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition bg-white"
-                      placeholder="Maqola sarlavhasini kiriting..."
-                    />
+                {checkingPayment ? (
+                  <div className="py-12 flex flex-col items-center justify-center space-y-4">
+                    <div className="w-12 h-12 border-4 border-[#002147] border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-slate-500 text-sm font-medium">To'lov holati tekshirilmoqda...</p>
                   </div>
-
-                  <div className="space-y-2">
-                    <label className="block font-medium text-gray-700">Annotatsiya *</label>
-                    <textarea
-                      value={abstract}
-                      onChange={(e) => setAbstract(e.target.value)}
-                      rows={5}
-                      className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition resize-y bg-white"
-                      placeholder="Annotatsiyani kiriting..."
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block font-medium text-gray-700">Kalit so'zlar *</label>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <input
-                        value={keywordInput}
-                        onChange={(e) => setKeywordInput(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addKeyword())}
-                        className="flex-1 rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none bg-white"
-                        placeholder="Kalit so'z yozing, vergul yoki Enter bilan ajrating"
-                      />
-                      <button onClick={() => addKeyword()} className="rounded-xl bg-[#002147] px-6 py-3 text-white font-medium hover:bg-[#001a3a] transition shadow-sm">
-                        Qo'shish
+                ) : !hasPaid ? (
+                  <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-200 rounded-3xl p-8 text-center space-y-6 animate-in fade-in duration-300">
+                    <div className="mx-auto w-16 h-16 bg-amber-500 text-white rounded-full flex items-center justify-center shadow-lg">
+                      <FiDollarSign size={32} />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-slate-800">Maqola yuborish uchun to'lov talab qilinadi</h3>
+                      <p className="text-slate-600 max-w-md mx-auto text-sm">
+                        Ushbu jurnalga maqola yuborish pullik. Ma'lumotlarni to'ldirishdan oldin to'lovni amalga oshirishingiz zarur.
+                      </p>
+                    </div>
+                    <div className="bg-white border border-amber-100 rounded-2xl p-4 inline-block shadow-sm">
+                      <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block font-bold">To'lov miqdori</span>
+                      <span className="text-2xl font-black text-slate-800">{selectedJournal?.submission_price?.toLocaleString()} UZS</span>
+                    </div>
+                    <div>
+                      <button
+                        onClick={handleRedirectToPayment}
+                        disabled={paymentLoading}
+                        className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white px-8 py-4 rounded-xl font-bold transition shadow-lg shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto"
+                      >
+                        {paymentLoading ? "To'lov sahifasiga yo'naltirilmoqda..." : "Hozir to'lash"}
                       </button>
                     </div>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                       {keywords.map((k, i) => (
-                          <span key={i} onClick={() => removeKeyword(i)} className="inline-flex items-center gap-1 px-4 py-1.5 rounded-full bg-[#e6f0ff] text-[#002147] text-sm cursor-pointer hover:bg-blue-200 transition">
-                             {k} <span className="font-bold">×</span>
-                          </span>
-                       ))}
-                    </div>
                   </div>
-
-                  <div className="grid sm:grid-cols-2 gap-6">
+                ) : (
+                  <div className="space-y-6 animate-in fade-in duration-300">
+                    <h2 className="text-xl font-bold text-[#002147] pb-2 border-b border-gray-200">2. Maqola ma'lumotlari</h2>
                     <div className="space-y-2">
-                      <label className="block font-medium text-gray-700">Toifa *</label>
-                      <div className="relative">
-                        <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition bg-white appearance-none cursor-pointer">
-                          <option value="">Toifani tanlang...</option>
-                          {journalCategories.map((cat) => (
-                            <option key={cat} value={cat}>{cat}</option>
-                          ))}
-                          <option value="Other">Boshqa...</option>
-                        </select>
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
+                      <label className="block font-medium text-gray-700">Sarlavha *</label>
+                      <input
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition bg-white"
+                        placeholder="Maqola sarlavhasini kiriting..."
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block font-medium text-gray-700">Annotatsiya *</label>
+                      <textarea
+                        value={abstract}
+                        onChange={(e) => setAbstract(e.target.value)}
+                        rows={5}
+                        className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition resize-y bg-white"
+                        placeholder="Annotatsiyani kiriting..."
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block font-medium text-gray-700">Kalit so'zlar *</label>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <input
+                          value={keywordInput}
+                          onChange={(e) => setKeywordInput(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addKeyword())}
+                          className="flex-1 rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none bg-white"
+                          placeholder="Kalit so'z yozing, vergul yoki Enter bilan ajrating"
+                        />
+                        <button onClick={() => addKeyword()} className="rounded-xl bg-[#002147] px-6 py-3 text-white font-medium hover:bg-[#001a3a] transition shadow-sm">
+                          Qo'shish
+                        </button>
                       </div>
-                      {category === "Other" && (
-                        <input type="text" placeholder="Toifa nomini yozing..." value={customCategory} onChange={(e) => setCustomCategory(e.target.value)} className="w-full mt-2 rounded-xl border border-blue-300 px-5 py-3 outline-none bg-blue-50/30" />
-                      )}
+                      <div className="flex flex-wrap gap-2 mt-3">
+                         {keywords.map((k, i) => (
+                            <span key={i} onClick={() => removeKeyword(i)} className="inline-flex items-center gap-1 px-4 py-1.5 rounded-full bg-[#e6f0ff] text-[#002147] text-sm cursor-pointer hover:bg-blue-200 transition">
+                               {k} <span className="font-bold">×</span>
+                            </span>
+                         ))}
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <label className="block font-medium text-gray-700">Til *</label>
-                      <select value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full rounded-xl border border-gray-300 px-5 py-3 outline-none bg-white">
-                        <option value="">Tilni tanlang...</option>
-                        <option value="English">English</option>
-                        <option value="Uzbek">O'zbekcha</option>
-                      </select>
+
+                    <div className="grid sm:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="block font-medium text-gray-700">Toifa *</label>
+                        <div className="relative">
+                          <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition bg-white appearance-none cursor-pointer">
+                            <option value="">Toifani tanlang...</option>
+                            {journalCategories.map((cat) => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                            <option value="Other">Boshqa...</option>
+                          </select>
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </div>
+                        {category === "Other" && (
+                          <input type="text" placeholder="Toifa nomini yozing..." value={customCategory} onChange={(e) => setCustomCategory(e.target.value)} className="w-full mt-2 rounded-xl border border-blue-300 px-5 py-3 outline-none bg-blue-50/30" />
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block font-medium text-gray-700">Til *</label>
+                        <select value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full rounded-xl border border-gray-300 px-5 py-3 outline-none bg-white">
+                          <option value="">Tilni tanlang...</option>
+                          <option value="English">English</option>
+                          <option value="Uzbek">O'zbekcha</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="flex justify-between gap-4 pt-6 border-t">
-                   <button onClick={prevStep} className="px-8 py-3 rounded-xl border border-gray-300 font-bold text-gray-600 hover:bg-gray-50 transition">Orqaga</button>
-                   <button onClick={nextStep} disabled={paymentLoading} className="flex-1 bg-[#002147] text-white py-4 rounded-xl font-bold hover:bg-[#001a3a] transition shadow-lg flex items-center justify-center gap-2">
-                     {paymentLoading ? "Tekshirilmoqda..." : "Keyingisi"} <FiArrowRight />
-                   </button>
-                </div>
+                )}
+ 
+                 <div className="flex justify-between gap-4 pt-6 border-t">
+                    <button onClick={prevStep} className="px-8 py-3 rounded-xl border border-gray-300 font-bold text-gray-600 hover:bg-gray-50 transition">Orqaga</button>
+                    {hasPaid && (
+                      <button onClick={nextStep} className="flex-1 bg-[#002147] text-white py-4 rounded-xl font-bold hover:bg-[#001a3a] transition shadow-lg flex items-center justify-center gap-2">
+                        Keyingisi <FiArrowRight />
+                      </button>
+                    )}
+                 </div>
               </div>
             )}
 
