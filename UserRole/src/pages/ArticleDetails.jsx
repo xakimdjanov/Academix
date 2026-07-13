@@ -34,7 +34,7 @@ const ArticleDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const myId = useMemo(() => getUserIdFromToken(), []);
-  const { t, language } = useLanguage();
+  const { t, language, translateCategory } = useLanguage();
 
   const [loading, setLoading] = useState(false);
   const [article, setArticle] = useState(null);
@@ -232,7 +232,7 @@ const ArticleDetails = () => {
              <div className="flex-1">
                 <div className="flex flex-wrap gap-3 mb-4">
                    <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-[10px] font-black uppercase rounded-full tracking-widest border border-blue-500/30">
-                      {article.category || (language === "uz" ? "Ilmiy maqola" : language === "en" ? "Scientific article" : "Научная статья")}
+                      {translateCategory(article.category)}
                    </span>
                    {article.journal && (
                      <Link to={`/journals/${article.journal.slug}`} className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase rounded-full tracking-widest border border-white/20 transition-colors">
