@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { FiMail, FiPhone, FiSend, FiMessageCircle, FiMapPin } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { suggestionService } from "../services/api";
+import { useLanguage } from "../context/LanguageContext";
 
 const Contact = () => {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const { t, language } = useLanguage();
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -23,11 +25,19 @@ const Contact = () => {
 
       await suggestionService.create(formData);
 
-      toast.success("Xabar muvaffaqiyatli yuborildi!");
+      toast.success(
+        language === "uz" ? "Xabar muvaffaqiyatli yuborildi!" :
+        language === "en" ? "Message sent successfully!" :
+        "Сообщение успешно отправлено!"
+      );
       setForm({ name: "", email: "", subject: "", message: "" });
     } catch (error) {
       console.error(error);
-      toast.error("Xatolik yuz berdi. Iltimos, qayta urinib ko'ring.");
+      toast.error(
+        language === "uz" ? "Xatolik yuz berdi. Iltimos, qayta urinib ko'ring." :
+        language === "en" ? "An error occurred. Please try again." :
+        "Произошла ошибка. Пожалуйста, попробуйте еще раз."
+      );
     } finally {
       setLoading(false);
     }
@@ -46,13 +56,17 @@ const Contact = () => {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-5 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-blue-200 text-xs font-bold tracking-widest uppercase mb-8 shadow-xl">
-             <FiMessageCircle className="text-sm" /> Biz bilan aloqa
+             <FiMessageCircle className="text-sm" /> {language === "uz" ? "Biz bilan aloqa" : language === "en" ? "Contact us" : "Связаться с нами"}
           </div>
           <h1 className="text-5xl md:text-7xl font-black mb-8 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-gray-300">
-            Savollaringiz bormi? <br className="hidden md:block"/> Biz yordamga tayyormiz
+            {language === "uz" ? <>Savollaringiz bormi? <br className="hidden md:block"/> Biz yordamga tayyormiz</> :
+             language === "en" ? <>Have questions? <br className="hidden md:block"/> We are here to help</> :
+             <>Есть вопросы? <br className="hidden md:block"/> Мы готовы помочь</>}
           </h1>
           <p className="text-blue-100/80 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed">
-            Platforma faoliyati yoki obunalar bo'yicha savollaringizni yo'llang. Bizning qo'llab-quvvatlash jamoamiz sizga 24/7 yordam beradi.
+            {language === "uz" ? "Platforma faoliyati yoki obunalar bo'yicha savollaringizni yo'llang. Bizning qo'llab-quvvatlash jamoamiz sizga 24/7 yordam beradi." :
+             language === "en" ? "Send your questions about platform operations or subscriptions. Our support team is ready to assist you 24/7." :
+             "Отправляйте ваши вопросы о работе платформы или подписках. Наша служба поддержки готова помочь вам 24/7."}
           </p>
         </div>
         
@@ -72,30 +86,30 @@ const Contact = () => {
             <div className="lg:col-span-5 grid sm:grid-cols-2 lg:grid-cols-1 gap-6">
                <ContactInfoCard 
                   icon={<FiMail />} 
-                  label="Elektron pochta" 
+                  label={t("auth.email")} 
                   value="stacknowa@gmail.com" 
-                  sub="24 soat ichida javob beriladi"
+                  sub={language === "uz" ? "24 soat ichida javob beriladi" : language === "en" ? "Replied within 24 hours" : "Ответ в течение 24 часов"}
                   href="mailto:stacknowa@gmail.com"
                />
                <ContactInfoCard 
                   icon={<FiPhone />} 
-                  label="To'g'ridan-to'g'ri bog'lanish" 
+                  label={language === "uz" ? "To'g'ridan-to'g'ri bog'lanish" : language === "en" ? "Direct contact" : "Прямой контакт"} 
                   value="+998 (20) 014-66-67" 
-                  sub="Du-Ju, 9:00-18:00"
+                  sub={language === "uz" ? "Du-Ju, 9:00-18:00" : language === "en" ? "Mon-Fri, 9:00-18:00" : "Пн-Пт, 9:00-18:00"}
                   href="tel:+998200146667"
                />
                <ContactInfoCard 
                   icon={<FiMessageCircle />} 
-                  label="Telegram kanal" 
+                  label={language === "uz" ? "Telegram kanal" : language === "en" ? "Telegram channel" : "Telegram канал"} 
                   value="@stacknowa" 
-                  sub="Jamiyatimizga qo'shiling"
+                  sub={language === "uz" ? "Jamiyatimizga qo'shiling" : language === "en" ? "Join our community" : "Присоединяйтесь к сообществу"}
                   href="https://t.me/stacknowa"
                />
                <ContactInfoCard 
                   icon={<FiMapPin />} 
-                  label="Asosiy ofis" 
-                  value="Namangan shahar" 
-                  sub="Tashrif buyuruvchilar uchun ochiq"
+                  label={language === "uz" ? "Asosiy ofis" : language === "en" ? "Main office" : "Главный офис"} 
+                  value={language === "uz" ? "Namangan shahar" : language === "en" ? "Namangan city" : "город Наманган"} 
+                  sub={language === "uz" ? "Tashrif buyuruvchilar uchun ochiq" : language === "en" ? "Open for visitors" : "Открыто для посетителей"}
                />
             </div>
 
@@ -105,66 +119,72 @@ const Contact = () => {
                   <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -mr-20 -mt-20 z-0"></div>
                   
                   <div className="relative z-10">
-                     <h2 className="text-3xl font-black text-[#001f3f] mb-8">Xabar qoldiring</h2>
-                     <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2 group">
-                           <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-blue-600">Ism-sharifingiz</label>
-                           <input 
-                              required
-                              type="text" 
-                              placeholder="Eshmatov Toshmat"
-                              value={form.name}
-                              onChange={e => setForm({...form, name: e.target.value})}
-                              className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-5 py-4 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:bg-white transition-all font-medium"
-                           />
-                        </div>
-                        <div className="space-y-2 group">
-                           <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-blue-600">Pochta manzili</label>
-                           <input 
-                              required
-                              type="email" 
-                              placeholder="email@manzil.com"
-                              value={form.email}
-                              onChange={e => setForm({...form, email: e.target.value})}
-                              className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-5 py-4 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:bg-white transition-all font-medium"
-                           />
-                        </div>
-                        <div className="md:col-span-2 space-y-2 group">
-                           <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-blue-600">Mavzu</label>
-                           <input 
-                              required
-                              type="text" 
-                              placeholder="Xabaringiz mavzusi"
-                              value={form.subject}
-                              onChange={e => setForm({...form, subject: e.target.value})}
-                              className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-5 py-4 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:bg-white transition-all font-medium"
-                           />
-                        </div>
-                        <div className="md:col-span-2 space-y-2 group">
-                           <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-blue-600">Sizning xabaringiz</label>
-                           <textarea 
-                              required
-                              rows="5"
-                              placeholder="Sizga qanday yordam kerakligini batafsil yozing..."
-                              value={form.message}
-                              onChange={e => setForm({...form, message: e.target.value})}
-                              className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-5 py-4 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:bg-white transition-all font-medium resize-none"
-                           ></textarea>
-                        </div>
-                        <div className="md:col-span-2 pt-2">
-                           <button 
-                              type="submit" 
-                              disabled={loading}
-                              className="w-full py-4 bg-[#0052cc] hover:bg-[#0043a8] text-white rounded-xl font-bold transition-all duration-300 shadow-xl shadow-blue-600/20 hover:shadow-blue-600/40 active:scale-[0.98] flex items-center justify-center gap-3 group overflow-hidden relative"
-                           >
-                              <span className="relative z-10 flex items-center gap-2">
-                                 {loading ? "Yuborilmoqda..." : "Xabarni yuborish"} 
-                                 <FiSend className={`transition-transform duration-300 ${loading ? 'animate-pulse' : 'group-hover:-translate-y-1 group-hover:translate-x-1'}`} />
-                              </span>
-                              <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-white/20 to-blue-400/0 translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                           </button>
-                        </div>
-                     </form>
+                      <h2 className="text-3xl font-black text-[#001f3f] mb-8">
+                        {language === "uz" ? "Xabar qoldirishingiz mumkin" : language === "en" ? "Leave a message" : "Оставьте сообщение"}
+                      </h2>
+                      <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                         <div className="space-y-2 group">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-blue-600">{t("auth.fullname")}</label>
+                            <input 
+                               required
+                               type="text" 
+                               placeholder={language === "uz" ? "Eshmatov Toshmat" : language === "en" ? "John Doe" : "Иван Иванов"}
+                               value={form.name}
+                               onChange={e => setForm({...form, name: e.target.value})}
+                               className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-5 py-4 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:bg-white transition-all font-medium"
+                            />
+                         </div>
+                         <div className="space-y-2 group">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-blue-600">{t("auth.email")}</label>
+                            <input 
+                               required
+                               type="email" 
+                               placeholder={t("auth.enter_email")}
+                               value={form.email}
+                               onChange={e => setForm({...form, email: e.target.value})}
+                               className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-5 py-4 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:bg-white transition-all font-medium"
+                            />
+                         </div>
+                         <div className="md:col-span-2 space-y-2 group">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-blue-600">
+                              {language === "uz" ? "Mavzu" : language === "en" ? "Subject" : "Тема"}
+                            </label>
+                            <input 
+                               required
+                               type="text" 
+                               placeholder={language === "uz" ? "Xabaringiz mavzusi" : language === "en" ? "Subject of your message" : "Тема вашего сообщения"}
+                               value={form.subject}
+                               onChange={e => setForm({...form, subject: e.target.value})}
+                               className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-5 py-4 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:bg-white transition-all font-medium"
+                            />
+                         </div>
+                         <div className="md:col-span-2 space-y-2 group">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-blue-600">
+                              {language === "uz" ? "Sizning xabaringiz" : language === "en" ? "Your message" : "Ваше сообщение"}
+                            </label>
+                            <textarea 
+                               required
+                               rows="5"
+                               placeholder={language === "uz" ? "Sizga qanday yordam kerakligini batafsil yozing..." : language === "en" ? "Describe how we can help you in detail..." : "Подробно опишите, как мы можем вам помочь..."}
+                               value={form.message}
+                               onChange={e => setForm({...form, message: e.target.value})}
+                               className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-5 py-4 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 focus:bg-white transition-all font-medium resize-none"
+                            ></textarea>
+                         </div>
+                         <div className="md:col-span-2 pt-2">
+                            <button 
+                               type="submit" 
+                               disabled={loading}
+                               className="w-full py-4 bg-[#0052cc] hover:bg-[#0043a8] text-white rounded-xl font-bold transition-all duration-300 shadow-xl shadow-blue-600/20 hover:shadow-blue-600/40 active:scale-[0.98] flex items-center justify-center gap-3 group overflow-hidden relative"
+                            >
+                               <span className="relative z-10 flex items-center gap-2">
+                                  {loading ? (language === "uz" ? "Yuborilmoqda..." : language === "en" ? "Submitting..." : "Отправка...") : (language === "uz" ? "Xabarni yuborish" : language === "en" ? "Send message" : "Отправить сообщение")} 
+                                  <FiSend className={`transition-transform duration-300 ${loading ? 'animate-pulse' : 'group-hover:-translate-y-1 group-hover:translate-x-1'}`} />
+                               </span>
+                               <div className="absolute inset-0 bg-gradient-to-r from-blue-400/0 via-white/20 to-blue-400/0 translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                            </button>
+                         </div>
+                      </form>
                   </div>
                </div>
             </div>

@@ -10,15 +10,16 @@ import {
   FiEye,
   FiLayers,
   FiChevronRight,
-  FiMessageSquare,
   FiCopy
 } from "react-icons/fi";
 import { journalService, articleService, settingsService, bobService, incrementArticleViewOnce } from "../services/api";
 import { useSEO } from "../hooks/useSEO";
 import toast, { Toaster } from "react-hot-toast";
 import { formatTitle } from "../utils/textFormatter";
+import { useLanguage } from "../context/LanguageContext";
 
 const ArticleRow = ({ article, showAuthors = false }) => {
+  const { t } = useLanguage();
   useEffect(() => {
     if (article.id) {
       incrementArticleViewOnce(article.id);
@@ -36,20 +37,20 @@ const ArticleRow = ({ article, showAuthors = false }) => {
           </h3>
           {showAuthors && (
              <p className="text-xs text-gray-500 mb-3">
-                Muallif: {article.authors ? (typeof article.authors === 'string' ? article.authors : (Array.isArray(article.authors) ? article.authors.map(x => x.fullName || x.name || x).join(', ') : '')) : '-'}
+                {t("articles.authors")}: {article.authors ? (typeof article.authors === 'string' ? article.authors : (Array.isArray(article.authors) ? article.authors.map(x => x.fullName || x.name || x).join(', ') : '')) : '-'}
              </p>
           )}
           <div className="flex items-center gap-4 mb-3">
              <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest">{new Date(article.createdAt).toLocaleDateString()}</p>
              <span className="flex items-center gap-1 text-[10px] sm:text-xs text-blue-600 font-black">
-                <FiEye size={12}/> {article.view_count || 0} KO'RILDI
+                <FiEye size={12}/> {article.view_count || 0} {t("common.views_count")}
              </span>
           </div>
           <div className="flex gap-4">
              <Link to={`/articles/${article.slug || article._id || article.id}`} className="inline-flex items-center gap-1 text-xs font-black text-blue-600 hover:text-blue-800 tracking-wider">
-                MAQOLANI O'QISH <FiChevronRight />
+                {t("common.read_article")} <FiChevronRight />
              </Link>
-             <a href={article.file_url} target="_blank" rel="noreferrer" className="text-xs font-black text-gray-400 hover:text-gray-600 tracking-wider">PDF YUKLAB OLISH</a>
+             <a href={article.file_url} target="_blank" rel="noreferrer" className="text-xs font-black text-gray-400 hover:text-gray-600 tracking-wider">{t("common.download_pdf")}</a>
           </div>
        </div>
     </div>
@@ -66,19 +67,23 @@ const JournalDetail = () => {
   const [selectedYear, setSelectedYear] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("about");
-  const isLoggedIn = !!localStorage.getItem("token");
+  const { t, language, translateCategory } = useLanguage();
 
   const [copied, setCopied] = useState(false);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
-    toast.success("Sahifa havolasi nusxalandi!");
+    toast.success(t("journals.shared"));
     setTimeout(() => setCopied(false), 2000);
   };
 
   const shareTelegram = () => {
-    const text = encodeURIComponent(`Academix platformasida yangi ilmiy nashr:\n\n${journal?.journal_name || journal?.name}\n\n`);
+    const text = encodeURIComponent(
+      language === "uz" ? `Academix platformasida yangi ilmiy nashr:\n\n${journal?.journal_name || journal?.name}\n\n` :
+      language === "en" ? `New scientific publication on Academix platform:\n\n${journal?.journal_name || journal?.name}\n\n` :
+      `Новое научное издание на платформе Academix:\n\n${journal?.journal_name || journal?.name}\n\n`
+    );
     const url = encodeURIComponent(window.location.href);
     window.open(`https://t.me/share/url?url=${url}&text=${text}`, "_blank");
   };
@@ -165,13 +170,19 @@ const JournalDetail = () => {
   if (!journal) {
     return (
       <div className="min-h-screen bg-[#F6F8FB] flex items-center justify-center flex-col gap-4">
-        <h2 className="text-2xl font-bold text-[#002147]">Jurnal topilmadi</h2>
+        <h2 className="text-2xl font-bold text-[#002147]">{t("journals.not_found")}</h2>
         <Link to="/journals" className="text-blue-600 font-bold hover:underline flex items-center gap-2">
-          <FiArrowLeft /> Jurnallarga qaytish
+          <FiArrowLeft /> {t("journals.back_journals")}
         </Link>
       </div>
     );
   }
+
+  const defaultShortDesc = language === "uz" 
+    ? "Ilmiy tadqiqotlar va akademik mukammallik uchun yetakchi nashriyot maydoni." 
+    : language === "en"
+    ? "A leading publishing platform for scientific research and academic excellence." 
+    : "Ведущая издательская платформа для научных исследований и академического мастерства.";
 
   return (
     <div className="bg-[#F6F8FB] min-h-screen pb-20">
@@ -187,7 +198,7 @@ const JournalDetail = () => {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <Link to="/journals" className="inline-flex items-center gap-2 text-blue-200 hover:text-white mb-8 transition-colors">
-            <FiArrowLeft /> Qidiruvga qaytish
+            <FiArrowLeft /> {t("journals.back_search")}
           </Link>
           <div className="flex flex-col md:flex-row gap-8 items-start">
              <div className="w-24 h-24 md:w-32 md:h-32 bg-white/10 backdrop-blur-md rounded-3xl flex items-center justify-center text-blue-400 border border-white/20 shadow-2xl overflow-hidden">
@@ -200,39 +211,37 @@ const JournalDetail = () => {
              <div className="flex-1">
                 <div className="flex flex-wrap gap-3 mb-4">
                    <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-[10px] font-black uppercase rounded-full tracking-widest border border-blue-500/30">
-                      {journal.category || "Taqrizdan o'tgan"}
+                      {translateCategory(journal.category) || t("home.hero_badge_peer")}
                    </span>
                    <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase rounded-full tracking-widest border border-emerald-500/30">
-                      ISSN: {journal.issn || "Kutilmoqda"}
+                      ISSN: {journal.issn || (language === "uz" ? "Kutilmoqda" : language === "en" ? "Pending" : "Ожидается")}
                    </span>
                    <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-black uppercase rounded-full tracking-widest border border-white/20 flex items-center gap-1">
-                      <FiEye size={12}/> {journal.view_count || 0} ko'rildi
+                      <FiEye size={12}/> {journal.view_count || 0} {t("common.views")}
                    </span>
                 </div>
                 <h1 className="text-3xl md:text-5xl font-black mb-4 leading-tight">{formatTitle(journal.journal_name || journal.name)}</h1>
                 <p className="text-blue-100/70 text-lg max-w-3xl italic">
-                   "{journal.short_description || "Ilmiy tadqiqotlar va akademik mukammallik uchun yetakchi nashriyot maydoni."}"
+                   "{journal.short_description || journal.description || defaultShortDesc}"
                 </p>
              </div>
               <div className="mt-4 md:mt-0 flex flex-wrap gap-3 items-center">
                  <Link to={`/submit-article?journalId=${journal.id || journal._id}`} className="px-8 py-4 bg-white text-[#002147] rounded-2xl font-black text-sm transition-all shadow-xl hover:-translate-y-1 active:scale-95 flex items-center gap-2">
-                    MAQOLA YUBORISH <FiSend />
+                    {t("home.hero_btn_submit").toUpperCase()} <FiSend />
                  </Link>
                  
                  <div className="flex gap-2 bg-white/10 backdrop-blur-md p-2 rounded-2xl border border-white/10">
                     <button 
                        onClick={shareTelegram}
                        className="p-3 bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 hover:text-white rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider"
-                       title="Telegram orqali ulashish"
                     >
-                       <FiSend size={16} /> Ulashish
+                       <FiSend size={16} /> {t("journals.share")}
                     </button>
                     <button 
                        onClick={handleCopyLink}
                        className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider"
-                       title="Havolani nusxalash"
                     >
-                       <FiCopy size={16} /> {copied ? "Nusxalandi" : "Nusxa olish"}
+                       <FiCopy size={16} /> {copied ? t("journals.copied") : t("journals.copy")}
                     </button>
                  </div>
               </div>
@@ -244,10 +253,10 @@ const JournalDetail = () => {
       {/* 🔘 Navigation Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20">
          <div className="bg-white rounded-2xl shadow-xl p-2 flex overflow-x-auto no-scrollbar gap-2 border border-gray-100">
-            <TabButton active={activeTab === 'about'} onClick={() => { setActiveTab('about'); setSelectedBob(null); setSelectedYear(null); }} icon={<FiInfo/>} label="Haqida" />
-            <TabButton active={activeTab === 'scope'} onClick={() => { setActiveTab('scope'); setSelectedBob(null); setSelectedYear(null); }} icon={<FiAward/>} label="Maqsad va yo'nalishlar" />
-            <TabButton active={activeTab === 'shablon'} onClick={() => { setActiveTab('shablon'); setSelectedBob(null); setSelectedYear(null); }} icon={<FiLayers/>} label="Maqola shabloni" />
-            <TabButton active={activeTab === 'articles'} onClick={() => { setActiveTab('articles'); setSelectedBob(null); setSelectedYear(null); }} icon={<FiFileText/>} label={`Maqolalar (${articles.length})`} />
+            <TabButton active={activeTab === 'about'} onClick={() => { setActiveTab('about'); setSelectedBob(null); setSelectedYear(null); }} icon={<FiInfo/>} label={t("header.about")} />
+            <TabButton active={activeTab === 'scope'} onClick={() => { setActiveTab('scope'); setSelectedBob(null); setSelectedYear(null); }} icon={<FiAward/>} label={t("journals.aims_scope")} />
+            <TabButton active={activeTab === 'shablon'} onClick={() => { setActiveTab('shablon'); setSelectedBob(null); setSelectedYear(null); }} icon={<FiLayers/>} label={t("journals.template")} />
+            <TabButton active={activeTab === 'articles'} onClick={() => { setActiveTab('articles'); setSelectedBob(null); setSelectedYear(null); }} icon={<FiFileText/>} label={`${t("header.articles")} (${articles.length})`} />
             
             {/* 💎 Dynamic Tabs from Backend Settings (Site Pages) */}
             {settings.map((s) => (
@@ -267,64 +276,141 @@ const JournalDetail = () => {
          <div className="lg:col-span-8 space-y-8">
             {activeTab === 'about' && (
                <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <h2 className="text-2xl font-black text-[#002147] mb-6">Jurnal haqida</h2>
+                  <h2 className="text-2xl font-black text-[#002147] mb-6">{t("journals.about_title")}</h2>
                   <div className="prose prose-blue max-w-none text-[#4B5563] leading-relaxed space-y-4 text-justify">
-                     {journal.description || "Ushbu jurnal haqida batafsil ma'lumot tayyorlanmoqda. Bizning vazifamiz qat'iy taqriz orqali akademik o'sishga ko'maklashishdir."}
+                     {journal.description || (language === "uz" ? "Ushbu jurnal haqida batafsil ma'lumot tayyorlanmoqda. Bizning vazifamiz qat'iy taqriz orqali akademik o'sishga ko'maklashishdir." : language === "en" ? "Detailed information about this journal is being prepared. Our mission is to facilitate academic growth through rigorous peer review." : "Подробная информация об этом журнале готовится. Наша миссия — способствовать академическому росту посредством строгого рецензирования.")}
                   </div>
                </div>
             )}
 
             {activeTab === 'scope' && (
                <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <h2 className="text-2xl font-black text-[#002147] mb-6">Maqsad va yo'nalishlar</h2>
+                  <h2 className="text-2xl font-black text-[#002147] mb-6">{t("journals.aims_title")}</h2>
                   <div className="prose prose-blue max-w-none text-[#4B5563] leading-relaxed space-y-4 whitespace-pre-wrap text-justify">
-                     {journal.aims_scope || "Ushbu jurnalning maqsad va yo'nalishlari yangilanmoqda."}
+                     {journal.aims_scope || (language === "uz" ? "Ushbu jurnalning maqsad va yo'nalishlari yangilanmoqda." : language === "en" ? "Aims and scope of this journal are being updated." : "Цели и область применения этого журнала обновляются.")}
                   </div>
                </div>
             )}
 
             {activeTab === 'shablon' && (
                <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <h2 className="text-2xl font-black text-[#002147] mb-6">Maqola yuborish shabloni va talablar</h2>
+                  <h2 className="text-2xl font-black text-[#002147] mb-6">{t("journals.template")}</h2>
                   <div className="prose prose-blue max-w-none text-[#4B5563] leading-relaxed space-y-4 text-justify">
-                     <p>Maqolani muvaffaqiyatli yuborish uchun quyidagi ma'lumotlar va hujjatlar talab etiladi. Iltimos, maqolani tizimga yuklashdan oldin barchasini tayyorlab qo'ying:</p>
-                     
-                     <div className="mt-6 space-y-4">
-                        <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                           <h3 className="font-bold text-[#002147] text-lg mb-2">1. Maqola ma'lumotlari</h3>
-                           <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                              <li><b>Sarlavha:</b> Maqolaning to'liq va aniq sarlavhasi.</li>
-                              <li><b>Annotatsiya:</b> Maqolaning qisqacha mazmuni va natijalari (Abstract).</li>
-                              <li><b>Kalit so'zlar:</b> Maqola mazmunini ochib beruvchi kamida bitta kalit so'z.</li>
-                              <li><b>Toifa:</b> Maqola turi (masalan, Tadqiqot maqolasi, Sharh va h.k.).</li>
-                              <li><b>Til:</b> Maqola yozilgan til (masalan, O'zbek tili, Ingliz tili).</li>
-                           </ul>
-                        </div>
+                     {language === "uz" ? (
+                        <>
+                           <p>Maqolani muvaffaqiyatli yuborish uchun quyidagi ma'lumotlar va hujjatlar talab etiladi. Iltimos, maqolani tizimga yuklashdan oldin barchasini tayyorlab qo'ying:</p>
+                           
+                           <div className="mt-6 space-y-4">
+                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                 <h3 className="font-bold text-[#002147] text-lg mb-2">1. Maqola ma'lumotlari</h3>
+                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                                    <li><b>Sarlavha:</b> Maqolaning to'liq va aniq sarlavhasi.</li>
+                                    <li><b>Annotatsiya:</b> Maqolaning qisqacha mazmuni va natijalari (Abstract).</li>
+                                    <li><b>Kalit so'zlar:</b> Maqola mazmunini ochib beruvchi kamida bitta kalit so'z.</li>
+                                    <li><b>Toifa:</b> Maqola turi (masalan, Tadqiqot maqolasi, Sharh va h.k.).</li>
+                                    <li><b>Til:</b> Maqola yozilgan til (masalan, O'zbek tili, Ingliz tili).</li>
+                                 </ul>
+                              </div>
 
-                        <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                           <h3 className="font-bold text-[#002147] text-lg mb-2">2. Mualliflar ma'lumotlari</h3>
-                           <p className="text-sm text-gray-600 mb-2">Barcha mualliflar uchun quyidagi ma'lumotlar kiritilishi shart (birinchi muallif asosiy hisoblanadi):</p>
-                           <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                              <li><b>To'liq ismi:</b> Muallifning ism va familiyasi.</li>
-                              <li><b>Telefon raqami:</b> Bog'lanish uchun ishlaydigan telefon raqam.</li>
-                              <li><b>ORCID ID:</b> Xalqaro olimlar identifikatsiya raqami (masalan: 0000-0000-0000-0000).</li>
-                              <li><b>Muallif rasmi:</b> Har bir muallifning 5MB gacha bo'lgan sifatli rasmi.</li>
-                           </ul>
-                        </div>
+                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                 <h3 className="font-bold text-[#002147] text-lg mb-2">2. Mualliflar ma'lumotlari</h3>
+                                 <p className="text-sm text-gray-600 mb-2">Barcha mualliflar uchun quyidagi ma'lumotlar kiritilishi shart (birinchi muallif asosiy hisoblanadi):</p>
+                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                                    <li><b>To'liq ismi:</b> Muallifning ism va familiyasi.</li>
+                                    <li><b>Telefon raqami:</b> Bog'lanish uchun ishlaydigan telefon raqam.</li>
+                                    <li><b>ORCID ID:</b> Xalqaro olimlar identifikatsiya raqami (masalan: 0000-0000-0000-0000).</li>
+                                    <li><b>Muallif rasmi:</b> Har bir muallifning 5MB gacha bo'lgan sifatli rasmi.</li>
+                                 </ul>
+                              </div>
 
-                        <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                           <h3 className="font-bold text-[#002147] text-lg mb-2">3. Maqola fayli</h3>
-                           <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                              <li><b>Format:</b> Faqat PDF, DOC, yoki DOCX formatlari qabul qilinadi.</li>
-                              <li><b>Hajm:</b> Fayl hajmi 20MB dan oshmasligi kerak.</li>
-                              <li>Fayl jurnal talablari (shrift, hoshiya, adabiyotlar ro'yxati) asosida shakllantirilgan bo'lishi lozim.</li>
-                           </ul>
-                        </div>
-                     </div>
+                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                 <h3 className="font-bold text-[#002147] text-lg mb-2">3. Maqola fayli</h3>
+                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                                    <li><b>Format:</b> Faqat PDF, DOC, yoki DOCX formatlari qabul qilinadi.</li>
+                                    <li><b>Hajm:</b> Fayl hajmi 20MB dan oshmasligi kerak.</li>
+                                    <li>Fayl jurnal talablari (shrift, hoshiya, adabiyotlar ro'yxati) asosida shakllantirilgan bo'lishi lozim.</li>
+                                 </ul>
+                              </div>
+                           </div>
+                        </>
+                     ) : language === "en" ? (
+                        <>
+                           <p>The following information and documents are required to successfully submit an article. Please prepare everything before uploading the article to the system:</p>
+                           
+                           <div className="mt-6 space-y-4">
+                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                 <h3 className="font-bold text-[#002147] text-lg mb-2">1. Article Information</h3>
+                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                                    <li><b>Title:</b> Full and precise title of the article.</li>
+                                    <li><b>Abstract:</b> Summary of the article content and results.</li>
+                                    <li><b>Keywords:</b> At least one keyword identifying the article.</li>
+                                    <li><b>Category:</b> Type of article (e.g., Research article, Review, etc.).</li>
+                                    <li><b>Language:</b> Written language of the article.</li>
+                                 </ul>
+                              </div>
+
+                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                 <h3 className="font-bold text-[#002147] text-lg mb-2">2. Authors Information</h3>
+                                 <p className="text-sm text-gray-600 mb-2">The following details are mandatory for all authors (first author is primary):</p>
+                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                                    <li><b>Full Name:</b> Name and surname of the author.</li>
+                                    <li><b>Phone Number:</b> Contact phone number.</li>
+                                    <li><b>ORCID ID:</b> International scientist identification number (e.g., 0000-0000-0000-0000).</li>
+                                    <li><b>Author Photo:</b> Quality photo of each author up to 5MB.</li>
+                                 </ul>
+                              </div>
+
+                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                 <h3 className="font-bold text-[#002147] text-lg mb-2">3. Article File</h3>
+                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                                    <li><b>Format:</b> Only PDF, DOC, or DOCX formats are accepted.</li>
+                                    <li><b>Size:</b> File size must not exceed 20MB.</li>
+                                    <li>The file must be formatted based on the journal requirements (font, margins, bibliography).</li>
+                                 </ul>
+                              </div>
+                           </div>
+                        </>
+                     ) : (
+                        <>
+                           <p>Для успешной подачи статьи требуются следующие данные и документы. Пожалуйста, подготовьте все перед загрузкой статьи в систему:</p>
+                           
+                           <div className="mt-6 space-y-4">
+                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                 <h3 className="font-bold text-[#002147] text-lg mb-2">1. Информация о статье</h3>
+                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                                    <li><b>Название:</b> Полное и точное название статьи.</li>
+                                    <li><b>Аннотация:</b> Краткое содержание и результаты статьи (Abstract).</li>
+                                    <li><b>Ключевые слова:</b> Не менее одного ключевого слова.</li>
+                                    <li><b>Категория:</b> Тип статьи (например, Исследовательская статья, Обзор и т. д.).</li>
+                                    <li><b>Язык:</b> Язык написания статьи.</li>
+                                 </ul>
+                              </div>
+
+                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                 <h3 className="font-bold text-[#002147] text-lg mb-2">2. Информация об авторах</h3>
+                                 <p className="text-sm text-gray-600 mb-2">Следующие данные обязательны для всех авторов (первый автор является основным):</p>
+                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                                    <li><b>Ф.И.О.:</b> Имя и фамилия автора.</li>
+                                    <li><b>Номер телефона:</b> Контактный номер телефона.</li>
+                                    <li><b>ORCID ID:</b> Международный идентификационный номер ученого (например, 0000-0000-0000-0000).</li>
+                                    <li><b>Фото автора:</b> Качественное фото каждого автора размером до 5 МБ.</li>
+                                 </ul>
+                              </div>
+
+                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                 <h3 className="font-bold text-[#002147] text-lg mb-2">3. Файл статьи</h3>
+                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                                    <li><b>Формат:</b> Принимаются только форматы PDF, DOC или DOCX.</li>
+                                    <li><b>Размер:</b> Размер файла не должен превышать 20 МБ.</li>
+                                    <li>Файл должен быть оформлен в соответствии с требованиями журнала (шрифт, поля, список литературы).</li>
+                                 </ul>
+                              </div>
+                           </div>
+                        </>
+                     )}
                   </div>
                </div>
             )}
-
 
             {activeTab === 'articles' && (
                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -338,17 +424,19 @@ const JournalDetail = () => {
                                  onClick={() => setSelectedBob(null)}
                                  className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors"
                               >
-                                 <FiArrowLeft /> Orqaga (Sonlar ro'yxati)
+                                 <FiArrowLeft /> {t("common.back")}
                               </button>
                               <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-extrabold rounded-full">
-                                 {selectedBob.year}-yil
+                                 {selectedBob.year}-{language === "uz" ? "yil" : language === "en" ? "year" : "год"}
                               </span>
                            </div>
 
-                           <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                           <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-55 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                               <div>
                                  <h3 className="text-xl font-black text-[#002147] mb-2">{selectedBob.name}</h3>
-                                 <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Ushbu son tarkibidagi maqolalar</p>
+                                 <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
+                                   {language === "uz" ? "Ushbu son tarkibidagi maqolalar" : language === "en" ? "Articles in this issue" : "Статьи в этом выпуске"}
+                                 </p>
                               </div>
                               {selectedBob.file_url && (
                                  <a 
@@ -357,14 +445,14 @@ const JournalDetail = () => {
                                     rel="noreferrer" 
                                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md shadow-blue-200 transition-all active:scale-95"
                                  >
-                                    To'liq sonni yuklab olish (PDF)
+                                    {t("journals.issue_pdf")}
                                  </a>
                               )}
                            </div>
 
                            {articles.filter(a => Number(a.bob_id) === Number(selectedBob.id)).length === 0 ? (
                               <div className="bg-white p-12 rounded-3xl text-center border border-gray-100 text-gray-400 font-medium">
-                                 Ushbu sonda maqolalar hali nashr etilmagan.
+                                 {t("journals.no_articles_bob")}
                               </div>
                            ) : (
                               <div className="space-y-4">
@@ -382,14 +470,16 @@ const JournalDetail = () => {
                                  onClick={() => setSelectedYear(null)}
                                  className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors"
                               >
-                                 <FiArrowLeft /> Orqaga (Yillar ro'yxati)
+                                 <FiArrowLeft /> {t("common.back")}
                               </button>
                               <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-extrabold rounded-full">
-                                 {selectedYear}-yil
+                                 {selectedYear}-{language === "uz" ? "yil" : language === "en" ? "year" : "год"}
                               </span>
                            </div>
 
-                           <h2 className="text-2xl font-black text-[#002147] mb-6">{selectedYear}-yil sonlari (Boblar)</h2>
+                           <h2 className="text-2xl font-black text-[#002147] mb-6">
+                             {language === "uz" ? `${selectedYear}-yil sonlari (Boblar)` : language === "en" ? `Issues of ${selectedYear} (Chapters)` : `Выпуски ${selectedYear} года (Главы)`}
+                           </h2>
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               {bobs.filter(bob => Number(bob.year) === Number(selectedYear)).map(bob => {
                                  const bobArticlesCount = articles.filter(a => Number(a.bob_id) === Number(bob.id)).length;
@@ -402,10 +492,10 @@ const JournalDetail = () => {
                                        <div>
                                           <div className="flex items-center gap-2 mb-3">
                                              <span className="px-2.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-full">
-                                                {bob.year}-yil
+                                                {bob.year}-{language === "uz" ? "yil" : language === "en" ? "year" : "год"}
                                              </span>
                                              <span className="px-2.5 py-0.5 bg-gray-50 text-gray-500 text-[10px] font-black uppercase rounded-full">
-                                                {bobArticlesCount} maqola
+                                                {language === "uz" ? `${bobArticlesCount} ta maqola` : language === "en" ? `${bobArticlesCount} articles` : `${bobArticlesCount} статей`}
                                              </span>
                                           </div>
                                           <h3 className="text-lg font-black text-[#002147] group-hover:text-blue-600 transition-colors line-clamp-2">
@@ -414,10 +504,12 @@ const JournalDetail = () => {
                                        </div>
                                        <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
                                           <span className="text-xs font-black text-blue-600 uppercase tracking-wider flex items-center gap-1">
-                                             Sonni ko'rish <FiChevronRight />
+                                             {language === "uz" ? "Sonni ko'rish" : language === "en" ? "View issue" : "Посмотреть выпуск"} <FiChevronRight />
                                           </span>
                                           {bob.file_url && (
-                                             <span className="text-[10px] font-bold text-gray-400">PDF mavjud</span>
+                                             <span className="text-[10px] font-bold text-gray-400">
+                                               {language === "uz" ? "PDF mavjud" : language === "en" ? "PDF available" : "PDF доступен"}
+                                             </span>
                                           )}
                                        </div>
                                     </div>
@@ -428,10 +520,10 @@ const JournalDetail = () => {
                      ) : (
                         /* List of Years view */
                         <div className="space-y-6 animate-in fade-in duration-300">
-                           <h2 className="text-2xl font-black text-[#002147] mb-6">Nashr yillari</h2>
+                           <h2 className="text-2xl font-black text-[#002147] mb-6">{t("journals.years_title")}</h2>
                            {bobs.length === 0 ? (
                               <div className="bg-white p-12 rounded-3xl text-center border border-gray-100 text-gray-400 font-medium">
-                                 Ushbu jurnalda hali nashrlar (boblar) yaratilmagan.
+                                 {t("journals.no_bobs")}
                               </div>
                            ) : (
                               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -447,15 +539,15 @@ const JournalDetail = () => {
                                           >
                                              <div>
                                                 <h3 className="text-2xl font-black text-[#002147] group-hover:text-blue-600 transition-colors">
-                                                   {year}-yil
+                                                   {year}-{language === "uz" ? "yil" : language === "en" ? "year" : "год"}
                                                 </h3>
                                                 <p className="text-sm text-gray-500 font-bold mt-2">
-                                                   {yearBobsCount} ta son
+                                                   {language === "uz" ? `${yearBobsCount} ta son` : language === "en" ? `${yearBobsCount} issues` : `${yearBobsCount} выпусков`}
                                                 </p>
                                              </div>
                                              <div className="flex items-center justify-between pt-3 border-t border-gray-50">
                                                 <span className="text-xs font-black text-blue-600 uppercase tracking-wider flex items-center gap-1">
-                                                   Batafsil <FiChevronRight />
+                                                   {t("common.details")} <FiChevronRight />
                                                 </span>
                                              </div>
                                           </div>
@@ -468,10 +560,10 @@ const JournalDetail = () => {
                   ) : (
                      /* 2. Bob yaratish ruxsati bo'lmasa: flat list of articles as originally designed */
                      <div className="space-y-6">
-                        <h2 className="text-2xl font-black text-[#002147] mb-6">Yaqinda nashr etilgan maqolalar</h2>
+                        <h2 className="text-2xl font-black text-[#002147] mb-6">{t("journals.recent_articles")}</h2>
                         {articles.length === 0 ? (
                            <div className="bg-white p-12 rounded-3xl text-center border border-gray-100 text-gray-400 font-medium">
-                              Ushbu jurnalda hali maqolalar nashr etilmagan.
+                              {t("journals.no_articles_journal")}
                            </div>
                         ) : (
                            articles.map(article => (
@@ -500,20 +592,20 @@ const JournalDetail = () => {
          {/* 🪜 Sidebar */}
          <aside className="lg:col-span-4 space-y-8">
             <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-               <h3 className="text-xl font-black text-[#002147] mb-6 uppercase tracking-widest text-sm">Jurnal ko'rsatkichlari</h3>
+               <h3 className="text-xl font-black text-[#002147] mb-6 uppercase tracking-widest text-sm">{t("journals.metrics")}</h3>
                <div className="space-y-4">
-                  <Metric label="Qabul qilish darajasi" value="18%" />
-                  <Metric label="Birinchi qarorgacha vaqt" value="24 kun" />
-                  <Metric label="Impakt faktor" value="4.2 (2025)" />
+                  <Metric label={t("journals.metric_accept")} value="18%" />
+                  <Metric label={t("journals.metric_decision")} value={language === "uz" ? "24 kun" : language === "en" ? "24 days" : "24 дня"} />
+                  <Metric label={t("journals.metric_impact")} value="4.2 (2025)" />
                </div>
             </div>
 
             <div className="bg-[#002147] rounded-3xl p-8 shadow-sm text-white relative overflow-hidden">
                <div className="relative z-10">
-                  <h3 className="text-xl font-bold mb-4">Nashr qilishga tayyormisiz?</h3>
-                  <p className="text-blue-200/60 text-sm mb-6 leading-relaxed">Bugun tadqiqotingizni yuboring va jahon darajasidagi olimlar jamoasiga qo'shiling.</p>
+                  <h3 className="text-xl font-bold mb-4">{t("journals.ready")}</h3>
+                  <p className="text-blue-200/60 text-sm mb-6 leading-relaxed">{t("journals.ready_sub")}</p>
                   <Link to={`/submit-article?journalId=${journal.id || journal._id}`} className="block w-full text-center py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-lg active:scale-95">
-                     Qo'lyozmani yuborish
+                     {t("journals.submit_manuscript")}
                   </Link>
                </div>
                <FiSend className="absolute -bottom-4 -right-4 text-white/5 size-32" />

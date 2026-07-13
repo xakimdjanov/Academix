@@ -15,6 +15,10 @@ axiosInstance.interceptors.request.use(
     const token = localStorage.getItem("token");
     if (token) config.headers.Authorization = `Bearer ${token}`;
 
+    // Attach language header
+    const lang = localStorage.getItem("lang") || "uz";
+    config.headers["Accept-Language"] = lang;
+
     // ✅ FormData bo‘lsa multipart, bo‘lmasa json
     const isFormData = config.data instanceof FormData;
     if (isFormData) {
