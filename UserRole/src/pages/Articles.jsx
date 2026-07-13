@@ -11,7 +11,7 @@ const Articles = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("Barchasi");
-  const { t, language } = useLanguage();
+  const { t, language, translateStatus } = useLanguage();
 
   useSEO({
     title: (language === "uz" ? "Nashr Etilgan Ilmiy Maqolalar Ro'yxati" : language === "en" ? "List of Published Scientific Articles" : "Список опубликованных научных статей") + " | Academix.uz",
@@ -42,11 +42,6 @@ const Articles = () => {
     return ["Barchasi", ...Array.from(sSet)];
   }, [articles]);
 
-  const translateStatus = (s) => {
-    if (s === "Barchasi") return language === "uz" ? "Barchasi" : language === "en" ? "All" : "Все";
-    if (s === "Published" || s === "published") return language === "uz" ? "Nashr etilgan" : language === "en" ? "Published" : "Опубликовано";
-    return s;
-  };
 
   const filtered = articles
     .filter(a => {
@@ -132,14 +127,14 @@ const Articles = () => {
 };
 
 const ArticleCard = ({ article }) => {
-  const { t, language } = useLanguage();
+  const { t, language, translateStatus } = useLanguage();
   useEffect(() => {
     if (article.id) {
       incrementArticleViewOnce(article.id);
     }
   }, [article.id]);
 
-  const articleStatus = language === "uz" ? "Nashr etilgan" : language === "en" ? "Published" : "Опубликовано";
+  const articleStatus = translateStatus(article.status);
   const noAbstract = language === "uz" ? "Maqola haqida qisqacha ma'lumot mavjud emas." :
                      language === "en" ? "No summary available for this article." :
                      "Краткая информация о статье отсутствует.";

@@ -22,14 +22,14 @@ const formatDate = (iso) => {
 };
 
 const Timeline = ({ status }) => {
-  const { language } = useLanguage();
+  const { language, translateStatus } = useLanguage();
 
   const steps = [
-    { key: "Submitted", label: language === "uz" ? "Yuborilgan" : language === "en" ? "Submitted" : "Отправлено" },
-    { key: "Under Review", label: language === "uz" ? "Taqrizda" : language === "en" ? "Under Review" : "На рецензировании" },
-    { key: "Needs Revision", label: language === "uz" ? "Tuzatish kiritilishi kerak" : language === "en" ? "Needs Revision" : "Требует доработки" },
-    { key: "Accepted", label: language === "uz" ? "Qabul qilingan" : language === "en" ? "Accepted" : "Принято" },
-    { key: "Published", label: language === "uz" ? "Nashr etilgan" : language === "en" ? "Published" : "Опубликовано" },
+    { key: "Submitted", label: translateStatus("Submitted") },
+    { key: "Under Review", label: translateStatus("Under Review") },
+    { key: "Needs Revision", label: translateStatus("Needs Revision") },
+    { key: "Accepted", label: translateStatus("Accepted") },
+    { key: "Published", label: translateStatus("Published") },
   ];
   const rejected = status === "Rejected";
   const indexOf = (k) => steps.findIndex((s) => s.key === k);
@@ -77,7 +77,7 @@ const MyArticleDetail = () => {
   const navigate = useNavigate();
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { t, language } = useLanguage();
+  const { t, language, translateStatus, translateCategory } = useLanguage();
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -111,15 +111,7 @@ const MyArticleDetail = () => {
     return lName;
   };
 
-  const translateArticleStatus = (s) => {
-    if (s === "Submitted") return language === "uz" ? "Yuborilgan" : language === "en" ? "Submitted" : "Отправлено";
-    if (s === "Under Review") return language === "uz" ? "Taqrizda" : language === "en" ? "Under Review" : "На рецензировании";
-    if (s === "Needs Revision") return language === "uz" ? "Tuzatish kiritilishi kerak" : language === "en" ? "Needs Revision" : "Требует доработки";
-    if (s === "Accepted") return language === "uz" ? "Qabul qilingan" : language === "en" ? "Accepted" : "Принято";
-    if (s === "Published") return language === "uz" ? "Nashr etilgan" : language === "en" ? "Published" : "Опубликовано";
-    if (s === "Rejected") return language === "uz" ? "Rad etilgan" : language === "en" ? "Rejected" : "Отклонено";
-    return s;
-  };
+
 
   if (loading) return (
     <div className="min-h-screen bg-[#F6F8FB] flex items-center justify-center">
@@ -148,7 +140,7 @@ const MyArticleDetail = () => {
            <div className="flex flex-col md:flex-row gap-8 items-start justify-between">
               <div className="flex-1">
                  <div className="flex gap-2 mb-4">
-                    <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest">{translateArticleStatus(article.status)}</span>
+                    <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest">{translateStatus(article.status)}</span>
                     <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1"><FiEye size={12}/> {article.view_count || 0}</span>
                  </div>
                  <h1 className="text-3xl font-black mb-4 leading-tight">{formatTitle(article.title)}</h1>
@@ -188,7 +180,7 @@ const MyArticleDetail = () => {
             {/* Details Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                <DetailCard icon={<FiLayers/>} label={language === "uz" ? "Jurnal" : language === "en" ? "Journal" : "Журнал"} value={formatTitle(article.journal?.name || "Global Science Journal")} />
-               <DetailCard icon={<FiUser/>} label={language === "uz" ? "Toifa" : language === "en" ? "Category" : "Категория"} value={article.category || (language === "uz" ? "Ilmiy maqola" : language === "en" ? "Scientific article" : "Научная статья")} />
+               <DetailCard icon={<FiUser/>} label={language === "uz" ? "Toifa" : language === "en" ? "Category" : "Категория"} value={translateCategory(article.category)} />
                <DetailCard icon={<FiClock/>} label={language === "uz" ? "Oxirgi tahrir" : language === "en" ? "Last updated" : "Последнее обновление"} value={formatDate(article.updatedAt)} />
                <DetailCard icon={<FiUser/>} label={language === "uz" ? "Maqola tili" : language === "en" ? "Article language" : "Язык статьи"} value={translateLanguageName(article.language)} />
             </div>
