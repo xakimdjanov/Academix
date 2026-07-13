@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { FiChevronDown } from "react-icons/fi";
+import { useLanguage } from "../../context/LanguageContext";
 
 const Footer = () => {
   const [open, setOpen] = useState(null);
+  const { t } = useLanguage();
 
   const toggle = (key) => {
     setOpen(open === key ? null : key);
@@ -16,11 +18,10 @@ const Footer = () => {
           {/* ABOUT */}
           <div className="md:col-span-2">
             <h3 className="text-white text-lg font-bold mb-4 uppercase tracking-widest">
-              ACADEMIX PLATFORMASI
+              {t("footer.brand_title")}
             </h3>
             <p className="text-sm leading-relaxed max-w-xs text-gray-400">
-              Ilmiy tadqiqotlar va maqolalarni boshqarish uchun zamonaviy yechim.
-              Biz bilan bilimingizni dunyoga ulashing.
+              {t("footer.brand_desc")}
             </p>
           </div>
 
@@ -31,7 +32,7 @@ const Footer = () => {
               className="w-full flex justify-between items-center text-white font-bold
               text-sm uppercase tracking-wider mb-6 md:cursor-default"
             >
-              Havolalar
+              {t("footer.links")}
               <FiChevronDown
                 className={`md:hidden transition-transform duration-300 ease-in-out ${
                   open === "links" ? "rotate-180" : ""
@@ -51,17 +52,17 @@ const Footer = () => {
               <ul className="space-y-3 text-sm pb-6 md:pb-0">
                 <li>
                   <a href="/about" className="hover:text-blue-400 transition-colors">
-                    Biz haqimizda
+                    {t("footer.about")}
                   </a>
                 </li>
                 <li>
                   <a href="/privacy" className="hover:text-blue-400 transition-colors">
-                    Maxfiylik siyosati
+                    {t("footer.privacy")}
                   </a>
                 </li>
                 <li>
                   <a href="/terms" className="hover:text-blue-400 transition-colors">
-                    Foydalanish shartlari
+                    {t("footer.terms")}
                   </a>
                 </li>
               </ul>
@@ -75,7 +76,7 @@ const Footer = () => {
               className="w-full flex justify-between items-center text-white font-bold
               text-sm uppercase tracking-wider mb-6 md:cursor-default"
             >
-              Bog'lanish
+              {t("footer.contact")}
               <FiChevronDown
                 className={`md:hidden transition-transform duration-300 ease-in-out ${
                   open === "contact" ? "rotate-180" : ""
@@ -94,11 +95,11 @@ const Footer = () => {
             >
               <div className="text-sm space-y-3 pb-6 md:pb-0">
                 <p className="flex flex-col">
-                  <span className="text-gray-500 text-xs font-bold uppercase mb-1">Elektron pochta</span>
+                  <span className="text-gray-500 text-xs font-bold uppercase mb-1">{t("footer.email")}</span>
                   <a href="mailto:stacknowa@gmail.com" className="text-white hover:text-blue-400">stacknowa@gmail.com</a>
                 </p>
                 <p className="flex flex-col">
-                  <span className="text-gray-500 text-xs font-bold uppercase mb-1">Telefon</span>
+                  <span className="text-gray-500 text-xs font-bold uppercase mb-1">{t("footer.phone")}</span>
                   <a href="tel:+998200146667" className="text-white hover:text-blue-400">+998 (20) 014-66-67</a>
                 </p>
               </div>
@@ -109,8 +110,7 @@ const Footer = () => {
         {/* COPYRIGHT */}
         <div className="mt-12 pt-8 border-t border-gray-800 text-center text-xs text-gray-500">
           <p>
-            &copy; {new Date().getFullYear()} Academix Platformasi. Barcha huquqlar
-            himoyalangan.
+            &copy; {new Date().getFullYear()} {t("footer.copyright")}
           </p>
         </div>
       </div>

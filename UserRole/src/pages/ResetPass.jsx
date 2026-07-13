@@ -3,11 +3,12 @@ import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { userService } from "../services/api";
 import { FiLock, FiEye, FiEyeOff, FiArrowLeft, FiArrowRight, FiShield } from "react-icons/fi";
+import { useLanguage } from "../context/LanguageContext";
 
 const ResetPass = () => {
   const navigate = useNavigate();
-
   const token = sessionStorage.getItem("reset_token");
+  const { t, language } = useLanguage();
 
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -25,12 +26,20 @@ const ResetPass = () => {
 
     try {
       if (!token) {
-        toast.error("Token topilmadi. Iltimos, qaytadan urinib ko'ring.");
+        toast.error(
+          language === "uz" ? "Token topilmadi. Iltimos, qaytadan urinib ko'ring." :
+          language === "en" ? "Token not found. Please try again." :
+          "Токен не найден. Пожалуйста, попробуйте еще раз."
+        );
         return;
       }
 
       if (!passwordValid) {
-        toast.error("Parol: kamida 6 ta belgi + 1 ta bosh harf bo'lishi kerak.");
+        toast.error(
+          language === "uz" ? "Parol: kamida 6 ta belgi + 1 ta bosh harf bo'lishi kerak." :
+          language === "en" ? "Password must contain at least 1 uppercase letter and be at least 6 characters long." :
+          "Пароль должен содержать как минимум 1 заглавную букву и быть длиной не менее 6 символов."
+        );
         return;
       }
 
@@ -38,14 +47,20 @@ const ResetPass = () => {
 
       sessionStorage.removeItem("reset_token");
 
-      toast.success("Parol muvaffaqiyatli yangilandi!");
+      toast.success(
+        language === "uz" ? "Parol muvaffaqiyatli yangilandi!" :
+        language === "en" ? "Password updated successfully!" :
+        "Пароль успешно обновлен!"
+      );
       navigate("/signin");
     } catch (error) {
       const msg =
         error?.response?.data?.message ||
         error?.response?.data?.error ||
         error?.message ||
-        "Tiklash muvaffaqiyatsiz tugadi.";
+        (language === "uz" ? "Tiklash muvaffaqiyatsiz tugadi." :
+         language === "en" ? "Reset failed." :
+         "Восстановление не удалось.");
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -59,7 +74,9 @@ const ResetPass = () => {
         <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-6">
           <div className="flex items-center gap-3">
             <FiShield className="text-white text-xl" />
-            <h1 className="text-white font-bold text-lg">Parolni tiklash</h1>
+            <h1 className="text-white font-bold text-lg">
+              {language === "uz" ? "Parolni tiklash" : language === "en" ? "Reset Password" : "Восстановление пароля"}
+            </h1>
           </div>
         </div>
 
@@ -68,9 +85,9 @@ const ResetPass = () => {
           {/* Password */}
           <div>
             <label className="block text-sm font-medium text-[#1F2937] mb-2">
-              Yangi parol{" "}
+              {language === "uz" ? "Yangi parol" : language === "en" ? "New password" : "Новый пароль"}{" "}
               <span className="text-xs font-normal text-[#6B7280]">
-                (1 bosh harf, kamida 6 belgi)
+                {language === "uz" ? "(1 bosh harf, kamida 6 belgi)" : language === "en" ? "(1 uppercase, at least 6 characters)" : "(1 заглавная буква, минимум 6 символов)"}
               </span>
             </label>
 
@@ -79,7 +96,7 @@ const ResetPass = () => {
                 type={showPassword ? "text" : "password"}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Yangi parolni kiriting"
+                placeholder={language === "uz" ? "Yangi parolni kiriting" : language === "en" ? "Enter new password" : "Введите новый пароль"}
                 className="w-full rounded-xl border border-gray-300 bg-white pl-12 pr-12 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1F4F8F]"
               />
               <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1F4F8F]" />
@@ -87,7 +104,10 @@ const ResetPass = () => {
                 type="button"
                 onClick={() => setShowPassword((p) => !p)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#1F2937] transition-colors"
-                aria-label={showPassword ? "Parolni yashirish" : "Parolni ko'rsatish"}
+                aria-label={showPassword ? 
+                  (language === "uz" ? "Parolni yashirish" : language === "en" ? "Hide password" : "Скрыть пароль") : 
+                  (language === "uz" ? "Parolni ko'rsatish" : language === "en" ? "Show password" : "Показать пароль")
+                }
               >
                 {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
               </button>
@@ -102,7 +122,7 @@ const ResetPass = () => {
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl border border-gray-300 text-sm font-medium text-[#1F2937] hover:bg-gray-100 transition"
             >
               <FiArrowLeft />
-              Orqaga
+              {t("common.back")}
             </Link>
 
             {/* Reset */}
@@ -111,7 +131,7 @@ const ResetPass = () => {
               disabled={loading || !token}
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white text-sm font-semibold transition disabled:opacity-60"
             >
-              {loading ? "Iltimos, kuting..." : "Tiklash"}
+              {loading ? (language === "uz" ? "Kuting..." : language === "en" ? "Wait..." : "Ожидайте...") : (language === "uz" ? "Tiklash" : language === "en" ? "Reset" : "Восстановить")}
               {!loading && <FiArrowRight />}
             </button>
           </div>
@@ -119,7 +139,7 @@ const ResetPass = () => {
           {/* Optional small link */}
           <p className="text-center text-sm text-[#6B7280]">
             <Link to="/signin" className="text-[#1F4F8F] font-semibold hover:underline">
-              Tizimga kirishga qaytish
+              {language === "uz" ? "Tizimga kirishga qaytish" : language === "en" ? "Back to Sign In" : "Назад к входу"}
             </Link>
           </p>
         </form>

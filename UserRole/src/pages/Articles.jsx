@@ -4,17 +4,19 @@ import { FiSearch, FiFilter, FiFileText, FiArrowRight, FiBookOpen, FiEye, FiCloc
 import { Link } from "react-router-dom";
 import { useSEO } from "../hooks/useSEO";
 import { formatTitle } from "../utils/textFormatter";
+import { useLanguage } from "../context/LanguageContext";
 
 const Articles = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("Barchasi");
+  const { t, language } = useLanguage();
 
   useSEO({
-    title: "Nashr Etilgan Ilmiy Maqolalar Ro'yxati | Academix.uz",
-    description: "Academix / Akademix.uz — O'zbekiston va xalqaro doiradagi eng so'nggi ilmiy maqolalar, tezislar va tadqiqot ishlari ma'lumotlar bazasi. Ilmiy maqolalarni bepul o'qing.",
-    keywords: "Academix, Academix.uz, akademix, akademix.uz, academix uz, ilmiy maqolalar ro'yxati, tadqiqot ishlari, dissertatsiyalar, maqola qidirish, iqtibos olish, scholar uz, ilmiy maqola yuklab olish",
+    title: (language === "uz" ? "Nashr Etilgan Ilmiy Maqolalar Ro'yxati" : language === "en" ? "List of Published Scientific Articles" : "Список опубликованных научных статей") + " | Academix.uz",
+    description: "Academix / Akademix.uz — O'zbekiston va xalqaro doiradagi eng so'nggi ilmiy maqolalar, tezislar va tadqiqot ishlari ma'lumotlar bazasi.",
+    keywords: "Academix, Academix.uz, ilmiy maqolalar ro'yxati, tadqiqot ishlari",
     url: "https://akademix.uz/articles",
     type: "website"
   });
@@ -40,6 +42,12 @@ const Articles = () => {
     return ["Barchasi", ...Array.from(sSet)];
   }, [articles]);
 
+  const translateStatus = (s) => {
+    if (s === "Barchasi") return language === "uz" ? "Barchasi" : language === "en" ? "All" : "Все";
+    if (s === "Published" || s === "published") return language === "uz" ? "Nashr etilgan" : language === "en" ? "Published" : "Опубликовано";
+    return s;
+  };
+
   const filtered = articles
     .filter(a => {
       const matchesSearch = (a.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -56,10 +64,11 @@ const Articles = () => {
       {/* Header Section */}
       <section className="bg-[#002147] text-white py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-black mb-6">Ilmiy maqolalar</h1>
+          <h1 className="text-4xl md:text-5xl font-black mb-6">{t("header.articles")}</h1>
           <p className="text-blue-100/70 text-lg max-w-2xl mx-auto">
-            Barcha sohalardagi so'nggi va eng ko'p o'qilgan ilmiy maqolalarni o'rganing. 
-            Bilimlar dunyosiga sho'ng'ing.
+            {language === "uz" ? "Barcha sohalardagi so'nggi va eng ko'p o'qilgan ilmiy maqolalarni o'rganing." :
+             language === "en" ? "Explore the latest and most read scientific articles in all fields." :
+             "Изучите последние и наиболее читаемые научные статьи во всех областях."}
           </p>
         </div>
       </section>
@@ -71,7 +80,9 @@ const Articles = () => {
             <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <input 
               type="text"
-              placeholder="Maqola sarlavhasi yoki annotatsiyasi bo'yicha qidirish..."
+              placeholder={language === "uz" ? "Maqola sarlavhasi yoki annotatsiyasi bo'yicha qidirish..." :
+                           language === "en" ? "Search by article title or abstract..." :
+                           "Поиск по названию статьи или аннотации..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
@@ -84,7 +95,7 @@ const Articles = () => {
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none font-bold text-[#002147]"
              >
-                {statuses.map(s => <option key={s} value={s}>{s}</option>)}
+                {statuses.map(s => <option key={s} value={s}>{translateStatus(s)}</option>)}
              </select>
           </div>
         </div>
@@ -103,8 +114,10 @@ const Articles = () => {
              <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-300">
                 <FiFileText size={40} />
              </div>
-             <h3 className="text-2xl font-bold text-[#002147] mb-2">Maqolalar topilmadi</h3>
-             <p className="text-gray-500">Qidiruv yoki filtrlarni o'zgartirib ko'ring.</p>
+             <h3 className="text-2xl font-bold text-[#002147] mb-2">
+               {language === "uz" ? "Maqolalar topilmadi" : language === "en" ? "Articles not found" : "Статьи не найдены"}
+             </h3>
+             <p className="text-gray-500">{t("journals.not_found_sub")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -119,19 +132,25 @@ const Articles = () => {
 };
 
 const ArticleCard = ({ article }) => {
+  const { t, language } = useLanguage();
   useEffect(() => {
     if (article.id) {
       incrementArticleViewOnce(article.id);
     }
   }, [article.id]);
 
+  const articleStatus = language === "uz" ? "Nashr etilgan" : language === "en" ? "Published" : "Опубликовано";
+  const noAbstract = language === "uz" ? "Maqola haqida qisqacha ma'lumot mavjud emas." :
+                     language === "en" ? "No summary available for this article." :
+                     "Краткая информация о статье отсутствует.";
+
   return (
-    <div className="bg-white rounded-[2rem] p-8 shadow-sm hover:shadow-2xl transition-all border border-gray-50 group flex flex-col h-full">
+    <div className="bg-white rounded-[2rem] p-8 shadow-sm hover:shadow-2xl transition-all border border-gray-55 group flex flex-col h-full">
       <div className="flex justify-between items-start mb-6">
          <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
             <FiFileText size={28} />
          </div>
-         <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-full tracking-widest">{article.status || "Nashr etilgan"}</span>
+         <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-full tracking-widest">{articleStatus}</span>
       </div>
       
       <h3 className="text-xl font-bold text-[#002147] leading-tight mb-4 group-hover:text-blue-600 transition-colors line-clamp-2">
@@ -139,14 +158,14 @@ const ArticleCard = ({ article }) => {
       </h3>
       
       <p className="text-[#6B7280] text-sm line-clamp-3 mb-6 flex-grow leading-relaxed italic">
-        {article.abstract || "Maqola haqida qisqacha ma'lumot mavjud emas."}
+        {article.abstract || noAbstract}
       </p>
       
       <div className="flex flex-col gap-4 pt-6 border-t border-gray-50">
          <div className="flex items-center justify-between text-[11px] font-bold text-gray-400">
             <span className="flex items-center gap-1"><FiClock size={12}/> {new Date(article.createdAt).toLocaleDateString()}</span>
             <span className="flex items-center gap-1 text-blue-600">
-               <FiEye size={14}/> {article.view_count || 0} KO'RILDI
+               <FiEye size={14}/> {article.view_count || 0} {t("common.views_count")}
             </span>
          </div>
          <div className="flex gap-2">
@@ -154,7 +173,7 @@ const ArticleCard = ({ article }) => {
               to={`/articles/${article.slug || article._id || article.id}`} 
               className="flex-1 py-3 text-center text-xs font-black text-[#002147] bg-[#F6F8FB] hover:bg-gray-200 rounded-xl transition-all"
            >
-              O'QISH
+              {t("common.read_article").toUpperCase()}
            </Link>
            {article.file_url && (
              <a 

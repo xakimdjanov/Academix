@@ -1,7 +1,10 @@
 import React, { useEffect } from "react";
 import { FiUser, FiSettings, FiEdit, FiX } from "react-icons/fi";
+import { useLanguage } from "../context/LanguageContext";
 
 const RoleSelectionModal = ({ isOpen, onClose }) => {
+  const { t } = useLanguage();
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -18,8 +21,8 @@ const RoleSelectionModal = ({ isOpen, onClose }) => {
   const roles = [
     {
       id: "user",
-      title: "Foydalanuvchi",
-      desc: "Maqola yuborish va kuzatish",
+      title: t("role_modal.user"),
+      desc: t("role_modal.user_desc"),
       icon: <FiUser className="w-8 h-8" />,
       url: "/signin",
       bgColor: "bg-blue-500/10",
@@ -28,8 +31,8 @@ const RoleSelectionModal = ({ isOpen, onClose }) => {
     },
     {
       id: "journal_admin",
-      title: "Jurnal Admin",
-      desc: "Jurnalni boshqarish va taqrizlar",
+      title: t("role_modal.admin"),
+      desc: t("role_modal.admin_desc"),
       icon: <FiSettings className="w-8 h-8" />,
       url: "https://journal.akademix.uz/",
       bgColor: "bg-indigo-500/10",
@@ -38,8 +41,8 @@ const RoleSelectionModal = ({ isOpen, onClose }) => {
     },
     {
       id: "editor",
-      title: "Muharrir",
-      desc: "Maqolalarni tahrirlash",
+      title: t("role_modal.editor"),
+      desc: t("role_modal.editor_desc"),
       icon: <FiEdit className="w-8 h-8" />,
       url: "https://editor.akademix.uz/",
       bgColor: "bg-emerald-500/10",
@@ -70,11 +73,11 @@ const RoleSelectionModal = ({ isOpen, onClose }) => {
         >
           <FiX size={24} />
         </button>
-
+ 
         <div className="p-8 md:p-12">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-black text-[#002147] mb-3">Tizimga kirish</h2>
-            <p className="text-gray-500">Iltimos, o'z rolingizga mos panellni tanlang</p>
+            <h2 className="text-3xl font-black text-[#002147] mb-3">{t("role_modal.title")}</h2>
+            <p className="text-gray-500">{t("role_modal.desc")}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -95,15 +98,15 @@ const RoleSelectionModal = ({ isOpen, onClose }) => {
                 <p className="text-sm text-gray-500 leading-tight">{role.desc}</p>
                 
                 <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity italic text-xs font-semibold text-blue-600">
-                  Kirish →
+                  {t("common.signin")} →
                 </div>
               </button>
             ))}
           </div>
           
           <div className="mt-12 text-center text-sm text-gray-400">
-            Hisobingiz yo'qmi?{" "}
-            <a href="/signup" className="text-blue-600 font-bold hover:underline">Ro'yxatdan o'tish</a>
+            {t("role_modal.no_account")}{" "}
+            <a href="/signup" className="text-blue-600 font-bold hover:underline">{t("role_modal.signup")}</a>
           </div>
         </div>
       </div>

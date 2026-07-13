@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { userService } from "../../services/api";
 import RoleSelectionModal from "../RoleSelectionModal";
+import { useLanguage } from "../../context/LanguageContext";
+import { FiGlobe } from "react-icons/fi";
 
 const NAV_ITEMS = [
   { to: "/", label: "Bosh sahifa" },
@@ -11,6 +13,15 @@ const NAV_ITEMS = [
   { to: "/about", label: "Haqida" },
   { to: "/contact", label: "Bog'lanish" },
 ];
+
+const navLabels = {
+  "/": "header.home",
+  "/journals": "header.journals",
+  "/articles": "header.articles",
+  "/pricing": "header.pricing",
+  "/about": "header.about",
+  "/contact": "header.contact",
+};
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://academixbackend-productionn.up.railway.app";
 const UPLOADS_PATH = "/uploads";
@@ -33,7 +44,10 @@ function buildAvatarUrl(raw) {
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [isLangOpen, setIsLangOpen] = useState(false);
   const [user, setUser] = useState(null);
+
+  const { t, language, changeLanguage } = useLanguage();
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -128,7 +142,7 @@ const Header = () => {
                     : "text-gray-300 hover:text-white"
                   }`}
               >
-                {item.label}
+                {t(navLabels[item.to])}
                 <span
                   className={`absolute -bottom-1 left-0 h-0.5 bg-blue-400 transition-all duration-300 ${isActive(item.to) ? "w-full" : "w-0 hover:w-full"
                     }`}
@@ -138,20 +152,56 @@ const Header = () => {
           </nav>
 
           <div className="hidden md:flex items-center gap-3 lg:gap-4">
+            {/* Language Switcher */}
+            <div className="relative">
+              <button
+                onClick={() => setIsLangOpen(!isLangOpen)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 transition text-sm font-bold text-white border border-white/10"
+              >
+                <FiGlobe className="text-gray-300" />
+                <span>{language.toUpperCase()}</span>
+              </button>
+              {isLangOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setIsLangOpen(false)} />
+                  <div className="absolute right-0 mt-2 w-36 rounded-xl bg-[#001529] text-white shadow-xl border border-white/10 py-1 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <button
+                      onClick={() => { changeLanguage("uz"); setIsLangOpen(false); }}
+                      className={`w-full text-left px-4 py-2 text-sm font-semibold hover:bg-white/10 flex items-center gap-2 ${language === "uz" ? "text-blue-400 bg-white/5" : "text-gray-200"}`}
+                    >
+                      🇺🇿 UZ
+                    </button>
+                    <button
+                      onClick={() => { changeLanguage("en"); setIsLangOpen(false); }}
+                      className={`w-full text-left px-4 py-2 text-sm font-semibold hover:bg-white/10 flex items-center gap-2 ${language === "en" ? "text-blue-400 bg-white/5" : "text-gray-200"}`}
+                    >
+                      🇺🇸 EN
+                    </button>
+                    <button
+                      onClick={() => { changeLanguage("ru"); setIsLangOpen(false); }}
+                      className={`w-full text-left px-4 py-2 text-sm font-semibold hover:bg-white/10 flex items-center gap-2 ${language === "ru" ? "text-blue-400 bg-white/5" : "text-gray-200"}`}
+                    >
+                      🇷🇺 RU
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
             {!isLoggedIn ? (
               <>
                 <button
                   onClick={() => setIsRoleModalOpen(true)}
                   className="text-gray-300 hover:text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition"
                 >
-                  Kirish
+                  {t("header.signin")}
                 </button>
 
                 <Link
                   to="/signup"
                   className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-900/40 active:scale-95"
                 >
-                  Ro'yxatdan o'tish
+                  {t("header.signup")}
                 </Link>
               </>
             ) : (
@@ -171,7 +221,7 @@ const Header = () => {
                       />
                   </div>
                   <div className="leading-tight">
-                    <div className="text-sm font-semibold">Boshqaruv paneli</div>
+                    <div className="text-sm font-semibold">{t("header.dashboard")}</div>
                     <div className="text-xs text-white/70 max-w-[160px] truncate">
                       {fullName || initials}
                     </div>
@@ -182,7 +232,7 @@ const Header = () => {
                   onClick={handleLogout}
                   className="bg-white/10 hover:bg-white/15 px-4 py-2.5 rounded-lg text-sm font-semibold transition"
                 >
-                  Chiqish
+                  {t("header.logout")}
                 </button>
               </div>
             )}
@@ -195,7 +245,7 @@ const Header = () => {
                 onClick={() => setIsRoleModalOpen(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all active:scale-95"
               >
-                Kirish
+                {t("header.signin")}
               </button>
             ) : (
               <Link
@@ -282,13 +332,35 @@ const Header = () => {
                     />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold">Boshqaruv paneli</div>
+                  <div className="text-sm font-semibold">{t("header.dashboard")}</div>
                   <div className="text-xs text-white/70 truncate">
                     {fullName || initials}
                   </div>
                 </div>
               </div>
             )}
+
+            {/* Mobile Language Switcher */}
+            <div className="flex justify-around items-center mb-6 p-2 bg-white/5 rounded-xl border border-white/5">
+              <button
+                onClick={() => changeLanguage("uz")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${language === "uz" ? "bg-blue-600 text-white shadow" : "text-gray-300 hover:text-white"}`}
+              >
+                🇺🇿 UZ
+              </button>
+              <button
+                onClick={() => changeLanguage("en")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${language === "en" ? "bg-blue-600 text-white shadow" : "text-gray-300 hover:text-white"}`}
+              >
+                🇺🇸 EN
+              </button>
+              <button
+                onClick={() => changeLanguage("ru")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${language === "ru" ? "bg-blue-600 text-white shadow" : "text-gray-300 hover:text-white"}`}
+              >
+                🇷🇺 RU
+              </button>
+            </div>
 
             <div className="space-y-2">
               {NAV_ITEMS.map((item) => (
@@ -301,7 +373,7 @@ const Header = () => {
                       : "text-gray-200 hover:bg-white/10 hover:text-white"
                     }`}
                 >
-                  <span>{item.label}</span>
+                  <span>{t(navLabels[item.to])}</span>
                   {isActive(item.to) && (
                     <span className="w-2 h-2 bg-blue-400 rounded-full" />
                   )}
@@ -319,7 +391,7 @@ const Header = () => {
                     }}
                     className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-bold transition shadow-lg active:scale-[0.99]"
                   >
-                    Kirish
+                    {t("header.signin")}
                   </button>
 
                   <Link
@@ -327,7 +399,7 @@ const Header = () => {
                     onClick={closeMenu}
                     className="block w-full text-center border border-blue-400 text-blue-300 hover:bg-blue-400 hover:text-white px-4 py-3 rounded-xl font-semibold transition active:scale-[0.99]"
                   >
-                    Ro'yxatdan o'tish
+                    {t("header.signup")}
                   </Link>
                 </>
               ) : (
@@ -337,7 +409,7 @@ const Header = () => {
                     onClick={closeMenu}
                     className="block w-full text-center bg-white/10 hover:bg-white/15 text-white px-4 py-3 rounded-xl font-semibold transition"
                   >
-                    Boshqaruv paneli
+                    {t("header.dashboard")}
                   </Link>
                   <button
                     onClick={() => {
@@ -346,13 +418,13 @@ const Header = () => {
                     }}
                     className="block w-full text-center bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl font-semibold transition"
                   >
-                    Chiqish
+                    {t("header.logout")}
                   </button>
                 </>
               )}
 
               <p className="pt-4 text-center text-xs text-gray-300">
-                © {new Date().getFullYear()} Academix. Barcha huquqlar himoyalangan.
+                © {new Date().getFullYear()} Academix. {t("footer.copyright")}
               </p>
             </div>
           </div>

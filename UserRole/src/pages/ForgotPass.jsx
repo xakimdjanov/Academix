@@ -3,11 +3,13 @@ import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { userService } from "../services/api";
 import { FiMail, FiArrowLeft, FiArrowRight, FiKey } from "react-icons/fi";
+import { useLanguage } from "../context/LanguageContext";
 
 const ForgotPass = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
+  const { t, language } = useLanguage();
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -15,7 +17,7 @@ const ForgotPass = () => {
 
     try {
       if (!email.trim()) {
-        toast.error("Iltimos, elektron pochtangizni kiriting.");
+        toast.error(t("auth.enter_email") || (language === "uz" ? "Iltimos, elektron pochtangizni kiriting." : language === "en" ? "Please enter your email." : "Пожалуйста, введите ваш адрес электронной почты."));
         return;
       }
 
@@ -26,21 +28,31 @@ const ForgotPass = () => {
       const resetToken = res?.data?.resetToken;
 
       if (!resetToken) {
-        toast.error("Tiklash tokeni olinmadi.");
+        toast.error(
+          language === "uz" ? "Tiklash tokeni olinmadi." :
+          language === "en" ? "Reset token not received." :
+          "Токен восстановления не получен."
+        );
         return;
       }
 
       // tokenni yashirib saqlaymiz
       sessionStorage.setItem("reset_token", resetToken);
 
-      toast.success("Yo'naltirilmoqda...");
+      toast.success(
+        language === "uz" ? "Yo'naltirilmoqda..." :
+        language === "en" ? "Redirecting..." :
+        "Перенаправление..."
+      );
       navigate("/reset-password");
     } catch (error) {
       const msg =
         error?.response?.data?.message ||
         error?.response?.data?.error ||
         error?.message ||
-        "Xatolik yuz berdi.";
+        (language === "uz" ? "Xatolik yuz berdi." :
+         language === "en" ? "An error occurred." :
+         "Произошла ошибка.");
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -56,7 +68,7 @@ const ForgotPass = () => {
           <div className="flex items-center gap-3">
             <FiKey className="text-white text-xl" />
             <h1 className="text-white font-bold text-lg">
-              Parolni tiklash
+              {t("auth.reset_title")}
             </h1>
           </div>
         </div>
@@ -67,14 +79,14 @@ const ForgotPass = () => {
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-[#1F2937] mb-2">
-              Elektron pochta
+              {t("auth.email")}
             </label>
             <div className="relative">
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="email@manzil.com"
+                placeholder={t("auth.enter_email")}
                 className="w-full rounded-xl border border-gray-300 pl-12 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1F4F8F]"
               />
               <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1F4F8F]" />
@@ -90,7 +102,7 @@ const ForgotPass = () => {
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl border border-gray-300 text-sm font-medium text-[#1F2937] hover:bg-gray-100 transition"
             >
               <FiArrowLeft />
-              Orqaga
+              {t("common.back")}
             </Link>
 
             {/* Next */}
@@ -99,7 +111,7 @@ const ForgotPass = () => {
               disabled={loading}
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#1F4F8F] to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm font-semibold transition disabled:opacity-60"
             >
-              {loading ? "Iltimos, kuting..." : "Keyingisi"}
+              {loading ? (language === "uz" ? "Kuting..." : language === "en" ? "Wait..." : "Ожидайте...") : (language === "uz" ? "Keyingisi" : language === "en" ? "Next" : "Далее")}
               {!loading && <FiArrowRight />}
             </button>
 

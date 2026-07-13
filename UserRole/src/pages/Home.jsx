@@ -16,6 +16,7 @@ import {
 import { journalService, tariffService } from "../services/api";
 import { useSEO } from "../hooks/useSEO";
 import { formatTitle } from "../utils/textFormatter";
+import { useLanguage } from "../context/LanguageContext";
 
 const Home = () => {
   const [journals, setJournals] = useState([]);
@@ -29,11 +30,13 @@ const Home = () => {
     reviewers: 0,
     impact: 0
   });
+  
+  const { t, language } = useLanguage();
 
   useSEO({
-    title: "Akademik Jurnallar va Ilmiy Maqolalar Platformasi | Academix.uz",
-    description: "Academix / Akademix.uz — O'zbekistondagi akademik jurnallar, ilmiy maqolalar va tadqiqotlarni nashr qilish hamda tahririyat ishlarini avtomatlashtirish bo'yicha eng mukammal platforma. DOI va xalqaro indeksatsiya xizmatlari.",
-    keywords: "Academix, Academix.uz, akademix, akademix.uz, academix uz, akademix uz, ilmiy maqolalar, akademik jurnallar, o'zbekiston jurnallari, doi maqola, tadqiqotlar, dissertatsiya, maqola chiqarish, ilmiy jurnallar",
+    title: t("home.hero_title") + " | Academix.uz",
+    description: "Academix / Akademix.uz — O'zbekistondagi akademik jurnallar, ilmiy maqolalar va tadqiqotlarni nashr qilish hamda tahririyat ishlarini avtomatlashtirish bo'yicha eng mukammal platforma.",
+    keywords: "Academix, Academix.uz, ilmiy maqolalar, akademik jurnallar, doi maqola, tadqiqotlar",
     url: "https://akademix.uz",
     type: "website"
   });
@@ -55,8 +58,6 @@ const Home = () => {
         }
 
         // 🎯 Fetch Global "Why Choose Us" settings
-        // We use try-catch here so that if Journal ID 1 doesn't exist (404/500), 
-        // it doesn't break the entire page load.
         try {
           const settingsRes = await journalService.getById(1); 
           const sData = settingsRes?.data?.settings || [];
@@ -76,7 +77,6 @@ const Home = () => {
       try {
         const res = await tariffService.getAll();
         const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
-        // Faqat maqolalar uchun tariflarni ko'rsatamiz
         setTariffs(data.filter(t => t.type === 'Article'));
       } catch (err) {
         console.error("Tariff fetch failed:", err);
@@ -89,6 +89,56 @@ const Home = () => {
     fetchTariffs();
   }, []);
 
+  const getWhyChooseUsTranslation = (title, defaultContent) => {
+    const cleanTitle = (title || "").trim();
+    if (cleanTitle === "Shaffof ish jarayoni") {
+      return { title: t("home.why1_title"), content: t("home.why1_desc") };
+    }
+    if (cleanTitle === "Tezkor taqriz tizimi") {
+      return { title: t("home.why2_title"), content: t("home.why2_desc") };
+    }
+    if (cleanTitle === "Xavfsiz to'lovlar") {
+      return { title: t("home.why3_title"), content: t("home.why3_desc") };
+    }
+    if (cleanTitle === "Global standartlar") {
+      return { title: t("home.why4_title"), content: t("home.why4_desc") };
+    }
+    return { title, content: defaultContent };
+  };
+
+  const getTariffNameTranslation = (name) => {
+    const cleanName = (name || "").toLowerCase().trim();
+    if (cleanName === "boshlang'ich" || cleanName === "starter" || cleanName === "начальный") {
+      return t("pricing.starter");
+    } else if (cleanName === "professional" || cleanName === "профессиональный") {
+      return t("pricing.professional");
+    } else if (cleanName === "korporativ" || cleanName === "corporate" || cleanName === "корпоративный") {
+      return t("pricing.corporate");
+    }
+    return name;
+  };
+
+  const getJournalLimitText = (limit) => {
+    if (limit) {
+      return `${limit} ${t("pricing.journal_limit")}`;
+    }
+    return language === "uz" ? "Cheksiz jurnallar" : language === "en" ? "Unlimited journals" : "Безлимитные журналы";
+  };
+
+  const getArticleLimitText = (limit) => {
+    if (limit) {
+      return `${limit} ${t("pricing.article_limit")}`;
+    }
+    return language === "uz" ? "Cheksiz maqolalar" : language === "en" ? "Unlimited articles" : "Безлимитные статьи";
+  };
+
+  const getDurationText = (days) => {
+    if (days) {
+      return `${days} ${t("pricing.duration_days")}`;
+    }
+    return t("pricing.lifetime");
+  };
+
   return (
     <div className="bg-white overflow-hidden">
       {/* 🚀 1. HERO SECTION */}
@@ -97,30 +147,29 @@ const Home = () => {
           <div className="flex flex-col items-center gap-12">
             <div className="max-w-4xl animate-in fade-in slide-in-from-bottom duration-1000">
               <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
-                Akademik <span className="text-blue-400">Jurnallarni</span> bitta platformada nashr eting va boshqaring
+                {t("home.hero_title")}
               </h1>
               <p className="mt-6 text-lg md:text-xl text-blue-100/80 max-w-2xl mx-auto">
-                Ilmiy maqolalarni to'liq shaffoflik bilan yuboring, taqrizdan o'tkazing va nashr eting. 
-                Bizning zamonaviy boshqaruv tizimimiz bilan tahririyat ish jarayonini soddalashtiring.
+                {t("home.hero_desc")}
               </p>
               <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   to="/submit-article"
                   className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg transition-all shadow-xl shadow-blue-500/20 active:scale-95 flex items-center justify-center gap-2"
                 >
-                  Maqola yuborish <FiArrowRight />
+                  {t("home.hero_btn_submit")} <FiArrowRight />
                 </Link>
                 <Link
                   to="/journals"
                   className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl font-bold text-lg transition-all backdrop-blur-sm active:scale-95 flex items-center justify-center gap-2"
                 >
-                  Jurnallarni ko'rish <FiSearch />
+                  {t("home.hero_btn_journals")} <FiSearch />
                 </Link>
               </div>
               <div className="mt-8 flex items-center justify-center gap-4 text-sm text-blue-200/60">
-                <span className="flex items-center gap-1"><FiCheckCircle className="text-blue-400" /> taqriz qilinadigan</span>
-                <span className="flex items-center gap-1"><FiCheckCircle className="text-blue-400" /> ochiq kirish</span>
-                <span className="flex items-center gap-1"><FiCheckCircle className="text-blue-400" /> xavfsiz</span>
+                <span className="flex items-center gap-1"><FiCheckCircle className="text-blue-400" /> {t("home.hero_badge_peer")}</span>
+                <span className="flex items-center gap-1"><FiCheckCircle className="text-blue-400" /> {t("home.hero_badge_open")}</span>
+                <span className="flex items-center gap-1"><FiCheckCircle className="text-blue-400" /> {t("home.hero_badge_secure")}</span>
               </div>
             </div>
           </div>
@@ -131,42 +180,42 @@ const Home = () => {
       <section className="py-24 bg-[#F6F8FB]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-[#002147]">Platformaning ilg'or imkoniyatlari</h2>
+            <h2 className="text-3xl md:text-5xl font-bold text-[#002147]">{t("home.features_title")}</h2>
             <p className="mt-4 text-[#6B7280] text-lg max-w-2xl mx-auto">
-              Akademik jurnalning hayotiy tsiklini boshqarish uchun kerak bo'lgan hamma narsa.
+              {t("home.features_desc")}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <FeatureCard
               icon={<FiFileText size={24} />}
-              title="Maqola yuborish tizimi"
-              desc="Mualliflar uchun meta-ma'lumotlarni avtomatik ajratib olish imkoniyatiga ega qulay interfeys."
+              title={t("home.feature_submit_title")}
+              desc={t("home.feature_submit_desc")}
             />
             <FeatureCard
               icon={<FiSearch size={24} />}
-              title="Taqriz jarayoni"
-              desc="Mualliflar, muharrirlar va taqrizchilar o'rtasida uzluksiz aloqa."
+              title={t("home.feature_review_title")}
+              desc={t("home.feature_review_desc")}
             />
             <FeatureCard
               icon={<FiCreditCard size={24} />}
-              title="Integratsiyalashgan to'lovlar"
-              desc="Maqolani qayta ishlash to'lovlari (APC) va obunalarni xavfsiz boshqarish."
+              title={t("home.feature_pay_title")}
+              desc={t("home.feature_pay_desc")}
             />
             <FeatureCard
               icon={<FiActivity size={24} />}
-              title="Real vaqtda kuzatuv"
-              desc="Maqolangiz holatini yuborilgan paytdan boshlab nashr etilgunga qadar darhol kuzatib boring."
+              title={t("home.feature_track_title")}
+              desc={t("home.feature_track_desc")}
             />
             <FeatureCard
               icon={<FiLock size={24} />}
-              title="Rallarga asoslangan kirish"
-              desc="Mualliflar, muharrirlar va taqrizchilar uchun maxsus ruxsatnomalarga ega xavfsiz muhit."
+              title={t("home.feature_role_title")}
+              desc={t("home.feature_role_desc")}
             />
             <FeatureCard
               icon={<FiLayers size={24} />}
-              title="Jurnalni boshqarish"
-              desc="Jurnal sozlamalari, sonlari va tahririyat kengashi ustidan to'liq nazorat."
+              title={t("home.feature_mgmt_title")}
+              desc={t("home.feature_mgmt_desc")}
             />
           </div>
         </div>
@@ -176,17 +225,15 @@ const Home = () => {
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-[#002147]">Bu qanday ishlaydi</h2>
+            <h2 className="text-3xl md:text-5xl font-bold text-[#002147]">{t("home.how_it_works")}</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
-            {/* Steps */}
-            <Step number="1" title="Maqola yuborish" desc="Muallif maqolani foydalanuvchi paneli orqali yuboradi." />
-            <Step number="2" title="Tahririyat ko'rigi" desc="Muharrir sifat va texnik standartlarni tekshiradi." />
-            <Step number="3" title="Taqriz jarayoni" desc="Taqrizchilar maqolani yaxshilash bo'yicha fikr-mulohazalarini bildiradilar." />
-            <Step number="4" title="Nashr etish" desc="Yakuniy maqola nashr etiladi va unga DOI biriktiriladi." />
+            <Step number="1" title={t("home.step1_title")} desc={t("home.step1_desc")} />
+            <Step number="2" title={t("home.step2_title")} desc={t("home.step2_desc")} />
+            <Step number="3" title={t("home.step3_title")} desc={t("home.step3_desc")} />
+            <Step number="4" title={t("home.step4_title")} desc={t("home.step4_desc")} />
 
-            {/* Visual connector for desktop */}
             <div className="hidden md:block absolute top-[40px] left-[15%] right-[15%] h-0.5 bg-gray-100 -z-10"></div>
           </div>
         </div>
@@ -197,11 +244,11 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
             <div>
-              <h2 className="text-3xl md:text-5xl font-bold text-[#002147]">Jurnallarni o'rganing</h2>
-              <p className="mt-4 text-[#6B7280] text-lg">Yuqori sifatli ilmiy jurnallarimizni ko'rib chiqing.</p>
+              <h2 className="text-3xl md:text-5xl font-bold text-[#002147]">{t("home.explore_title")}</h2>
+              <p className="mt-4 text-[#6B7280] text-lg">{t("home.explore_desc")}</p>
             </div>
             <Link to="/journals" className="text-blue-600 font-bold flex items-center gap-2 hover:gap-3 transition-all">
-              Barcha jurnallar <FiArrowRight />
+              {t("home.explore_all")} <FiArrowRight />
             </Link>
           </div>
 
@@ -221,12 +268,12 @@ const Home = () => {
                   <div className="flex items-center gap-4 text-xs font-semibold text-gray-500 mb-6">
                     <span className="px-2 py-1 bg-gray-100 rounded">ISSN: {journal.issn || "N/A"}</span>
                     <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded flex items-center gap-1">
-                      <FiEye size={12} /> {journal.view_count || 0} KO'RILDI
+                      <FiEye size={12} /> {journal.view_count || 0} {t("common.views_count")}
                     </span>
                   </div>
                   <div className="flex gap-2">
-                    <Link to={`/journals/${journal.slug || journal.journal_name || journal.name}`} className="flex-1 py-2 text-center text-sm font-bold text-[#002147] bg-gray-50 hover:bg-gray-100 rounded-lg transition">Batafsil</Link>
-                    <Link to="/submit-article" className="flex-1 py-2 text-center text-sm font-bold text-white bg-[#002147] hover:bg-[#003366] rounded-lg transition">Yuborish</Link>
+                    <Link to={`/journals/${journal.slug || journal.journal_name || journal.name}`} className="flex-1 py-2 text-center text-sm font-bold text-[#002147] bg-gray-50 hover:bg-gray-100 rounded-lg transition">{t("common.details")}</Link>
+                    <Link to="/submit-article" className="flex-1 py-2 text-center text-sm font-bold text-white bg-[#002147] hover:bg-[#003366] rounded-lg transition">{t("common.submit")}</Link>
                   </div>
                 </div>
               ))}
@@ -240,27 +287,28 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-3xl md:text-5xl font-bold mb-8 italic tracking-tight">Nima uchun Academix?</h2>
+              <h2 className="text-3xl md:text-5xl font-bold mb-8 italic tracking-tight">{t("home.why_title")}</h2>
               <div className="space-y-6">
                 {whyChooseUs.length > 0 ? (
-                  whyChooseUs.map((item, idx) => (
-                    <TrustItem key={idx} title={item.title} desc={item.content} />
-                  ))
+                  whyChooseUs.map((item, idx) => {
+                    const translated = getWhyChooseUsTranslation(item.title, item.content);
+                    return <TrustItem key={idx} title={translated.title} desc={translated.content} />;
+                  })
                 ) : (
                   <>
-                    <TrustItem title="Shaffof ish jarayoni" desc="Taqriz va tahririyat jarayonining har bir bosqichini kuzatib boring." />
-                    <TrustItem title="Tezkor taqriz tizimi" desc="Maqolalar va malakali taqrizchilar o'rtasida optimallashtirilgan muvofiqlik." />
-                    <TrustItem title="Xavfsiz to'lovlar" desc="APC va obunalar uchun yuqori darajadagi xavfsizlik." />
-                    <TrustItem title="Global standartlar" desc="COPE va xalqaro akademik ko'rsatmalarga moslik." />
+                    <TrustItem title={t("home.why1_title")} desc={t("home.why1_desc")} />
+                    <TrustItem title={t("home.why2_title")} desc={t("home.why2_desc")} />
+                    <TrustItem title={t("home.why3_title")} desc={t("home.why3_desc")} />
+                    <TrustItem title={t("home.why4_title")} desc={t("home.why4_desc")} />
                   </>
                 )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-8 text-center bg-white/5 backdrop-blur-md rounded-3xl p-10 border border-white/10">
-              <StatItem label="Nashr etilgan maqolalar" value={`${stats.articles}+`} />
-              <StatItem label="Faol jurnallar" value={`${stats.journals}+`} />
-              <StatItem label="Global taqrizchilar" value={`${stats.reviewers}+`} />
-              <StatItem label="Ko'rishlar soni" value={`${(stats.impact / 1000).toFixed(1)}k+`} />
+              <StatItem label={t("home.stats_articles")} value={`${stats.articles}+`} />
+              <StatItem label={t("home.stats_journals")} value={`${stats.journals}+`} />
+              <StatItem label={t("home.stats_reviewers")} value={`${stats.reviewers}+`} />
+              <StatItem label={t("home.stats_views")} value={`${(stats.impact / 1000).toFixed(1)}k+`} />
             </div>
           </div>
         </div>
@@ -270,9 +318,9 @@ const Home = () => {
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-[#002147]">Tariflar</h2>
+            <h2 className="text-3xl md:text-5xl font-bold text-[#002147]">{t("home.pricing_title")}</h2>
             <p className="mt-4 text-[#6B7280] text-lg max-w-2xl mx-auto">
-              Tadqiqotingiz yoki muassasangiz uchun eng ma'qul rejani tanlang.
+              {t("home.pricing_desc")}
             </p>
           </div>
 
@@ -280,27 +328,27 @@ const Home = () => {
             {loadingTariffs ? (
               [1, 2, 3].map(i => <div key={i} className="h-96 bg-gray-50 animate-pulse rounded-3xl"></div>)
             ) : (
-              tariffs.map((t, idx) => (
+              tariffs.map((tItem, idx) => (
                 <PricingCard
-                  key={t.id}
-                  title={t.name}
-                  price={t.price}
+                  key={tItem.id}
+                  title={getTariffNameTranslation(tItem.name)}
+                  price={tItem.price}
                   popular={idx === 1}
                   features={[
-                    t.type === 'Journal' ? (t.journal_limit ? `${t.journal_limit} ta jurnal` : "Cheksiz jurnallar") : null,
-                    t.article_limit ? `${t.article_limit} ta maqola` : "Cheksiz maqolalar",
-                    t.duration_days ? `${t.duration_days} kunlik muddat` : "Umrbod foydalanish",
-                    ...(t.description ? t.description.split(/[\n,]+/).map(f => f.trim()).filter(f => f.length > 0) : [])
+                    tItem.type === 'Journal' ? getJournalLimitText(tItem.journal_limit) : null,
+                    getArticleLimitText(tItem.article_limit),
+                    getDurationText(tItem.duration_days),
+                    ...(tItem.description ? tItem.description.split(/[\n,]+/).map(f => f.trim()).filter(f => f.length > 0) : [])
                   ].filter(Boolean)}
-                  btnText={t.price === 0 ? "Bepul boshlash" : "Hoziroq boshlash"}
-                  link={`/signup?tariff_id=${t.id}`}
+                  btnText={tItem.price === 0 ? t("home.pricing_free") : t("home.pricing_start")}
+                  link={`/signup?tariff_id=${tItem.id}`}
                 />
               ))
             )}
             
             {!loadingTariffs && tariffs.length === 0 && (
                 <div className="col-span-full text-center p-12 bg-gray-50 rounded-3xl">
-                    <p className="text-gray-400 font-bold">Hozircha tariflar mavjud emas.</p>
+                    <p className="text-gray-400 font-bold">{t("pricing.no_tariffs")}</p>
                 </div>
             )}
           </div>
@@ -311,7 +359,7 @@ const Home = () => {
       <section className="py-24 bg-[#F6F8FB]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-[#002147]">Foydalanuvchilar fikri</h2>
+            <h2 className="text-3xl md:text-5xl font-bold text-[#002147]">{t("home.testimonials_title")}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <Testimonial
@@ -333,13 +381,12 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-[3rem] p-12 md:p-20 text-center text-white relative overflow-hidden shadow-2xl">
             <div className="relative z-10">
-              <h2 className="text-3xl md:text-5xl font-extrabold mb-6">Nashr qilishga tayyormisiz?</h2>
-              <p className="text-xl text-blue-100/80 mb-10 max-w-2xl mx-auto">Ilmiy taraqqiyot sari birgalikda intilayotgan minglab tadqiqotchi va muharrirlarga qo'shiling.</p>
+              <h2 className="text-3xl md:text-5xl font-extrabold mb-6">{t("home.cta_title")}</h2>
+              <p className="text-xl text-blue-100/80 mb-10 max-w-2xl mx-auto">{t("home.cta_desc")}</p>
               <Link to="/signup" className="px-10 py-5 bg-white text-blue-700 hover:bg-blue-50 rounded-2xl font-bold text-xl transition-all shadow-xl active:scale-95">
-                Bugun boshlang
+                {t("home.cta_btn")}
               </Link>
             </div>
-            {/* Abstract decorative elements */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-400/20 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl"></div>
           </div>
@@ -391,28 +438,31 @@ const StatItem = ({ label, value }) => (
   </div>
 );
 
-const PricingCard = ({ title, price, features, popular, btnText, link }) => (
-  <div className={`p-10 rounded-3xl border ${popular ? 'border-blue-600 shadow-2xl relative bg-blue-600 text-white' : 'border-gray-200 bg-white text-[#002147]'} transition-all`}>
-    {popular && <div className="absolute top-0 right-10 -translate-y-1/2 bg-yellow-400 text-[#002147] text-[10px] font-black uppercase px-4 py-1.5 rounded-full shadow-lg">Eng mashhur</div>}
-    <div className="mb-8">
-      <span className="text-sm font-bold uppercase tracking-widest opacity-60">{title}</span>
-      <div className="mt-4 flex items-baseline">
-        <span className="text-4xl font-black">{price === "Maxsus" || isNaN(price) ? "" : "$"}{price}</span>
-        {!(price === "Maxsus" || isNaN(price)) && <span className="text-sm opacity-60 ml-2">/oyiga</span>}
+const PricingCard = ({ title, price, features, popular, btnText, link }) => {
+  const { t } = useLanguage();
+  return (
+    <div className={`p-10 rounded-3xl border ${popular ? 'border-blue-600 shadow-2xl relative bg-blue-600 text-white' : 'border-gray-200 bg-white text-[#002147]'} transition-all`}>
+      {popular && <div className="absolute top-0 right-10 -translate-y-1/2 bg-yellow-400 text-[#002147] text-[10px] font-black uppercase px-4 py-1.5 rounded-full shadow-lg">{t("home.pricing_popular")}</div>}
+      <div className="mb-8">
+        <span className="text-sm font-bold uppercase tracking-widest opacity-60">{title}</span>
+        <div className="mt-4 flex items-baseline">
+          <span className="text-4xl font-black">{price === "Maxsus" || isNaN(price) ? "" : "$"}{price}</span>
+          {!(price === "Maxsus" || isNaN(price)) && <span className="text-sm opacity-60 ml-2">{t("home.pricing_month")}</span>}
+        </div>
       </div>
+      <ul className="space-y-4 mb-10">
+        {features.map((f, i) => (
+          <li key={i} className="flex items-center gap-3 text-sm">
+            <FiCheckCircle className={popular ? 'text-white' : 'text-blue-600'} /> {f}
+          </li>
+        ))}
+      </ul>
+      <Link to={link || "/signup"} className={`block w-full text-center py-4 rounded-xl font-bold transition ${popular ? 'bg-white text-blue-600 hover:bg-blue-50' : 'bg-[#002147] text-white hover:bg-[#003366]'}`}>
+        {btnText}
+      </Link>
     </div>
-    <ul className="space-y-4 mb-10">
-      {features.map((f, i) => (
-        <li key={i} className="flex items-center gap-3 text-sm">
-          <FiCheckCircle className={popular ? 'text-white' : 'text-blue-600'} /> {f}
-        </li>
-      ))}
-    </ul>
-    <Link to={link || "/signup"} className={`block w-full text-center py-4 rounded-xl font-bold transition ${popular ? 'bg-white text-blue-600 hover:bg-blue-50' : 'bg-[#002147] text-white hover:bg-[#003366]'}`}>
-      {btnText}
-    </Link>
-  </div>
-);
+  );
+};
 
 const Testimonial = ({ text, author, role }) => (
   <div className="bg-white p-10 rounded-3xl border border-gray-100 shadow-sm italic text-[#4B5563] text-lg leading-relaxed relative">

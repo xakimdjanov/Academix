@@ -3,12 +3,14 @@ import toast from "react-hot-toast";
 import { useNavigate, Link } from "react-router-dom";
 import { userService } from "../../services/api";
 import { FiMail, FiLock, FiEye, FiEyeOff, FiKey } from "react-icons/fi";
+import { useLanguage } from "../../context/LanguageContext";
 
 const SignIn = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
+  const { t, language } = useLanguage();
 
   const onChange = (e) =>
     setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
@@ -20,7 +22,10 @@ const SignIn = () => {
     const password = form.password;
 
     if (!email || !password) {
-      toast.error("Iltimos, elektron pochta va parolni kiriting.");
+      toast.error(
+        t("auth.enter_email_password") || 
+        (language === "uz" ? "Iltimos, elektron pochta va parolni kiriting." : language === "en" ? "Please enter email and password." : "Пожалуйста, введите адрес электронной почты и пароль.")
+      );
       return;
     }
 
@@ -65,21 +70,31 @@ const SignIn = () => {
       }
 
       if (!id) {
-        toast.error("Tizimga kirildi, lekin foydalanuvchi IDsi topilmadi.");
+        toast.error(
+          language === "uz" ? "Tizimga kirildi, lekin foydalanuvchi IDsi topilmadi." :
+          language === "en" ? "Logged in, but user ID not found." :
+          "Вход выполнен успешно, но ID пользователя не найден."
+        );
         return;
       }
 
       // ✅ user id saqlaymiz
       localStorage.setItem("user_id", String(id));
 
-      toast.success("Tizimga muvaffaqiyatli kirildi!");
+      toast.success(
+        language === "uz" ? "Tizimga muvaffaqiyatli kirildi!" :
+        language === "en" ? "Successfully logged in!" :
+        "Вход выполнен успешно!"
+      );
       navigate("/dashboard"); // ✅ o'zingizning user dashboard route
     } catch (error) {
       const msg =
         error?.response?.data?.message ||
         error?.response?.data?.error ||
         error?.message ||
-        "Elektron pochta yoki parol noto'g'ri.";
+        (language === "uz" ? "Elektron pochta yoki parol noto'g'ri." :
+         language === "en" ? "Incorrect email or password." :
+         "Неверный адрес электронной почты или пароль.");
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -90,15 +105,15 @@ const SignIn = () => {
     <div className="py-12 md:py-20 bg-[#F6F8FB] flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
         <div className="bg-gradient-to-r from-[#0B2A6D] to-[#1F4F8F] px-6 py-7">
-          <h1 className="text-2xl font-bold text-white">Tizimga kirish</h1>
-          <p className="text-white/90 text-sm mt-1">Hisobingizga kiring</p>
+          <h1 className="text-2xl font-bold text-white">{t("auth.signin_title")}</h1>
+          <p className="text-white/90 text-sm mt-1">{t("auth.signin_sub")}</p>
         </div>
 
         <form onSubmit={onSubmit} className="p-6 space-y-5">
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-[#1F2937] mb-2">
-              Elektron pochta
+              {t("auth.email")}
             </label>
             <div className="relative">
               <input
@@ -106,7 +121,7 @@ const SignIn = () => {
                 name="email"
                 value={form.email}
                 onChange={onChange}
-                placeholder="email@manzil.com"
+                placeholder={t("auth.enter_email")}
                 className="w-full rounded-xl border border-gray-300 bg-white pl-12 pr-4 py-3 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#0B2A6D] focus:border-transparent"
               />
               <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#0B2A6D]" />
@@ -116,7 +131,7 @@ const SignIn = () => {
           {/* Password */}
           <div>
             <label className="block text-sm font-medium text-[#1F2937] mb-2">
-              Parol
+              {t("auth.password")}
             </label>
             <div className="relative">
               <input
@@ -124,7 +139,7 @@ const SignIn = () => {
                 name="password"
                 value={form.password}
                 onChange={onChange}
-                placeholder="Parolni kiriting"
+                placeholder={t("auth.enter_password")}
                 className="w-full rounded-xl border border-gray-300 bg-white pl-12 pr-12 py-3 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#0B2A6D] focus:border-transparent"
               />
               <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#0B2A6D]" />
@@ -132,7 +147,10 @@ const SignIn = () => {
                 type="button"
                 onClick={() => setShowPassword((p) => !p)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#1F2937] transition-colors"
-                aria-label={showPassword ? "Parolni yashirish" : "Parolni ko'rsatish"}
+                aria-label={showPassword ? 
+                  (language === "uz" ? "Parolni yashirish" : language === "en" ? "Hide password" : "Скрыть пароль") : 
+                  (language === "uz" ? "Parolni ko'rsatish" : language === "en" ? "Show password" : "Показать пароль")
+                }
               >
                 {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
               </button>
@@ -146,7 +164,7 @@ const SignIn = () => {
               className="text-sm text-[#0B2A6D] hover:text-blue-700 font-medium inline-flex items-center gap-1"
             >
               <FiKey className="text-sm" />
-              Parolni unutdingizmi?
+              {t("auth.forgot")}
             </Link>
           </div>
 
@@ -156,17 +174,17 @@ const SignIn = () => {
             disabled={loading}
             className="w-full bg-gradient-to-r from-[#0B2A6D] to-[#1F4F8F] hover:from-[#1F4F8F] hover:to-blue-700 text-white rounded-xl py-3 font-semibold text-sm transition disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? "Kirilmoqda..." : "Kirish"}
+            {loading ? t("auth.logging_in") : t("auth.login_btn")}
           </button>
 
           {/* Sign Up Link */}
           <p className="text-sm text-center text-[#6B7280]">
-            Hisobingiz yo'qmi?{" "}
+            {t("auth.no_account")}{" "}
             <Link
               to="/signup"
               className="text-[#0B2A6D] font-semibold hover:underline"
             >
-              Ro'yxatdan o'ting
+              {t("auth.signup_link")}
             </Link>
           </p>
         </form>
