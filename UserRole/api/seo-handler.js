@@ -1,24 +1,56 @@
 import fs from "fs";
 import path from "path";
 
+// Build qilingan index.html (ichida /assets/index-*.js va .css bor) — bir marta olinib keshlanadi
+let cachedTemplate = null;
+
+const isBuiltHtml = (h) => typeof h === "string" && /<script[^>]+src="\/assets\//.test(h);
+
+async function loadTemplate(req) {
+  if (cachedTemplate) return cachedTemplate;
+
+  // 1) Funksiya bilan birga qo'shilgan dist/index.html (vercel.json -> includeFiles)
+  for (const p of [path.join(process.cwd(), "dist", "index.html"), path.join(process.cwd(), "UserRole", "dist", "index.html")]) {
+    try {
+      const h = fs.readFileSync(p, "utf8");
+      if (isBuiltHtml(h)) return (cachedTemplate = h);
+    } catch {
+      /* keyingisini sinaymiz */
+    }
+  }
+
+  // 2) Deploy'ning o'zidagi statik /index.html (statik fayllar rewrite'lardan oldin beriladi)
+  try {
+    const proto = req.headers["x-forwarded-proto"] || "https";
+    const r = await fetch(`${proto}://${req.headers.host}/index.html`);
+    if (r.ok) {
+      const h = await r.text();
+      if (isBuiltHtml(h)) return (cachedTemplate = h);
+    }
+  } catch (err) {
+    console.error("Could not fetch /index.html:", err);
+  }
+  return null;
+}
+
 export default async function handler(req, res) {
   const { type, id, slug } = req.query;
   const API_URL = "https://academixbackend-productionn.up.railway.app";
   const SITE_NAME = "Academix | Akademix.uz";
 
-  // 1. Read base index.html template
-  let html;
-  try {
-    // Vercel serverless function packages dist/index.html via includeFiles
-    html = fs.readFileSync(path.join(process.cwd(), "dist", "index.html"), "utf8");
-  } catch (e) {
-    try {
-      html = fs.readFileSync(path.join(process.cwd(), "index.html"), "utf8");
-    } catch (err) {
-      console.error("Could not read index.html template:", err);
-      // Minimal recovery HTML shell if all reads fail
-      html = `<!doctype html><html lang="uz"><head><meta charset="UTF-8" /><title>Academix</title></head><body><div id="root"></div></body></html>`;
-    }
+  // 1. Base template. Skriptsiz "bo'sh qobiq" qaytarilsa sahifa oppoq qoladi —
+  //    shablon topilmasa SPA'ning o'ziga yo'naltiramiz.
+  let html = await loadTemplate(req);
+  if (!html) {
+    console.error("seo-handler: built index.html not found, serving loader shell");
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Cache-Control", "no-store");
+    // URL o'zgarmaydi: brauzer haqiqiy index.html ni yuklab, sahifani u bilan almashtiradi
+    return res
+      .status(200)
+      .send(
+        `<!doctype html><html lang="uz"><head><meta charset="UTF-8" /><title>Academix</title></head><body><script>fetch("/index.html").then(function(r){return r.text()}).then(function(h){document.open();document.write(h);document.close();});</script></body></html>`
+      );
   }
 
   // Helper to escape double quotes for HTML attributes

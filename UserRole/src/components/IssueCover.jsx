@@ -15,7 +15,7 @@ export const issueNumber = (name = "") => {
 const IssueCover = ({ imageUrl, journalName, issueName, year, className = "" }) => {
   const [broken, setBroken] = useState(false);
   const base =
-    "relative aspect-[3/4] w-full overflow-hidden rounded-[3px] shadow-[0_1px_0_#DCE1E8,0_18px_32px_-18px_rgba(0,33,71,0.55)]";
+    "relative aspect-[3/4] w-full overflow-hidden rounded-xl ring-1 ring-black/5 shadow-[0_18px_40px_-16px_rgba(0,0,0,0.45)]";
 
   if (imageUrl && !broken) {
     return (
@@ -49,6 +49,32 @@ const IssueCover = ({ imageUrl, journalName, issueName, year, className = "" }) 
         </div>
       </div>
     </div>
+  );
+};
+
+/**
+ * Sarlavha bloki orqa foni: banner rasmi (bo'lmasa muqova xiralashtirilib) + to'q ko'k qoplama.
+ * Ota element `relative overflow-hidden` bo'lishi kerak.
+ */
+export const HeroBackdrop = ({ bannerUrl, fallbackUrl }) => {
+  const [broken, setBroken] = useState(false);
+  const src = bannerUrl || fallbackUrl;
+  return (
+    <>
+      {src && !broken && (
+        <img
+          src={src}
+          alt=""
+          aria-hidden="true"
+          onError={() => setBroken(true)}
+          className={`absolute inset-0 h-full w-full object-cover ${bannerUrl ? "" : "scale-110 blur-2xl opacity-70"}`}
+        />
+      )}
+      <div
+        className="absolute inset-0 bg-gradient-to-b from-[#002147]/65 via-[#002147]/80 to-[#002147]/95"
+        aria-hidden="true"
+      />
+    </>
   );
 };
 

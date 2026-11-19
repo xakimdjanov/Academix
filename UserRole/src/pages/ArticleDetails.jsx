@@ -7,10 +7,13 @@ import { getUserIdFromToken } from "../utils/getUserIdFromToken";
 import { useSEO } from "../hooks/useSEO";
 import { formatTitle } from "../utils/textFormatter";
 import { useLanguage } from "../context/LanguageContext";
-import IssueCover, { issueNumber } from "../components/IssueCover";
+import IssueCover, { issueNumber, HeroBackdrop } from "../components/IssueCover";
 
 const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ax-firuza focus-visible:ring-offset-2";
+
+const focusRingDark =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ax-firuza-light focus-visible:ring-offset-2 focus-visible:ring-offset-[#002147]";
 
 const LOCALES = { uz: "uz-UZ", en: "en-GB", ru: "ru-RU" };
 const LANG_NAMES = {
@@ -29,7 +32,7 @@ const initials = (name = "") =>
     .join("");
 
 const Section = ({ title, aside, children }) => (
-  <section className="rounded-md border border-ax-rule bg-white px-6 py-8 sm:px-10 sm:py-10">
+  <section className="rounded-3xl border border-gray-100 bg-white p-8 shadow-sm md:p-12">
     <div className="mb-5 flex items-baseline justify-between gap-4">
       <h2 className="ax-serif text-2xl font-semibold text-ax-ink">{title}</h2>
       {aside}
@@ -211,19 +214,20 @@ const ArticleDetails = () => {
       <Toaster position="top-right" />
 
       {/* Maqola boshi */}
-      <header className="border-b border-ax-rule bg-white">
-        <div className="mx-auto max-w-6xl px-4 pb-10 pt-6 sm:px-6 lg:px-8">
+      <section className="relative overflow-hidden bg-[#002147] text-white">
+        <HeroBackdrop bannerUrl={article.journal?.banner_url} fallbackUrl={article.journal?.cover_image_url} />
+        <div className="relative mx-auto max-w-7xl px-4 pb-28 pt-8 sm:px-6 lg:px-8">
           <nav aria-label="Breadcrumb">
-            <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-ax-muted">
+            <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-blue-100/70">
               <li>
-                <Link to="/journals" className={`rounded-sm hover:text-ax-ink ${focusRing}`}>
+                <Link to="/journals" className={`rounded-sm hover:text-white ${focusRingDark}`}>
                   {L("Jurnallar", "Journals", "Журналы")}
                 </Link>
               </li>
               {article.journal && (
                 <li className="flex items-center gap-1.5">
                   <FiChevronRight size={13} aria-hidden="true" />
-                  <Link to={`/journals/${article.journal.slug}`} className={`rounded-sm hover:text-ax-ink ${focusRing}`}>
+                  <Link to={`/journals/${article.journal.slug}`} className={`rounded-sm hover:text-white ${focusRingDark}`}>
                     {journalName}
                   </Link>
                 </li>
@@ -231,7 +235,7 @@ const ArticleDetails = () => {
               {bob && article.journal && (
                 <li className="flex items-center gap-1.5">
                   <FiChevronRight size={13} aria-hidden="true" />
-                  <Link to={`/journals/${article.journal.slug}?son=${bob.id}`} className={`rounded-sm hover:text-ax-ink ${focusRing}`}>
+                  <Link to={`/journals/${article.journal.slug}?son=${bob.id}`} className={`rounded-sm hover:text-white ${focusRingDark}`}>
                     {bob.name}
                   </Link>
                 </li>
@@ -240,33 +244,33 @@ const ArticleDetails = () => {
           </nav>
 
           <div className="mt-8 max-w-[54rem]">
-            <h1 className="ax-serif text-[1.7rem] font-semibold leading-[1.15] tracking-[-0.01em] text-ax-ink sm:text-[2.25rem] lg:text-[2.6rem]">
+            <h1 className="ax-serif text-[1.7rem] font-semibold leading-[1.15] tracking-[-0.01em] text-white sm:text-[2.25rem] lg:text-[2.6rem]">
               {title}
             </h1>
-            {authorList && <p className="mt-5 text-base text-ax-text">{authorList}</p>}
+            {authorList && <p className="mt-5 text-base text-blue-50/90">{authorList}</p>}
 
             <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-3 text-sm">
               {date && (
                 <div>
-                  <dt className="text-ax-muted">{L("Nashr etilgan", "Published", "Опубликовано")}</dt>
-                  <dd className="ax-num mt-0.5 font-medium">{date}</dd>
+                  <dt className="text-blue-100/60">{L("Nashr etilgan", "Published", "Опубликовано")}</dt>
+                  <dd className="ax-num mt-0.5 font-medium text-white">{date}</dd>
                 </div>
               )}
               {article.category && (
                 <div>
-                  <dt className="text-ax-muted">{L("Bo'lim", "Section", "Раздел")}</dt>
-                  <dd className="mt-0.5 font-medium">{translateCategory(article.category)}</dd>
+                  <dt className="text-blue-100/60">{L("Bo'lim", "Section", "Раздел")}</dt>
+                  <dd className="mt-0.5 font-medium text-white">{translateCategory(article.category)}</dd>
                 </div>
               )}
               {langName && (
                 <div>
-                  <dt className="text-ax-muted">{L("Til", "Language", "Язык")}</dt>
-                  <dd className="mt-0.5 font-medium">{langName}</dd>
+                  <dt className="text-blue-100/60">{L("Til", "Language", "Язык")}</dt>
+                  <dd className="mt-0.5 font-medium text-white">{langName}</dd>
                 </div>
               )}
               <div>
-                <dt className="text-ax-muted">{L("Ko'rishlar", "Views", "Просмотры")}</dt>
-                <dd className="ax-num mt-0.5 font-medium">{article.view_count || 0}</dd>
+                <dt className="text-blue-100/60">{L("Ko'rishlar", "Views", "Просмотры")}</dt>
+                <dd className="ax-num mt-0.5 font-medium text-white">{article.view_count || 0}</dd>
               </div>
             </dl>
 
@@ -276,7 +280,7 @@ const ArticleDetails = () => {
                   href={article.file_url}
                   target="_blank"
                   rel="noreferrer"
-                  className={`inline-flex items-center gap-2 rounded-md bg-ax-ink px-5 py-2.5 text-sm font-medium text-white hover:bg-[#00336b] ${focusRing}`}
+                  className={`inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-[#002147] shadow-xl hover:bg-blue-50 ${focusRingDark}`}
                 >
                   <FiDownload aria-hidden="true" /> {L("PDF ni ochish", "Open PDF", "Открыть PDF")}
                 </a>
@@ -284,14 +288,14 @@ const ArticleDetails = () => {
               <button
                 type="button"
                 onClick={shareTelegram}
-                className={`inline-flex items-center gap-2 rounded-md border border-ax-rule px-4 py-2.5 text-sm hover:border-ax-ink ${focusRing}`}
+                className={`inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-medium text-white backdrop-blur-md hover:bg-white/20 ${focusRingDark}`}
               >
                 <FiSend aria-hidden="true" /> {t("journals.share")}
               </button>
               <button
                 type="button"
                 onClick={handleCopyLink}
-                className={`inline-flex items-center gap-2 rounded-md border border-ax-rule px-4 py-2.5 text-sm hover:border-ax-ink ${focusRing}`}
+                className={`inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-medium text-white backdrop-blur-md hover:bg-white/20 ${focusRingDark}`}
               >
                 <FiLink aria-hidden="true" />
                 {copied ? t("journals.copied") : L("Havolani nusxalash", "Copy link", "Скопировать ссылку")}
@@ -299,13 +303,13 @@ const ArticleDetails = () => {
             </div>
           </div>
         </div>
-      </header>
+      </section>
 
-      <main className="mx-auto mt-10 grid max-w-6xl gap-8 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_19rem] lg:px-8">
+      <main className="relative z-10 mx-auto -mt-16 grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:px-8">
         <div className="min-w-0 space-y-8">
           {/* Tahririyat izohi (faqat muallifga) */}
           {isAuthor && article.editor_comment && (
-            <section className="rounded-md border-l-4 border-amber-500 bg-amber-50 px-6 py-6 sm:px-8">
+            <section className="rounded-3xl border border-amber-100 bg-amber-50 p-8 shadow-sm md:px-12">
               <h2 className="flex items-center gap-2 font-semibold text-amber-900">
                 <FiMessageSquare aria-hidden="true" /> {L("Tahririyat izohi", "Editor's note", "Комментарий редакции")}
               </h2>
@@ -317,7 +321,7 @@ const ArticleDetails = () => {
           <Section title={L("Annotatsiya", "Abstract", "Аннотация")}>
             <p className="ax-serif max-w-[68ch] whitespace-pre-wrap text-[1.125rem] leading-[1.75] text-ax-text">{article.abstract}</p>
             {keywords.length > 0 && (
-              <p className="mt-6 max-w-[68ch] border-t border-ax-rule pt-5 text-[15px] leading-relaxed">
+              <p className="mt-6 max-w-[68ch] border-t border-gray-100 pt-5 text-[15px] leading-relaxed">
                 <span className="font-semibold text-ax-ink">{L("Kalit so'zlar", "Keywords", "Ключевые слова")}:</span>{" "}
                 <span className="ax-serif italic text-ax-text/90">{keywords.join(", ")}</span>
               </p>
@@ -363,7 +367,7 @@ const ArticleDetails = () => {
           <Section
             title={L("Iqtibos keltirish", "Cite this article", "Цитирование")}
             aside={
-              <div role="radiogroup" aria-label={L("Iqtibos uslubi", "Citation style", "Стиль цитирования")} className="flex rounded-md border border-ax-rule p-0.5 text-sm">
+              <div role="radiogroup" aria-label={L("Iqtibos uslubi", "Citation style", "Стиль цитирования")} className="flex rounded-xl border border-gray-200 bg-gray-50 p-1 text-sm">
                 {[
                   ["gost", "GOST"],
                   ["apa", "APA"],
@@ -374,7 +378,7 @@ const ArticleDetails = () => {
                     role="radio"
                     aria-checked={citeStyle === k}
                     onClick={() => setCiteStyle(k)}
-                    className={`rounded px-3 py-1 ${focusRing} ${citeStyle === k ? "bg-ax-ink text-white" : "text-ax-muted hover:text-ax-ink"}`}
+                    className={`rounded-lg px-3 py-1 ${focusRing} ${citeStyle === k ? "bg-ax-ink text-white" : "text-ax-muted hover:text-ax-ink"}`}
                   >
                     {label}
                   </button>
@@ -382,11 +386,11 @@ const ArticleDetails = () => {
               </div>
             }
           >
-            <p className="ax-serif max-w-[68ch] break-words rounded-md bg-ax-paper px-5 py-4 text-[15px] leading-relaxed">{citation}</p>
+            <p className="ax-serif max-w-[68ch] break-words rounded-2xl border border-gray-100 bg-gray-50 px-5 py-4 text-[15px] leading-relaxed">{citation}</p>
             <button
               type="button"
               onClick={copyCitation}
-              className={`mt-4 inline-flex items-center gap-2 rounded-md border border-ax-rule px-4 py-2 text-sm hover:border-ax-ink ${focusRing}`}
+              className={`mt-4 inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium hover:border-[#002147] hover:bg-gray-50 ${focusRing}`}
             >
               {citeCopied ? <FiCheck aria-hidden="true" /> : <FiCopy aria-hidden="true" />}
               {citeCopied ? L("Nusxalandi", "Copied", "Скопировано") : L("Iqtibosni nusxalash", "Copy citation", "Скопировать")}
@@ -408,21 +412,21 @@ const ArticleDetails = () => {
                   value={userComment}
                   onChange={(e) => setUserComment(e.target.value)}
                   placeholder={L("Tadqiqot haqida fikr yoki savolingizni yozing", "Share feedback or ask about this research", "Поделитесь мнением или задайте вопрос об исследовании")}
-                  className="min-h-[7rem] w-full rounded-md border border-ax-rule bg-white p-4 text-[15px] leading-relaxed placeholder:text-ax-muted focus:border-ax-firuza focus:outline-none focus:ring-2 focus:ring-ax-firuza/30"
+                  className="min-h-[7rem] w-full rounded-2xl border border-gray-100 bg-gray-50 p-5 text-[15px] leading-relaxed placeholder:text-ax-muted focus:border-ax-firuza focus:bg-white focus:outline-none focus:ring-4 focus:ring-ax-firuza/10"
                 />
                 <div className="mt-3 flex justify-end">
                   <button
                     type="button"
                     onClick={handlePostComment}
                     disabled={isSubmitting}
-                    className={`inline-flex items-center gap-2 rounded-md bg-ax-ink px-5 py-2.5 text-sm font-medium text-white hover:bg-[#00336b] disabled:opacity-50 ${focusRing}`}
+                    className={`inline-flex items-center gap-2 rounded-xl bg-[#002147] px-6 py-3 text-sm font-semibold text-white shadow-lg hover:bg-[#00336b] disabled:opacity-50 ${focusRing}`}
                   >
                     {isSubmitting ? L("Yuborilmoqda", "Sending", "Отправка") : L("Izohni yuborish", "Send comment", "Отправить")}
                   </button>
                 </div>
               </div>
             ) : (
-              <p className="mb-8 rounded-md bg-ax-paper px-5 py-4 text-[15px]">
+              <p className="mb-8 rounded-2xl border border-blue-100/60 bg-blue-50/50 px-5 py-4 text-center text-[15px]">
                 {L("Muhokamada qatnashish uchun", "To join the discussion,", "Чтобы участвовать в обсуждении,")}{" "}
                 <Link to="/signin" className={`rounded-sm font-medium text-ax-firuza hover:underline ${focusRing}`}>
                   {L("tizimga kiring", "sign in", "войдите")}
@@ -434,7 +438,7 @@ const ArticleDetails = () => {
             {publicComments.length === 0 ? (
               <p className="text-ax-muted">{L("Hali izoh yo'q.", "No comments yet.", "Комментариев пока нет.")}</p>
             ) : (
-              <ul className="divide-y divide-ax-rule">
+              <ul className="divide-y divide-gray-100">
                 {publicComments.map((c) => {
                   const who = c.author?.full_name || c.author?.fullName || L("Foydalanuvchi", "User", "Пользователь");
                   return (
@@ -442,7 +446,7 @@ const ArticleDetails = () => {
                       {c.author?.avatar_url ? (
                         <img src={c.author.avatar_url} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" loading="lazy" />
                       ) : (
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ax-paper text-xs font-semibold text-ax-muted" aria-hidden="true">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-ax-muted" aria-hidden="true">
                           {initials(who)}
                         </span>
                       )}
@@ -466,10 +470,10 @@ const ArticleDetails = () => {
         {/* Son haqida */}
         {article.journal && (
           <aside className="order-first lg:order-none">
-            <div className="flex gap-5 rounded-md border border-ax-rule bg-white p-5 lg:sticky lg:top-6 lg:flex-col lg:p-6">
+            <div className="flex gap-5 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm lg:sticky lg:top-6 lg:flex-col lg:p-7">
               <Link
                 to={`/journals/${article.journal.slug}${bob ? `?son=${bob.id}` : ""}`}
-                className={`block w-24 shrink-0 rounded-[3px] sm:w-28 lg:w-40 ${focusRing}`}
+                className={`block w-24 shrink-0 rounded-xl sm:w-28 lg:w-40 ${focusRing}`}
                 aria-label={bob ? `${journalName}, ${bob.name}` : journalName}
               >
                 <IssueCover imageUrl={article.journal.cover_image_url} journalName={journalName} issueName={bob?.name} year={bob?.year} />
