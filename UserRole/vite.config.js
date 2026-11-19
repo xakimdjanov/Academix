@@ -8,15 +8,20 @@ const API_URL  = 'https://academixbackend-productionn.up.railway.app';
 const today    = new Date().toISOString().split('T')[0];
 
 async function safeFetch(url) {
-  try {
-    const { default: fetch } = await import('node-fetch').catch(() => ({ default: globalThis.fetch }));
-    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json?.data || json?.articles || (Array.isArray(json) ? json : []);
-  } catch {
-    return [];
+  // API ba'zan sekin yoki xato javob beradi — 3 marta urinib ko'ramiz
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
+      if (res.ok) {
+        const json = await res.json();
+        const list = json?.data || json?.articles || (Array.isArray(json) ? json : []);
+        if (Array.isArray(list) && list.length) return list;
+      }
+    } catch {
+      /* qayta urinamiz */
+    }
   }
+  return [];
 }
 
 function makeUrl(loc, lastmod = today, changefreq = 'monthly', priority = '0.80') {
@@ -30,7 +35,7 @@ function makeUrl(loc, lastmod = today, changefreq = 'monthly', priority = '0.80'
   ].join('\n');
 }
 
-async function buildSitemap(outDir) {
+async function buildSitemap(outDirs) {
   const staticPages = [
     makeUrl(`${BASE_URL}/`,         today, 'daily',   '1.00'),
     makeUrl(`${BASE_URL}/journals`, today, 'daily',   '0.90'),
@@ -75,9 +80,10 @@ async function buildSitemap(outDir) {
     '</urlset>',
   ].join('\n');
 
-  const dest = path.resolve(outDir, 'sitemap.xml');
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.writeFileSync(dest, xml, 'utf-8');
+  for (const dir of [].concat(outDirs)) {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.resolve(dir, 'sitemap.xml'), xml, 'utf-8');
+  }
   console.log(
     `\x1b[32m✓\x1b[0m sitemap.xml yangilandi` +
     ` (${staticPages.length} statik + ${journalUrls.length} jurnal + ${articleUrls.length} maqola)`
@@ -96,9 +102,8 @@ function sitemapPlugin() {
     },
     // npm run build — barcha assetlar yig'ilgandan keyin
     async closeBundle() {
-      await buildSitemap(path.resolve(__dirname, 'dist'));
-      // dist/sitemap.xml ham public/sitemap.xml ni yangilaydi
-      await buildSitemap(path.resolve(__dirname, 'public'));
+      // bir marta yig'ib, dist/ va public/ ga yozamiz
+      await buildSitemap([path.resolve(__dirname, 'dist'), path.resolve(__dirname, 'public')]);
     },
   };
 }
