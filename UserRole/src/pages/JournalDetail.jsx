@@ -1,75 +1,327 @@
-import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { 
-  FiArrowLeft, 
-  FiBook, 
-  FiInfo, 
-  FiFileText, 
-  FiSend,
-  FiAward,
-  FiEye,
-  FiLayers,
-  FiChevronRight,
-  FiCopy
-} from "react-icons/fi";
+import React, { useEffect, useMemo, useState } from "react";
+import { useParams, Link, useSearchParams } from "react-router-dom";
+import { FiArrowLeft, FiEye, FiSend, FiLink, FiDownload, FiSearch } from "react-icons/fi";
 import { journalService, articleService, settingsService, bobService, incrementArticleViewOnce } from "../services/api";
 import { useSEO } from "../hooks/useSEO";
 import toast, { Toaster } from "react-hot-toast";
 import { formatTitle } from "../utils/textFormatter";
 import { useLanguage } from "../context/LanguageContext";
+import IssueCover from "../components/IssueCover";
 
-const ArticleRow = ({ article, showAuthors = false }) => {
-  const { t } = useLanguage();
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ax-firuza focus-visible:ring-offset-2";
+
+const LOCALES = { uz: "uz-UZ", en: "en-GB", ru: "ru-RU" };
+const LANG_NAMES = {
+  uzbek: ["O'zbek", "Uzbek", "Узбекский"],
+  usbek: ["O'zbek", "Uzbek", "Узбекский"],
+  russian: ["Rus", "Russian", "Русский"],
+  english: ["Ingliz", "English", "Английский"],
+};
+
+// "2026 5(19)-son" -> 19 (sonlarni tartiblash uchun)
+const issueOrder = (b) => {
+  const m = String(b?.name || "").match(/\((\d+)\)/);
+  return m ? Number(m[1]) : 0;
+};
+
+const authorNames = (authors) => {
+  if (!authors) return "";
+  if (typeof authors === "string") return authors;
+  if (Array.isArray(authors)) return authors.map((x) => x?.fullName || x?.name || x).filter(Boolean).join(", ");
+  return "";
+};
+
+const useL = () => {
+  const { language } = useLanguage();
+  return (uz, en, ru) => (language === "uz" ? uz : language === "en" ? en : ru);
+};
+
+/* ---------- Mundarija qatori ---------- */
+const ArticleEntry = ({ article }) => {
+  const { language, translateCategory } = useLanguage();
+  const L = useL();
+
   useEffect(() => {
-    if (article.id) {
-      incrementArticleViewOnce(article.id);
-    }
+    if (article.id) incrementArticleViewOnce(article.id);
   }, [article.id]);
 
+  const authors = authorNames(article.authors);
+  const date = article.createdAt
+    ? new Date(article.createdAt).toLocaleDateString(LOCALES[language] || "uz-UZ", { day: "numeric", month: "long", year: "numeric" })
+    : null;
+
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-55 flex gap-4 hover:shadow-md transition-shadow group">
-       <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors flex-shrink-0">
-          <FiFileText size={20} />
-       </div>
-       <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-bold text-[#002147] mb-2 leading-snug group-hover:text-blue-600 transition-colors truncate">
-             {formatTitle(article.title)}
-          </h3>
-          {showAuthors && (
-             <p className="text-xs text-gray-500 mb-3">
-                {t("articles.authors")}: {article.authors ? (typeof article.authors === 'string' ? article.authors : (Array.isArray(article.authors) ? article.authors.map(x => x.fullName || x.name || x).join(', ') : '')) : '-'}
-             </p>
+    <li className="py-5">
+      <Link
+        to={`/articles/${article.slug || article._id || article.id}`}
+        className={`ax-serif block text-[1.125rem] leading-snug text-ax-text hover:text-ax-firuza rounded-sm ${focusRing}`}
+      >
+        {formatTitle(article.title)}
+      </Link>
+      {authors && <p className="mt-1.5 text-sm text-ax-muted">{authors}</p>}
+      <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-[13px] text-ax-muted">
+        {date && <span className="ax-num">{date}</span>}
+        <span className="ax-num inline-flex items-center gap-1" title={L("Ko'rishlar", "Views", "Просмотры")}>
+          <FiEye size={13} aria-hidden="true" /> {article.view_count || 0}
+        </span>
+        {article.category && <span>{translateCategory(article.category)}</span>}
+        {article.file_url && (
+          <a
+            href={article.file_url}
+            target="_blank"
+            rel="noreferrer"
+            className={`inline-flex items-center gap-1 font-medium text-ax-firuza hover:text-ax-firuza-deep rounded-sm ${focusRing}`}
+          >
+            <FiDownload size={13} aria-hidden="true" /> PDF
+          </a>
+        )}
+      </div>
+    </li>
+  );
+};
+
+/* ---------- Qidiruv bilan maqolalar ro'yxati ---------- */
+const ArticleList = ({ articles, emptyText }) => {
+  const L = useL();
+  const [q, setQ] = useState("");
+  const query = q.trim().toLowerCase();
+  const shown = query
+    ? articles.filter((a) => `${a.title} ${authorNames(a.authors)}`.toLowerCase().includes(query))
+    : articles;
+
+  if (articles.length === 0) {
+    return <p className="py-10 text-ax-muted">{emptyText}</p>;
+  }
+
+  return (
+    <>
+      {articles.length > 8 && (
+        <label className="relative mt-5 block max-w-md">
+          <span className="sr-only">{L("Qidirish", "Search", "Поиск")}</span>
+          <FiSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ax-muted" aria-hidden="true" />
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={L("Sarlavha yoki muallif bo'yicha qidirish", "Search by title or author", "Поиск по названию или автору")}
+            className="w-full rounded-md border border-ax-rule bg-white py-2.5 pl-9 pr-3 text-sm text-ax-text placeholder:text-ax-muted focus:border-ax-firuza focus:outline-none focus:ring-2 focus:ring-ax-firuza/30"
+          />
+        </label>
+      )}
+      {shown.length === 0 ? (
+        <p className="py-10 text-ax-muted">
+          {L(`"${q}" bo'yicha maqola topilmadi.`, `No articles match "${q}".`, `По запросу «${q}» статьи не найдены.`)}
+        </p>
+      ) : (
+        <ol className="divide-y divide-ax-rule">
+          {shown.map((a) => (
+            <ArticleEntry key={a._id || a.id} article={a} />
+          ))}
+        </ol>
+      )}
+    </>
+  );
+};
+
+/* ---------- Arxiv: yillar/sonlar + tanlangan son mundarijasi ---------- */
+const Archive = ({ bobs, articles }) => {
+  const { t } = useLanguage();
+  const L = useL();
+  const [params, setParams] = useSearchParams();
+
+  const byBob = useMemo(() => {
+    const map = {};
+    for (const a of articles) (map[a.bob_id ?? "none"] ||= []).push(a);
+    return map;
+  }, [articles]);
+
+  const issues = useMemo(() => {
+    const list = [...bobs].sort((a, b) => (Number(b.year) - Number(a.year)) || (issueOrder(b) - issueOrder(a)) || (b.id - a.id));
+    if (byBob.none?.length) list.push({ id: "none", name: L("Songa biriktirilmagan", "Not assigned to an issue", "Вне выпусков"), year: null });
+    return list;
+  }, [bobs, byBob]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const years = useMemo(() => {
+    const groups = [];
+    for (const b of issues) {
+      const key = b.year ?? "other";
+      let g = groups.find((x) => x.key === key);
+      if (!g) groups.push((g = { key, label: b.year ?? L("Boshqa", "Other", "Другое"), items: [] }));
+      g.items.push(b);
+    }
+    return groups;
+  }, [issues]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const fallback = issues.find((b) => byBob[b.id]?.length) || issues[0];
+  const selected = issues.find((b) => String(b.id) === params.get("son")) || fallback;
+
+  const select = (id) => setParams((p) => { p.set("son", id); return p; }, { replace: true });
+
+  if (issues.length === 0) {
+    return <p className="py-10 text-ax-muted">{t("journals.no_bobs")}</p>;
+  }
+
+  const list = byBob[selected.id] || [];
+
+  return (
+    <div className="grid gap-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-14">
+      {/* Yillar va sonlar */}
+      <nav aria-label={L("Jurnal sonlari", "Journal issues", "Выпуски журнала")} className="hidden lg:block">
+        <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto pr-2 scrollbar-sleek">
+          {years.map((g) => (
+            <section key={g.key} className="mb-7">
+              <h3 className="ax-serif ax-num mb-2 text-lg text-ax-ink">{g.label}</h3>
+              <ul className="border-l border-ax-rule">
+                {g.items.map((b) => {
+                  const active = b.id === selected.id;
+                  return (
+                    <li key={b.id}>
+                      <button
+                        type="button"
+                        onClick={() => select(b.id)}
+                        aria-current={active ? "true" : undefined}
+                        className={`-ml-px flex w-full items-baseline justify-between gap-3 border-l-2 py-1.5 pl-4 text-left text-sm ${focusRing} ${
+                          active ? "border-ax-firuza font-medium text-ax-ink" : "border-transparent text-ax-muted hover:text-ax-ink"
+                        }`}
+                      >
+                        <span>{b.name}</span>
+                        <span className="ax-num text-xs">{byBob[b.id]?.length || 0}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </nav>
+
+      {/* Tanlangan son mundarijasi */}
+      <div className="min-w-0">
+        <label className="mb-6 block lg:hidden">
+          <span className="mb-1.5 block text-sm text-ax-muted">{L("Sonni tanlang", "Choose an issue", "Выберите выпуск")}</span>
+          <select
+            value={selected.id}
+            onChange={(e) => select(e.target.value)}
+            className="w-full rounded-md border border-ax-rule bg-white px-3 py-2.5 text-sm text-ax-text focus:border-ax-firuza focus:outline-none focus:ring-2 focus:ring-ax-firuza/30"
+          >
+            {years.map((g) => (
+              <optgroup key={g.key} label={String(g.label)}>
+                {g.items.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name} ({byBob[b.id]?.length || 0})
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
+
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b-2 border-ax-ink pb-4">
+          <div>
+            <h2 className="ax-serif text-2xl font-semibold leading-tight text-ax-ink sm:text-[2rem]">{selected.name}</h2>
+            <p className="ax-num mt-1 text-sm text-ax-muted">
+              {L(`${list.length} ta maqola`, `${list.length} articles`, `Статей: ${list.length}`)}
+            </p>
+          </div>
+          {selected.file_url && (
+            <a
+              href={selected.file_url}
+              target="_blank"
+              rel="noreferrer"
+              className={`inline-flex items-center gap-2 rounded-md border border-ax-ink px-4 py-2 text-sm font-medium text-ax-ink hover:bg-ax-ink hover:text-white ${focusRing}`}
+            >
+              <FiDownload aria-hidden="true" /> {t("journals.issue_pdf")}
+            </a>
           )}
-          <div className="flex items-center gap-4 mb-3">
-             <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest">{new Date(article.createdAt).toLocaleDateString()}</p>
-             <span className="flex items-center gap-1 text-[10px] sm:text-xs text-blue-600 font-black">
-                <FiEye size={12}/> {article.view_count || 0} {t("common.views_count")}
-             </span>
-          </div>
-          <div className="flex gap-4">
-             <Link to={`/articles/${article.slug || article._id || article.id}`} className="inline-flex items-center gap-1 text-xs font-black text-blue-600 hover:text-blue-800 tracking-wider">
-                {t("common.read_article")} <FiChevronRight />
-             </Link>
-             <a href={article.file_url} target="_blank" rel="noreferrer" className="text-xs font-black text-gray-400 hover:text-gray-600 tracking-wider">{t("common.download_pdf")}</a>
-          </div>
-       </div>
+        </div>
+
+        <ArticleList
+          key={selected.id}
+          articles={list}
+          emptyText={
+            selected.file_url
+              ? L("Bu son faqat PDF ko'rinishida mavjud.", "This issue is available as a PDF only.", "Этот выпуск доступен только в PDF.")
+              : t("journals.no_articles_bob")
+          }
+        />
+      </div>
     </div>
   );
 };
 
+/* ---------- Matnli bo'limlar uchun "varaq" ---------- */
+const Sheet = ({ title, children }) => (
+  <article className="rounded-md border border-ax-rule bg-white px-6 py-8 sm:px-10 sm:py-10">
+    <h2 className="ax-serif mb-5 text-2xl font-semibold text-ax-ink">{title}</h2>
+    <div className="max-w-[68ch] text-ax-text">{children}</div>
+  </article>
+);
+
+const TEMPLATE = {
+  uz: {
+    intro: "Maqolani yuborishdan oldin quyidagilarni tayyorlab qo'ying:",
+    sections: [
+      { title: "Maqola ma'lumotlari", items: [["Sarlavha", "maqolaning to'liq va aniq sarlavhasi."], ["Annotatsiya", "maqolaning qisqacha mazmuni va natijalari."], ["Kalit so'zlar", "mazmunni ochib beruvchi kamida bitta kalit so'z."], ["Toifa", "maqola turi (tadqiqot maqolasi, sharh va h.k.)."], ["Til", "maqola yozilgan til."]] },
+      { title: "Mualliflar", note: "Har bir muallif uchun (birinchi muallif asosiy hisoblanadi):", items: [["To'liq ismi", "ism va familiya."], ["Telefon raqami", "bog'lanish uchun."], ["ORCID ID", "masalan, 0000-0000-0000-0000."], ["Rasm", "5 MB gacha sifatli rasm."]] },
+      { title: "Maqola fayli", items: [["Format", "PDF, DOC yoki DOCX."], ["Hajm", "20 MB dan oshmasin."], ["Rasmiylashtirish", "shrift, hoshiya va adabiyotlar ro'yxati jurnal talablariga mos bo'lsin."]] },
+    ],
+  },
+  en: {
+    intro: "Prepare the following before you submit an article:",
+    sections: [
+      { title: "Article details", items: [["Title", "the full, precise title."], ["Abstract", "a short summary of the content and results."], ["Keywords", "at least one keyword describing the article."], ["Category", "article type (research article, review, etc.)."], ["Language", "the language the article is written in."]] },
+      { title: "Authors", note: "For every author (the first author is the corresponding author):", items: [["Full name", "first name and surname."], ["Phone number", "for contact."], ["ORCID ID", "e.g. 0000-0000-0000-0000."], ["Photo", "a clear photo up to 5 MB."]] },
+      { title: "Article file", items: [["Format", "PDF, DOC or DOCX."], ["Size", "up to 20 MB."], ["Formatting", "font, margins and references follow the journal requirements."]] },
+    ],
+  },
+  ru: {
+    intro: "Перед отправкой статьи подготовьте следующее:",
+    sections: [
+      { title: "Данные статьи", items: [["Название", "полное и точное название статьи."], ["Аннотация", "краткое содержание и результаты."], ["Ключевые слова", "не менее одного ключевого слова."], ["Категория", "тип статьи (исследование, обзор и т. д.)."], ["Язык", "язык статьи."]] },
+      { title: "Авторы", note: "Для каждого автора (первый автор — основной):", items: [["Ф.И.О.", "имя и фамилия."], ["Телефон", "для связи."], ["ORCID ID", "например, 0000-0000-0000-0000."], ["Фото", "качественное фото до 5 МБ."]] },
+      { title: "Файл статьи", items: [["Формат", "PDF, DOC или DOCX."], ["Размер", "не более 20 МБ."], ["Оформление", "шрифт, поля и список литературы по требованиям журнала."]] },
+    ],
+  },
+};
+
+const Fact = ({ label, children }) => (
+  <div>
+    <dt className="text-[13px] text-ax-muted">{label}</dt>
+    <dd className="ax-num mt-0.5 text-[15px] font-medium text-ax-text">{children}</dd>
+  </div>
+);
+
+const Tab = ({ active, onClick, children }) => (
+  <button
+    type="button"
+    role="tab"
+    aria-selected={active}
+    onClick={onClick}
+    className={`relative whitespace-nowrap py-4 text-sm ${focusRing} ${
+      active ? "font-semibold text-ax-ink" : "text-ax-muted hover:text-ax-ink"
+    }`}
+  >
+    {children}
+    {active && <span className="absolute inset-x-0 -bottom-px h-[3px] bg-ax-firuza" aria-hidden="true" />}
+  </button>
+);
+
+/* ============================================================ */
 const JournalDetail = () => {
   const { slug } = useParams();
   const [journal, setJournal] = useState(null);
   const [settings, setSettings] = useState([]);
   const [articles, setArticles] = useState([]);
   const [bobs, setBobs] = useState([]);
-  const [selectedBob, setSelectedBob] = useState(null);
-  const [selectedYear, setSelectedYear] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("about");
-  const { t, language, translateCategory } = useLanguage();
-
+  const [activeTab, setActiveTab] = useState("archive");
   const [copied, setCopied] = useState(false);
+  const { t, language } = useLanguage();
+  const L = useL();
+
+  const name = journal ? formatTitle(journal.journal_name || journal.name) : "";
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -80,37 +332,28 @@ const JournalDetail = () => {
 
   const shareTelegram = () => {
     const text = encodeURIComponent(
-      language === "uz" ? `Academix platformasida yangi ilmiy nashr:\n\n${journal?.journal_name || journal?.name}\n\n` :
-      language === "en" ? `New scientific publication on Academix platform:\n\n${journal?.journal_name || journal?.name}\n\n` :
-      `Новое научное издание на платформе Academix:\n\n${journal?.journal_name || journal?.name}\n\n`
+      L(
+        `Academix platformasida ilmiy jurnal:\n\n${name}\n\n`,
+        `Scientific journal on Academix:\n\n${name}\n\n`,
+        `Научный журнал на платформе Academix:\n\n${name}\n\n`
+      )
     );
-    const url = encodeURIComponent(window.location.href);
-    window.open(`https://t.me/share/url?url=${url}&text=${text}`, "_blank");
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${text}`, "_blank");
   };
 
   useSEO({
-    title: journal ? (journal.journal_name || journal.name) : undefined,
+    title: journal ? journal.journal_name || journal.name : undefined,
     description: journal
-      ? [
-          journal.short_description || journal.description || "",
-          journal.aims_scope || ""
-        ].filter(Boolean).join(" ").substring(0, 250)
+      ? [journal.short_description || journal.description || "", journal.aims_scope || ""].filter(Boolean).join(" ").substring(0, 250)
       : undefined,
     keywords: journal
-      ? [
-          journal.journal_name || journal.name,
-          journal.subject_area,
-          journal.issn,
-          journal.languages?.join(", "),
-          "akademix",
-          "akademix.uz",
-          "ilmiy jurnal",
-          "o'zbekiston jurnali"
-        ].filter(Boolean).join(", ")
+      ? [journal.journal_name || journal.name, journal.subject_area, journal.issn, journal.languages?.join(", "), "akademix", "akademix.uz", "ilmiy jurnal", "o'zbekiston jurnali"]
+          .filter(Boolean)
+          .join(", ")
       : undefined,
     image: journal?.banner_url || journal?.cover_image_url,
     url: `https://akademix.uz/journals/${slug}`,
-    type: "website"
+    type: "website",
   });
 
   useEffect(() => {
@@ -123,24 +366,24 @@ const JournalDetail = () => {
         if (jData) {
           const jId = jData.id || jData._id;
 
-          // 1. Published maqolalarni olish
           const aRes = await articleService.getAll();
-          const allArticles = Array.isArray(aRes?.data?.data) ? aRes.data.data : (Array.isArray(aRes?.data) ? aRes.data : []);
-          const published = allArticles.filter(a => 
-            (String(a.journal_id) === String(jId) || String(a.journal?.id) === String(jId)) && 
-            a.status === "Published" &&
-            a.is_approved_by_admin &&
-            a.is_active
+          const all = Array.isArray(aRes?.data?.data) ? aRes.data.data : Array.isArray(aRes?.data) ? aRes.data : [];
+          setArticles(
+            all
+              .filter(
+                (a) =>
+                  (String(a.journal_id) === String(jId) || String(a.journal?.id) === String(jId)) &&
+                  a.status === "Published" &&
+                  a.is_approved_by_admin &&
+                  a.is_active
+              )
+              .sort((x, y) => new Date(y.createdAt) - new Date(x.createdAt))
           );
-          setArticles(published);
 
-          // 2. Sayt sozlamalarini (Page/Settings) olish
           const sRes = await settingsService.getAll();
-          const allSettings = Array.isArray(sRes?.data?.data) ? sRes.data.data : (Array.isArray(sRes?.data) ? sRes.data : []);
-          const journalSettings = allSettings.filter(s => String(s.journal_id) === String(jId));
-          setSettings(journalSettings);
+          const allSettings = Array.isArray(sRes?.data?.data) ? sRes.data.data : Array.isArray(sRes?.data) ? sRes.data : [];
+          setSettings(allSettings.filter((s) => String(s.journal_id) === String(jId)));
 
-          // 3. Boblarni yuklab olish (agar admin ruxsati bo'lsa)
           if (jData.admin?.allow_bob_creation) {
             try {
               const bRes = await bobService.getByJournal(jId);
@@ -159,479 +402,236 @@ const JournalDetail = () => {
     fetchDetails();
   }, [slug]);
 
+  const hasIssues = !!journal?.admin?.allow_bob_creation;
+  const latestBob = useMemo(
+    () => [...bobs].sort((a, b) => (Number(b.year) - Number(a.year)) || (issueOrder(b) - issueOrder(a)) || (b.id - a.id))[0],
+    [bobs]
+  );
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F6F8FB] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="ax-page flex min-h-screen items-center justify-center bg-ax-paper" role="status" aria-live="polite">
+        <div className="h-10 w-10 rounded-full border-[3px] border-ax-firuza border-t-transparent motion-safe:animate-spin" />
+        <span className="sr-only">{L("Yuklanmoqda", "Loading", "Загрузка")}</span>
       </div>
     );
   }
 
   if (!journal) {
     return (
-      <div className="min-h-screen bg-[#F6F8FB] flex items-center justify-center flex-col gap-4">
-        <h2 className="text-2xl font-bold text-[#002147]">{t("journals.not_found")}</h2>
-        <Link to="/journals" className="text-blue-600 font-bold hover:underline flex items-center gap-2">
-          <FiArrowLeft /> {t("journals.back_journals")}
+      <div className="ax-page flex min-h-screen flex-col items-center justify-center gap-4 bg-ax-paper px-4 text-center">
+        <h2 className="ax-serif text-2xl text-ax-ink">{t("journals.not_found")}</h2>
+        <Link to="/journals" className={`inline-flex items-center gap-2 font-medium text-ax-firuza hover:underline ${focusRing}`}>
+          <FiArrowLeft aria-hidden="true" /> {t("journals.back_journals")}
         </Link>
       </div>
     );
   }
 
-  const defaultShortDesc = language === "uz" 
-    ? "Ilmiy tadqiqotlar va akademik mukammallik uchun yetakchi nashriyot maydoni." 
-    : language === "en"
-    ? "A leading publishing platform for scientific research and academic excellence." 
-    : "Ведущая издательская платформа для научных исследований и академического мастерства.";
+  const languages = (journal.languages || [])
+    .map((l) => {
+      const n = LANG_NAMES[String(l).toLowerCase()];
+      return n ? L(...n) : l;
+    })
+    .join(", ");
+
+  const description =
+    journal.short_description ||
+    journal.description ||
+    L(
+      "Jurnal haqida ma'lumot tez orada qo'shiladi.",
+      "Information about the journal will be added soon.",
+      "Информация о журнале скоро появится."
+    );
+
+  const tabs = [
+    { id: "archive", label: hasIssues ? L("Sonlar arxivi", "Issues", "Архив выпусков") : t("header.articles"), count: articles.length },
+    { id: "about", label: t("journals.about_title") },
+    { id: "scope", label: t("journals.aims_scope") },
+    { id: "shablon", label: L("Mualliflar uchun", "For authors", "Авторам") },
+    ...settings.map((s) => ({ id: `setting-${s.id}`, label: s.title || s.page_name })),
+  ];
+
+  const submitLink = `/submit-article?journalId=${journal.id || journal._id}`;
+  const tpl = TEMPLATE[language] || TEMPLATE.uz;
+  const activeSetting = settings.find((s) => activeTab === `setting-${s.id}`);
 
   return (
-    <div className="bg-[#F6F8FB] min-h-screen pb-20">
+    <div className="ax-page min-h-screen bg-ax-paper pb-24 text-ax-text">
       <Toaster position="top-right" />
-      {/* 🟦 Hero / Header */}
-      <section 
-        className="text-white pt-20 pb-32 relative overflow-hidden bg-[#002147]"
-        style={journal.banner_url ? {
-          backgroundImage: `linear-gradient(to bottom, rgba(0, 33, 71, 0.85), rgba(0, 33, 71, 0.95)), url(${journal.banner_url})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        } : {}}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <Link to="/journals" className="inline-flex items-center gap-2 text-blue-200 hover:text-white mb-8 transition-colors">
-            <FiArrowLeft /> {t("journals.back_search")}
+
+      {/* Masthead */}
+      <header className="border-b border-ax-rule bg-white">
+        <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
+          <Link
+            to="/journals"
+            className={`inline-flex items-center gap-1.5 rounded-sm text-sm text-ax-muted hover:text-ax-ink ${focusRing}`}
+          >
+            <FiArrowLeft aria-hidden="true" /> {t("journals.back_journals")}
           </Link>
-          <div className="flex flex-col md:flex-row gap-8 items-start">
-             <div className="w-24 h-24 md:w-32 md:h-32 bg-white/10 backdrop-blur-md rounded-3xl flex items-center justify-center text-blue-400 border border-white/20 shadow-2xl overflow-hidden">
-                {journal.cover_image_url ? (
-                   <img src={journal.cover_image_url} alt="Cover" className="w-full h-full object-cover" loading="lazy" />
-                ) : (
-                   <FiBook size={48} />
-                )}
-             </div>
-             <div className="flex-1">
-                <div className="flex flex-wrap gap-3 mb-4">
-                   <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-[10px] font-black uppercase rounded-full tracking-widest border border-blue-500/30">
-                      {translateCategory(journal.category) || t("home.hero_badge_peer")}
-                   </span>
-                   <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase rounded-full tracking-widest border border-emerald-500/30">
-                      ISSN: {journal.issn || (language === "uz" ? "Kutilmoqda" : language === "en" ? "Pending" : "Ожидается")}
-                   </span>
-                   <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-black uppercase rounded-full tracking-widest border border-white/20 flex items-center gap-1">
-                      <FiEye size={12}/> {journal.view_count || 0} {t("common.views")}
-                   </span>
-                </div>
-                <h1 className="text-3xl md:text-5xl font-black mb-4 leading-tight">{formatTitle(journal.journal_name || journal.name)}</h1>
-                <p className="text-blue-100/70 text-lg max-w-3xl italic">
-                   "{journal.short_description || journal.description || defaultShortDesc}"
+
+          <div className="mt-8 grid grid-cols-[6rem_minmax(0,1fr)] gap-x-5 gap-y-6 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-x-10 lg:grid-cols-[11.5rem_minmax(0,1fr)]">
+            <div className="row-span-1 sm:row-span-2">
+              <IssueCover
+                imageUrl={journal.cover_image_url}
+                journalName={name}
+                issueName={latestBob?.name}
+                year={latestBob?.year}
+              />
+            </div>
+
+            <div className="self-center sm:self-end">
+              <h1 className="ax-serif text-[1.65rem] font-semibold leading-[1.1] tracking-[-0.01em] text-ax-ink sm:text-4xl lg:text-[2.85rem]">
+                {name}
+              </h1>
+              {latestBob && (
+                <p className="mt-3 text-sm text-ax-muted">
+                  {L("So'nggi son", "Latest issue", "Последний выпуск")}:{" "}
+                  <Link
+                    to={`?son=${latestBob.id}`}
+                    replace
+                    onClick={() => setActiveTab("archive")}
+                    className={`rounded-sm font-medium text-ax-firuza hover:text-ax-firuza-deep hover:underline ${focusRing}`}
+                  >
+                    {latestBob.name}
+                  </Link>
                 </p>
-             </div>
-              <div className="mt-4 md:mt-0 flex flex-wrap gap-3 items-center">
-                 <Link to={`/submit-article?journalId=${journal.id || journal._id}`} className="px-8 py-4 bg-white text-[#002147] rounded-2xl font-black text-sm transition-all shadow-xl hover:-translate-y-1 active:scale-95 flex items-center gap-2">
-                    {t("home.hero_btn_submit").toUpperCase()} <FiSend />
-                 </Link>
-                 
-                 <div className="flex gap-2 bg-white/10 backdrop-blur-md p-2 rounded-2xl border border-white/10">
-                    <button 
-                       onClick={shareTelegram}
-                       className="p-3 bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 hover:text-white rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider"
-                    >
-                       <FiSend size={16} /> {t("journals.share")}
-                    </button>
-                    <button 
-                       onClick={handleCopyLink}
-                       className="p-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider"
-                    >
-                       <FiCopy size={16} /> {copied ? t("journals.copied") : t("journals.copy")}
-                    </button>
-                 </div>
+              )}
+            </div>
+
+            <div className="col-span-2 sm:col-span-1 sm:col-start-2">
+              <p className="max-w-[64ch] text-[15px] leading-relaxed text-ax-text/85 line-clamp-4">{description}</p>
+
+              <dl className="mt-6 grid max-w-2xl grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
+                <Fact label="ISSN">{journal.issn || L("Kutilmoqda", "Pending", "Ожидается")}</Fact>
+                {languages && <Fact label={L("Tillar", "Languages", "Языки")}>{languages}</Fact>}
+                {hasIssues && <Fact label={L("Sonlar", "Issues", "Выпуски")}>{bobs.length}</Fact>}
+                <Fact label={L("Maqolalar", "Articles", "Статьи")}>{articles.length}</Fact>
+                {!hasIssues && <Fact label={L("Ko'rishlar", "Views", "Просмотры")}>{journal.view_count || 0}</Fact>}
+              </dl>
+
+              <div className="mt-7 flex flex-wrap items-center gap-3">
+                <Link
+                  to={submitLink}
+                  className={`inline-flex items-center gap-2 rounded-md bg-ax-ink px-5 py-2.5 text-sm font-medium text-white hover:bg-[#00336b] ${focusRing}`}
+                >
+                  {t("journals.submit_manuscript")}
+                </Link>
+                <button
+                  type="button"
+                  onClick={shareTelegram}
+                  className={`inline-flex items-center gap-2 rounded-md border border-ax-rule px-4 py-2.5 text-sm text-ax-text hover:border-ax-ink ${focusRing}`}
+                >
+                  <FiSend aria-hidden="true" /> {t("journals.share")}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className={`inline-flex items-center gap-2 rounded-md border border-ax-rule px-4 py-2.5 text-sm text-ax-text hover:border-ax-ink ${focusRing}`}
+                >
+                  <FiLink aria-hidden="true" />
+                  {copied ? t("journals.copied") : L("Havolani nusxalash", "Copy link", "Скопировать ссылку")}
+                </button>
               </div>
+            </div>
+          </div>
+
+          {/* Bo'limlar */}
+          <div role="tablist" className="no-scrollbar mt-10 flex gap-7 overflow-x-auto">
+            {tabs.map((tb) => (
+              <Tab key={tb.id} active={activeTab === tb.id} onClick={() => setActiveTab(tb.id)}>
+                {tb.label}
+                {tb.count !== undefined && <span className="ax-num ml-1.5 font-normal text-ax-muted">{tb.count}</span>}
+              </Tab>
+            ))}
           </div>
         </div>
-        {/* Decorative mask */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#F6F8FB] to-transparent"></div>
-      </section>
-      {/* 🔘 Navigation Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20">
-         <div className="bg-white rounded-2xl shadow-xl p-2 flex overflow-x-auto no-scrollbar gap-2 border border-gray-100">
-            <TabButton active={activeTab === 'about'} onClick={() => { setActiveTab('about'); setSelectedBob(null); setSelectedYear(null); }} icon={<FiInfo/>} label={t("header.about")} />
-            <TabButton active={activeTab === 'scope'} onClick={() => { setActiveTab('scope'); setSelectedBob(null); setSelectedYear(null); }} icon={<FiAward/>} label={t("journals.aims_scope")} />
-            <TabButton active={activeTab === 'shablon'} onClick={() => { setActiveTab('shablon'); setSelectedBob(null); setSelectedYear(null); }} icon={<FiLayers/>} label={t("journals.template")} />
-            <TabButton active={activeTab === 'articles'} onClick={() => { setActiveTab('articles'); setSelectedBob(null); setSelectedYear(null); }} icon={<FiFileText/>} label={`${t("header.articles")} (${articles.length})`} />
-            
-            {/* 💎 Dynamic Tabs from Backend Settings (Site Pages) */}
-            {settings.map((s) => (
-               <TabButton 
-                  key={s.id} 
-                  active={activeTab === `setting-${s.id}`} 
-                  onClick={() => { setActiveTab(`setting-${s.id}`); setSelectedBob(null); setSelectedYear(null); }} 
-                  icon={<FiLayers/>} 
-                  label={s.title || s.page_name} 
-               />
-            ))}
-         </div>
-      </div>
+      </header>
 
-      {/* 📄 Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 grid grid-cols-1 lg:grid-cols-12 gap-8">
-         <div className="lg:col-span-8 space-y-8">
-            {activeTab === 'about' && (
-               <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <h2 className="text-2xl font-black text-[#002147] mb-6">{t("journals.about_title")}</h2>
-                  <div className="prose prose-blue max-w-none text-[#4B5563] leading-relaxed space-y-4 text-justify">
-                     {journal.description || (language === "uz" ? "Ushbu jurnal haqida batafsil ma'lumot tayyorlanmoqda. Bizning vazifamiz qat'iy taqriz orqali akademik o'sishga ko'maklashishdir." : language === "en" ? "Detailed information about this journal is being prepared. Our mission is to facilitate academic growth through rigorous peer review." : "Подробная информация об этом журнале готовится. Наша миссия — способствовать академическому росту посредством строгого рецензирования.")}
-                  </div>
-               </div>
-            )}
+      <main className="mx-auto mt-10 max-w-6xl px-4 sm:px-6 lg:px-8">
+        {activeTab === "archive" &&
+          (hasIssues ? (
+            <Archive bobs={bobs} articles={articles} />
+          ) : (
+            <div className="max-w-4xl">
+              <h2 className="ax-serif border-b-2 border-ax-ink pb-4 text-2xl font-semibold text-ax-ink sm:text-[2rem]">
+                {t("journals.recent_articles")}
+              </h2>
+              <ArticleList articles={articles} emptyText={t("journals.no_articles_journal")} />
+            </div>
+          ))}
 
-            {activeTab === 'scope' && (
-               <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <h2 className="text-2xl font-black text-[#002147] mb-6">{t("journals.aims_title")}</h2>
-                  <div className="prose prose-blue max-w-none text-[#4B5563] leading-relaxed space-y-4 whitespace-pre-wrap text-justify">
-                     {journal.aims_scope || (language === "uz" ? "Ushbu jurnalning maqsad va yo'nalishlari yangilanmoqda." : language === "en" ? "Aims and scope of this journal are being updated." : "Цели и область применения этого журнала обновляются.")}
-                  </div>
-               </div>
-            )}
+        {activeTab !== "archive" && (
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_19rem]">
+            <div>
+              {activeTab === "about" && (
+                <Sheet title={t("journals.about_title")}>
+                  <p className="ax-serif whitespace-pre-wrap text-[1.0625rem] leading-[1.75]">{journal.description || description}</p>
+                </Sheet>
+              )}
 
-            {activeTab === 'shablon' && (
-               <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <h2 className="text-2xl font-black text-[#002147] mb-6">{t("journals.template")}</h2>
-                  <div className="prose prose-blue max-w-none text-[#4B5563] leading-relaxed space-y-4 text-justify">
-                     {language === "uz" ? (
-                        <>
-                           <p>Maqolani muvaffaqiyatli yuborish uchun quyidagi ma'lumotlar va hujjatlar talab etiladi. Iltimos, maqolani tizimga yuklashdan oldin barchasini tayyorlab qo'ying:</p>
-                           
-                           <div className="mt-6 space-y-4">
-                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                 <h3 className="font-bold text-[#002147] text-lg mb-2">1. Maqola ma'lumotlari</h3>
-                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                                    <li><b>Sarlavha:</b> Maqolaning to'liq va aniq sarlavhasi.</li>
-                                    <li><b>Annotatsiya:</b> Maqolaning qisqacha mazmuni va natijalari (Abstract).</li>
-                                    <li><b>Kalit so'zlar:</b> Maqola mazmunini ochib beruvchi kamida bitta kalit so'z.</li>
-                                    <li><b>Toifa:</b> Maqola turi (masalan, Tadqiqot maqolasi, Sharh va h.k.).</li>
-                                    <li><b>Til:</b> Maqola yozilgan til (masalan, O'zbek tili, Ingliz tili).</li>
-                                 </ul>
-                              </div>
+              {activeTab === "scope" && (
+                <Sheet title={t("journals.aims_title")}>
+                  <p className="ax-serif whitespace-pre-wrap text-[1.0625rem] leading-[1.75]">
+                    {journal.aims_scope ||
+                      L(
+                        "Jurnalning maqsad va yo'nalishlari tez orada qo'shiladi.",
+                        "The journal's aims and scope will be added soon.",
+                        "Цели и тематика журнала скоро появятся."
+                      )}
+                  </p>
+                </Sheet>
+              )}
 
-                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                 <h3 className="font-bold text-[#002147] text-lg mb-2">2. Mualliflar ma'lumotlari</h3>
-                                 <p className="text-sm text-gray-600 mb-2">Barcha mualliflar uchun quyidagi ma'lumotlar kiritilishi shart (birinchi muallif asosiy hisoblanadi):</p>
-                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                                    <li><b>To'liq ismi:</b> Muallifning ism va familiyasi.</li>
-                                    <li><b>Telefon raqami:</b> Bog'lanish uchun ishlaydigan telefon raqam.</li>
-                                    <li><b>ORCID ID:</b> Xalqaro olimlar identifikatsiya raqami (masalan: 0000-0000-0000-0000).</li>
-                                    <li><b>Muallif rasmi:</b> Har bir muallifning 5MB gacha bo'lgan sifatli rasmi.</li>
-                                 </ul>
-                              </div>
+              {activeTab === "shablon" && (
+                <Sheet title={L("Mualliflar uchun", "For authors", "Авторам")}>
+                  <p className="text-[15px] leading-relaxed">{tpl.intro}</p>
+                  {tpl.sections.map((sec) => (
+                    <section key={sec.title} className="mt-8">
+                      <h3 className="ax-serif text-lg font-semibold text-ax-ink">{sec.title}</h3>
+                      {sec.note && <p className="mt-1 text-sm text-ax-muted">{sec.note}</p>}
+                      <ul className="mt-3 space-y-2 text-[15px] leading-relaxed">
+                        {sec.items.map(([k, v]) => (
+                          <li key={k} className="flex gap-3">
+                            <span className="mt-[0.6em] h-1 w-1 shrink-0 rounded-full bg-ax-firuza" aria-hidden="true" />
+                            <span>
+                              <span className="font-medium text-ax-ink">{k}</span> — {v}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  ))}
+                </Sheet>
+              )}
 
-                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                 <h3 className="font-bold text-[#002147] text-lg mb-2">3. Maqola fayli</h3>
-                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                                    <li><b>Format:</b> Faqat PDF, DOC, yoki DOCX formatlari qabul qilinadi.</li>
-                                    <li><b>Hajm:</b> Fayl hajmi 20MB dan oshmasligi kerak.</li>
-                                    <li>Fayl jurnal talablari (shrift, hoshiya, adabiyotlar ro'yxati) asosida shakllantirilgan bo'lishi lozim.</li>
-                                 </ul>
-                              </div>
-                           </div>
-                        </>
-                     ) : language === "en" ? (
-                        <>
-                           <p>The following information and documents are required to successfully submit an article. Please prepare everything before uploading the article to the system:</p>
-                           
-                           <div className="mt-6 space-y-4">
-                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                 <h3 className="font-bold text-[#002147] text-lg mb-2">1. Article Information</h3>
-                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                                    <li><b>Title:</b> Full and precise title of the article.</li>
-                                    <li><b>Abstract:</b> Summary of the article content and results.</li>
-                                    <li><b>Keywords:</b> At least one keyword identifying the article.</li>
-                                    <li><b>Category:</b> Type of article (e.g., Research article, Review, etc.).</li>
-                                    <li><b>Language:</b> Written language of the article.</li>
-                                 </ul>
-                              </div>
-
-                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                 <h3 className="font-bold text-[#002147] text-lg mb-2">2. Authors Information</h3>
-                                 <p className="text-sm text-gray-600 mb-2">The following details are mandatory for all authors (first author is primary):</p>
-                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                                    <li><b>Full Name:</b> Name and surname of the author.</li>
-                                    <li><b>Phone Number:</b> Contact phone number.</li>
-                                    <li><b>ORCID ID:</b> International scientist identification number (e.g., 0000-0000-0000-0000).</li>
-                                    <li><b>Author Photo:</b> Quality photo of each author up to 5MB.</li>
-                                 </ul>
-                              </div>
-
-                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                 <h3 className="font-bold text-[#002147] text-lg mb-2">3. Article File</h3>
-                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                                    <li><b>Format:</b> Only PDF, DOC, or DOCX formats are accepted.</li>
-                                    <li><b>Size:</b> File size must not exceed 20MB.</li>
-                                    <li>The file must be formatted based on the journal requirements (font, margins, bibliography).</li>
-                                 </ul>
-                              </div>
-                           </div>
-                        </>
-                     ) : (
-                        <>
-                           <p>Для успешной подачи статьи требуются следующие данные и документы. Пожалуйста, подготовьте все перед загрузкой статьи в систему:</p>
-                           
-                           <div className="mt-6 space-y-4">
-                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                 <h3 className="font-bold text-[#002147] text-lg mb-2">1. Информация о статье</h3>
-                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                                    <li><b>Название:</b> Полное и точное название статьи.</li>
-                                    <li><b>Аннотация:</b> Краткое содержание и результаты статьи (Abstract).</li>
-                                    <li><b>Ключевые слова:</b> Не менее одного ключевого слова.</li>
-                                    <li><b>Категория:</b> Тип статьи (например, Исследовательская статья, Обзор и т. д.).</li>
-                                    <li><b>Язык:</b> Язык написания статьи.</li>
-                                 </ul>
-                              </div>
-
-                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                 <h3 className="font-bold text-[#002147] text-lg mb-2">2. Информация об авторах</h3>
-                                 <p className="text-sm text-gray-600 mb-2">Следующие данные обязательны для всех авторов (первый автор является основным):</p>
-                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                                    <li><b>Ф.И.О.:</b> Имя и фамилия автора.</li>
-                                    <li><b>Номер телефона:</b> Контактный номер телефона.</li>
-                                    <li><b>ORCID ID:</b> Международный идентификационный номер ученого (например, 0000-0000-0000-0000).</li>
-                                    <li><b>Фото автора:</b> Качественное фото каждого автора размером до 5 МБ.</li>
-                                 </ul>
-                              </div>
-
-                              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                 <h3 className="font-bold text-[#002147] text-lg mb-2">3. Файл статьи</h3>
-                                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                                    <li><b>Формат:</b> Принимаются только форматы PDF, DOC или DOCX.</li>
-                                    <li><b>Размер:</b> Размер файла не должен превышать 20 МБ.</li>
-                                    <li>Файл должен быть оформлен в соответствии с требованиями журнала (шрифт, поля, список литературы).</li>
-                                 </ul>
-                              </div>
-                           </div>
-                        </>
-                     )}
-                  </div>
-               </div>
-            )}
-
-            {activeTab === 'articles' && (
-               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  {/* 1. Bob yaratish ruxsati bor bo'lsa */}
-                  {journal?.admin?.allow_bob_creation ? (
-                     selectedBob ? (
-                        /* Selected Bob view: list of nested articles */
-                        <div className="space-y-6 animate-in fade-in duration-300">
-                           <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                              <button
-                                 onClick={() => setSelectedBob(null)}
-                                 className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors"
-                              >
-                                 <FiArrowLeft /> {t("common.back")}
-                              </button>
-                              <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-extrabold rounded-full">
-                                 {selectedBob.year}-{language === "uz" ? "yil" : language === "en" ? "year" : "год"}
-                              </span>
-                           </div>
-
-                           <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-55 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                              <div>
-                                 <h3 className="text-xl font-black text-[#002147] mb-2">{selectedBob.name}</h3>
-                                 <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
-                                   {language === "uz" ? "Ushbu son tarkibidagi maqolalar" : language === "en" ? "Articles in this issue" : "Статьи в этом выпуске"}
-                                 </p>
-                              </div>
-                              {selectedBob.file_url && (
-                                 <a 
-                                    href={selectedBob.file_url} 
-                                    target="_blank" 
-                                    rel="noreferrer" 
-                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md shadow-blue-200 transition-all active:scale-95"
-                                 >
-                                    {t("journals.issue_pdf")}
-                                 </a>
-                              )}
-                           </div>
-
-                           {articles.filter(a => Number(a.bob_id) === Number(selectedBob.id)).length === 0 ? (
-                              <div className="bg-white p-12 rounded-3xl text-center border border-gray-100 text-gray-400 font-medium">
-                                 {t("journals.no_articles_bob")}
-                              </div>
-                           ) : (
-                              <div className="space-y-4">
-                                 {articles.filter(a => Number(a.bob_id) === Number(selectedBob.id)).map(article => (
-                                     <ArticleRow key={article._id || article.id} article={article} showAuthors={true} />
-                                  ))}
-                              </div>
-                           )}
-                        </div>
-                     ) : selectedYear ? (
-                        /* List of Bobs in Selected Year */
-                        <div className="space-y-6 animate-in fade-in duration-300">
-                           <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-                              <button
-                                 onClick={() => setSelectedYear(null)}
-                                 className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors"
-                              >
-                                 <FiArrowLeft /> {t("common.back")}
-                              </button>
-                              <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-extrabold rounded-full">
-                                 {selectedYear}-{language === "uz" ? "yil" : language === "en" ? "year" : "год"}
-                              </span>
-                           </div>
-
-                           <h2 className="text-2xl font-black text-[#002147] mb-6">
-                             {language === "uz" ? `${selectedYear}-yil sonlari (Boblar)` : language === "en" ? `Issues of ${selectedYear} (Chapters)` : `Выпуски ${selectedYear} года (Главы)`}
-                           </h2>
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              {bobs.filter(bob => Number(bob.year) === Number(selectedYear)).map(bob => {
-                                 const bobArticlesCount = articles.filter(a => Number(a.bob_id) === Number(bob.id)).length;
-                                 return (
-                                    <div 
-                                       key={bob.id} 
-                                       onClick={() => setSelectedBob(bob)}
-                                       className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between h-48 hover:-translate-y-1 duration-300"
-                                    >
-                                       <div>
-                                          <div className="flex items-center gap-2 mb-3">
-                                             <span className="px-2.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-full">
-                                                {bob.year}-{language === "uz" ? "yil" : language === "en" ? "year" : "год"}
-                                             </span>
-                                             <span className="px-2.5 py-0.5 bg-gray-50 text-gray-500 text-[10px] font-black uppercase rounded-full">
-                                                {language === "uz" ? `${bobArticlesCount} ta maqola` : language === "en" ? `${bobArticlesCount} articles` : `${bobArticlesCount} статей`}
-                                             </span>
-                                          </div>
-                                          <h3 className="text-lg font-black text-[#002147] group-hover:text-blue-600 transition-colors line-clamp-2">
-                                             {bob.name}
-                                          </h3>
-                                       </div>
-                                       <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
-                                          <span className="text-xs font-black text-blue-600 uppercase tracking-wider flex items-center gap-1">
-                                             {language === "uz" ? "Sonni ko'rish" : language === "en" ? "View issue" : "Посмотреть выпуск"} <FiChevronRight />
-                                          </span>
-                                          {bob.file_url && (
-                                             <span className="text-[10px] font-bold text-gray-400">
-                                               {language === "uz" ? "PDF mavjud" : language === "en" ? "PDF available" : "PDF доступен"}
-                                             </span>
-                                          )}
-                                       </div>
-                                    </div>
-                                 );
-                              })}
-                           </div>
-                        </div>
-                     ) : (
-                        /* List of Years view */
-                        <div className="space-y-6 animate-in fade-in duration-300">
-                           <h2 className="text-2xl font-black text-[#002147] mb-6">{t("journals.years_title")}</h2>
-                           {bobs.length === 0 ? (
-                              <div className="bg-white p-12 rounded-3xl text-center border border-gray-100 text-gray-400 font-medium">
-                                 {t("journals.no_bobs")}
-                              </div>
-                           ) : (
-                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                                 {Array.from(new Set(bobs.map(b => Number(b.year)).filter(Boolean)))
-                                    .sort((a, b) => b - a)
-                                    .map(year => {
-                                       const yearBobsCount = bobs.filter(b => Number(b.year) === Number(year)).length;
-                                       return (
-                                          <div 
-                                             key={year} 
-                                             onClick={() => setSelectedYear(year)}
-                                             className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between h-36 hover:-translate-y-1 duration-300"
-                                          >
-                                             <div>
-                                                <h3 className="text-2xl font-black text-[#002147] group-hover:text-blue-600 transition-colors">
-                                                   {year}-{language === "uz" ? "yil" : language === "en" ? "year" : "год"}
-                                                </h3>
-                                                <p className="text-sm text-gray-500 font-bold mt-2">
-                                                   {language === "uz" ? `${yearBobsCount} ta son` : language === "en" ? `${yearBobsCount} issues` : `${yearBobsCount} выпусков`}
-                                                </p>
-                                             </div>
-                                             <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-                                                <span className="text-xs font-black text-blue-600 uppercase tracking-wider flex items-center gap-1">
-                                                   {t("common.details")} <FiChevronRight />
-                                                </span>
-                                             </div>
-                                          </div>
-                                       );
-                                    })}
-                              </div>
-                           )}
-                        </div>
-                     )
-                  ) : (
-                     /* 2. Bob yaratish ruxsati bo'lmasa: flat list of articles as originally designed */
-                     <div className="space-y-6">
-                        <h2 className="text-2xl font-black text-[#002147] mb-6">{t("journals.recent_articles")}</h2>
-                        {articles.length === 0 ? (
-                           <div className="bg-white p-12 rounded-3xl text-center border border-gray-100 text-gray-400 font-medium">
-                              {t("journals.no_articles_journal")}
-                           </div>
-                        ) : (
-                           articles.map(article => (
-                               <ArticleRow key={article._id || article.id} article={article} showAuthors={false} />
-                            ))
-                        )}
-                     </div>
+              {activeSetting && (
+                <Sheet title={activeSetting.title || activeSetting.page_name}>
+                  {activeSetting.image_url && (
+                    <img src={activeSetting.image_url} alt="" className="mb-8 h-auto w-full rounded-md border border-ax-rule" loading="lazy" />
                   )}
-               </div>
-            )}
-
-            {/* 💎 Dynamic Settings Content */}
-            {settings.map((s) => activeTab === `setting-${s.id}` && (
-               <div key={s.id} className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <h2 className="text-2xl font-black text-[#002147] mb-6">{s.title || s.page_name}</h2>
-                  {s.image_url && (
-                     <img src={s.image_url} alt={s.title} className="w-full h-auto rounded-2xl mb-8 shadow-lg border border-gray-100" loading="lazy" />
-                  )}
-                  <div className="prose prose-blue max-w-none text-[#4B5563] leading-relaxed whitespace-pre-wrap text-justify">
-                     {s.content}
-                  </div>
-               </div>
-            ))}
-         </div>
-
-         {/* 🪜 Sidebar */}
-         <aside className="lg:col-span-4 space-y-8">
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-               <h3 className="text-xl font-black text-[#002147] mb-6 uppercase tracking-widest text-sm">{t("journals.metrics")}</h3>
-               <div className="space-y-4">
-                  <Metric label={t("journals.metric_accept")} value="18%" />
-                  <Metric label={t("journals.metric_decision")} value={language === "uz" ? "24 kun" : language === "en" ? "24 days" : "24 дня"} />
-                  <Metric label={t("journals.metric_impact")} value="4.2 (2025)" />
-               </div>
+                  <div className="whitespace-pre-wrap text-[15px] leading-relaxed">{activeSetting.content}</div>
+                </Sheet>
+              )}
             </div>
 
-            <div className="bg-[#002147] rounded-3xl p-8 shadow-sm text-white relative overflow-hidden">
-               <div className="relative z-10">
-                  <h3 className="text-xl font-bold mb-4">{t("journals.ready")}</h3>
-                  <p className="text-blue-200/60 text-sm mb-6 leading-relaxed">{t("journals.ready_sub")}</p>
-                  <Link to={`/submit-article?journalId=${journal.id || journal._id}`} className="block w-full text-center py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-lg active:scale-95">
-                     {t("journals.submit_manuscript")}
-                  </Link>
-               </div>
-               <FiSend className="absolute -bottom-4 -right-4 text-white/5 size-32" />
-            </div>
-         </aside>
+            <aside>
+              <div className="rounded-md bg-ax-ink p-7 text-white lg:sticky lg:top-6">
+                <h3 className="ax-serif text-xl font-semibold">{t("journals.ready")}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-white/75">{t("journals.ready_sub")}</p>
+                <Link
+                  to={submitLink}
+                  className="mt-6 block rounded-md bg-white py-3 text-center text-sm font-semibold text-ax-ink hover:bg-ax-firuza-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ax-firuza-light focus-visible:ring-offset-2 focus-visible:ring-offset-ax-ink"
+                >
+                  {t("journals.submit_manuscript")}
+                </Link>
+              </div>
+            </aside>
+          </div>
+        )}
       </main>
     </div>
   );
 };
-
-const TabButton = ({ active, onClick, icon, label }) => (
-   <button 
-      onClick={onClick}
-      className={`px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all whitespace-nowrap border-2 ${
-         active ? 'bg-[#002147] text-white border-[#002147] shadow-xl' : 'text-gray-500 hover:bg-gray-50 border-transparent hover:text-[#002147]'
-      }`}
-   >
-      {icon} {label}
-   </button>
-);
-
-const Metric = ({ label, value }) => (
-   <div className="flex justify-between items-center py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 px-2 rounded-lg transition-colors">
-      <span className="text-sm font-bold text-gray-500">{label}</span>
-      <span className="text-sm font-black text-[#002147]">{value}</span>
-   </div>
-);
 
 export default JournalDetail;
