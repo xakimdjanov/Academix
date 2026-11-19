@@ -141,3 +141,7 @@ body {
 ::-webkit-scrollbar {
   width: 0px;
 }
+/* Jurnal / maqola sahifalari: global "* { font-family }" ni shu doirada almashtiramiz */
+.ax-page, .ax-page * { font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+.ax-page .ax-serif, .ax-page .ax-serif * { font-family: "Source Serif 4", "PT Serif", Georgia, serif; }
+.ax-page .ax-num { font-variant-numeric: lining-nums tabular-nums; }

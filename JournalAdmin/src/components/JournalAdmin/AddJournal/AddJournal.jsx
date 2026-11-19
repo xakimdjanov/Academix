@@ -20,6 +20,20 @@ const initialState = {
   submission_price: 0,
 };
 
+// API'dan kelgan jurnalni formaga moslash: null maydonlar (masalan issn) bo'sh qiymat bo'lib qoladi,
+// aks holda form.issn.trim() kabi joylarda "Cannot read properties of null" xatosi chiqadi
+const toForm = (data = {}) => {
+  const form = { ...initialState };
+  for (const [k, v] of Object.entries(data)) {
+    if (v !== null && v !== undefined) form[k] = v;
+  }
+  form.languages = Array.isArray(data.languages) ? data.languages : [];
+  form.categories = Array.isArray(data.categories)
+    ? data.categories.map((c) => (typeof c === "object" ? c.name : c))
+    : [];
+  return form;
+};
+
 function slugify(text) {
   const cyrillicToLatin = {
     'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z', 'и': 'i',
@@ -91,13 +105,7 @@ const AddJournal = () => {
   // Edit rejimida bo'lsa ma'lumotlarni to'ldirish
   useEffect(() => {
     if (id && location.state?.journal) {
-      const journalData = location.state.journal;
-      const journal = {
-        ...journalData,
-        categories: Array.isArray(journalData.categories)
-          ? journalData.categories.map(c => typeof c === 'object' ? c.name : c)
-          : []
-      };
+      const journal = toForm(location.state.journal);
       setForm(journal);
       if (journal.cover_image_url) setCoverPreview(journal.cover_image_url);
       if (journal.banner_url) setBannerPreview(journal.banner_url);
@@ -105,13 +113,7 @@ const AddJournal = () => {
       const fetchById = async () => {
         try {
           const res = await journalService.getById(id);
-          const journalData = res.data.data || res.data;
-          const journal = {
-            ...journalData,
-            categories: Array.isArray(journalData.categories)
-              ? journalData.categories.map(c => typeof c === 'object' ? c.name : c)
-              : []
-          };
+          const journal = toForm(res.data.data || res.data);
           setForm(journal);
           if (journal.cover_image_url) setCoverPreview(journal.cover_image_url);
           if (journal.banner_url) setBannerPreview(journal.banner_url);
