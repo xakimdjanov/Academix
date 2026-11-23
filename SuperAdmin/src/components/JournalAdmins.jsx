@@ -214,7 +214,7 @@ const JournalAdmins = () => {
     const adminId = admin._id || admin.id;
     try {
       await journalAdminService.toggleBobPermission(adminId);
-      toast.success("Bob yaratish ruxsati o'zgartirildi!");
+      toast.success("Son yaratish ruxsati o'zgartirildi!");
       fetchAdmins();
     } catch (error) {
       toast.error("Ruxsatnomani o'zgartirishda xatolik yuz berdi");
@@ -259,7 +259,7 @@ const JournalAdmins = () => {
                   <th className="py-5 px-8">Foydalanuvchi</th>
                   <th className="py-5 px-8">Aloqa ma'lumotlari</th>
                   <th className="py-5 px-8">Tashkilot</th>
-                  <th className="py-5 px-8">Bob ruxsati</th>
+                  <th className="py-5 px-8">Son ruxsati</th>
                   <th className="py-5 px-8 text-right">Amallar</th>
                 </tr>
               </thead>
@@ -469,7 +469,7 @@ const JournalAdmins = () => {
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                      <span className="ml-3 text-xs font-bold text-gray-500 uppercase tracking-widest">Bob Yaratish Ruxsati</span>
+                      <span className="ml-3 text-xs font-bold text-gray-500 uppercase tracking-widest">Son Yaratish Ruxsati</span>
                     </label>
                   </div>
                 </div>

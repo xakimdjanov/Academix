@@ -73,6 +73,8 @@ export const journalService = {
   getById: (id) => axiosInstance.get(`/journal/getById/${id}`),
   update: (id, data) => axiosInstance.put(`/journal/update/${id}`, data),
   delete: (id) => axiosInstance.delete(`/journal/delete/${id}`),
+  // 1 oy bepul maqola yuborish: action = "open" | "close"
+  setFreeMonth: (id, action) => axiosInstance.patch(`/journal/free-month/${id}`, { action }),
 };
 
 // --- 6. JURNAL SOZLAMALARI (JOURNAL SETTINGS) ---

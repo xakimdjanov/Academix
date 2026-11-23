@@ -3,9 +3,13 @@ import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import { 
   FiCheckCircle, FiClock, FiSlash, FiPlay, FiBook, FiDollarSign, 
-  FiEye, FiXCircle, FiUser, FiMail, FiGlobe, FiInfo, FiEdit3
+  FiEye, FiXCircle, FiUser, FiMail, FiGlobe, FiInfo, FiEdit3, FiGift
 } from "react-icons/fi";
 import { journalService, adminService } from "../services/api";
+
+// Jurnalga bepul maqola yuborish muddati hali tugamaganmi
+const isFreeActive = (j) => !!j?.free_submission_until && new Date(j.free_submission_until) > new Date();
+const fmtDate = (d) => new Date(d).toLocaleDateString("uz-UZ", { day: "2-digit", month: "2-digit", year: "numeric" });
 
 const normalizeStatus = (s = "") => String(s).trim().toLowerCase().replace(/\s+/g, "");
 
@@ -154,6 +158,23 @@ const Journals = () => {
       toast.success("Jurnal muvaffaqiyatli tasdiqlandi");
     } catch (e) {
       toast.error("Failed to approve journal");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  // 1 oy bepul maqola yuborishni ochish (faol bo'lsa — yopish)
+  const handleFreeMonth = async (j) => {
+    const id = getId(j);
+    const action = isFreeActive(j) ? "close" : "open";
+    setBusyId(id);
+    try {
+      const res = await journalService.setFreeMonth(id, action);
+      const until = res?.data?.free_submission_until ?? null;
+      setJournals((prev) => prev.map((x) => (getId(x) === id ? { ...x, free_submission_until: until } : x)));
+      toast.success(until ? `1 oy bepul yuborish ochildi (${fmtDate(until)} gacha)` : "Bepul yuborish yopildi");
+    } catch (e) {
+      toast.error(e?.response?.data?.message || "Bepul oyni o'zgartirishda xatolik");
     } finally {
       setBusyId(null);
     }
@@ -388,6 +409,20 @@ const Journals = () => {
                               {j.is_active ? <><FiSlash size={12} /> {busyId === id ? "..." : "Bloklash"}</> : <><FiPlay size={12} /> {busyId === id ? "..." : "Yoqish"}</>}
                             </button>
                           )}
+
+                          {/* 1 oy bepul maqola yuborish */}
+                          <button
+                            onClick={() => handleFreeMonth(j)}
+                            disabled={busyId === id}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${isFreeActive(j)
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
+                              : "bg-violet-600 text-white hover:bg-violet-700 shadow-sm shadow-violet-100"
+                              }`}
+                            title={isFreeActive(j) ? "Bosilsa bepul yuborish yopiladi" : "Bugundan boshlab 1 oy davomida bu jurnalga maqola yuborish bepul bo'ladi"}
+                          >
+                            <FiGift size={12} />
+                            {busyId === id ? "..." : isFreeActive(j) ? `Bepul: ${fmtDate(j.free_submission_until)} gacha` : "1 oy bepul"}
+                          </button>
                         </div>
                       </td>
                     </tr>

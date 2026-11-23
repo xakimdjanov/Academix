@@ -87,7 +87,9 @@ const SubmitArticle = () => {
       return;
     }
     const target = journals.find((j) => String(j.id) === String(journalId));
-    if (!target || !target.submission_price || Number(target.submission_price) === 0) {
+    // SuperAdmin "1 oy bepul" ochgan bo'lsa — to'lov so'ralmaydi
+    const isFree = target?.free_submission_until && new Date(target.free_submission_until) > new Date();
+    if (!target || isFree || !target.submission_price || Number(target.submission_price) === 0) {
       setHasPaid(true);
       return;
     }
@@ -360,7 +362,7 @@ const SubmitArticle = () => {
     if (s === 2) {
       if (!selectedJournalId) return "Iltimos, jurnalni tanlang";
       if (bobs.length > 0 && !selectedBobId) {
-        return "Iltimos, maqola biriktirilishi kerak bo'lgan Bob (Nashr)ni tanlang";
+        return "Iltimos, maqola biriktirilishi kerak bo'lgan sonni tanlang";
       }
       if (!title.trim()) return "Sarlavha majburiy";
       if (!abstract.trim()) return "Annotatsiya majburiy";
@@ -680,14 +682,14 @@ const SubmitArticle = () => {
 
                   {selectedJournal && bobs.length > 0 && (
                     <div className="space-y-2 mt-4">
-                      <label className="block font-medium text-gray-700 font-semibold text-slate-700">Nashr (Bob/Son) *</label>
+                      <label className="block font-medium text-gray-700 font-semibold text-slate-700">Nashr (Son) *</label>
                       <div className="relative">
                         <select
                           value={selectedBobId}
                           onChange={(e) => setSelectedBobId(e.target.value)}
                           className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition bg-white appearance-none cursor-pointer"
                         >
-                          <option value="">Nashr (Bob/Son)ni tanlang...</option>
+                          <option value="">Sonni tanlang...</option>
                           {bobs.map((b) => (
                             <option key={b.id} value={b.id}>
                               {b.name} ({b.year}-yil)
@@ -742,6 +744,11 @@ const SubmitArticle = () => {
                   </div>
                 ) : (
                   <div className="space-y-6 animate-in fade-in duration-300">
+                    {!isEdit && selectedJournal?.free_submission_until && new Date(selectedJournal.free_submission_until) > new Date() && (
+                      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-semibold text-emerald-800">
+                        Bu jurnalga maqola yuborish hozir bepul — {new Date(selectedJournal.free_submission_until).toLocaleDateString("uz-UZ")} gacha.
+                      </div>
+                    )}
                     <h2 className="text-xl font-bold text-[#002147] pb-2 border-b border-gray-200">2. Maqola ma'lumotlari</h2>
                     <div className="space-y-2">
                       <label className="block font-medium text-gray-700">Sarlavha *</label>
