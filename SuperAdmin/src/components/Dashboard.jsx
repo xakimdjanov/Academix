@@ -484,7 +484,7 @@ const Dashboard = () => {
                     <th className="py-3 px-5">Foydalanuvchi</th>
                     <th className="py-3 px-5">Email / Telefon</th>
                     <th className="py-3 px-5">Affiliatsiya (Tashkilot)</th>
-                    <th className="py-3 px-5 text-center">Bob yaratish</th>
+                    <th className="py-3 px-5 text-center">Son yaratish</th>
                     <th className="py-3 px-5 text-right">Ro'yxatdan o'tdi</th>
                   </tr>
                 </thead>

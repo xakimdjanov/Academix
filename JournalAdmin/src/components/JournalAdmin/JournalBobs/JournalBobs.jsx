@@ -2,37 +2,13 @@ import React, { useEffect, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { journalService, bobService } from "../../../services/api";
 import toast from "react-hot-toast";
+import ConfirmModal from "../../ConfirmModal/ConfirmModal";
 import { 
   FiFolder, FiPlus, FiTrash2, FiEdit2, FiX, 
-  FiCheck, FiCalendar, FiBookOpen, FiFile, FiAlertTriangle 
+  FiCheck, FiCalendar, FiBookOpen, FiFile 
 } from "react-icons/fi";
 
 const inputCls = "w-full rounded-xl border border-gray-200 bg-gray-50/50 pl-11 pr-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all";
-
-const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, loading }) => {
-  if (!isOpen) return null;
-  return createPortal(
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 overflow-hidden">
-      {/* Backdrop overlay */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={onClose} />
-
-      <div className="relative w-full max-w-md bg-white rounded-[2rem] p-8 text-center shadow-2xl animate-in zoom-in-95 duration-200">
-        <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shrink-0">
-          <FiAlertTriangle size={32} />
-        </div>
-        <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
-        <p className="text-gray-500 text-sm mb-8 leading-relaxed">{message}</p>
-        <div className="flex gap-3 mt-4">
-          <button onClick={onClose} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-all">Bekor qilish</button>
-          <button onClick={onConfirm} disabled={loading} className="flex-1 py-3 bg-rose-500 text-white rounded-xl font-bold hover:bg-rose-600 transition-all shadow-lg shadow-rose-100 disabled:opacity-50">
-            {loading ? "O'chirilmoqda..." : "O'chirish"}
-          </button>
-        </div>
-      </div>
-    </div>,
-    document.body
-  );
-};
 
 const JournalBobs = () => {
   const [journals, setJournals] = useState([]);
@@ -87,7 +63,7 @@ const JournalBobs = () => {
       const data = res?.data || [];
       setBobs(data);
     } catch (error) {
-      toast.error("Boblar ro'yxatini yuklab bo'lmadi");
+      toast.error("Sonlar ro'yxatini yuklab bo'lmadi");
     } finally {
       setBobsLoading(false);
     }
@@ -149,10 +125,10 @@ const JournalBobs = () => {
 
       if (isAddOpen) {
         await bobService.create(fd);
-        toast.success("Yangi bob muvaffaqiyatli qo'shildi");
+        toast.success("Yangi son muvaffaqiyatli qo'shildi");
       } else {
         await bobService.update(editingBob.id, fd);
-        toast.success("Bob muvaffaqiyatli yangilandi");
+        toast.success("Son muvaffaqiyatli yangilandi");
       }
 
       setIsAddOpen(false);
@@ -170,7 +146,7 @@ const JournalBobs = () => {
     setIsSubmitting(true);
     try {
       await bobService.delete(deletingBob.id);
-      toast.success("Bob o'chirildi");
+      toast.success("Son o'chirildi");
       setDeletingBob(null);
       fetchBobs(selectedJournalId);
     } catch (e) {
@@ -186,7 +162,7 @@ const JournalBobs = () => {
       <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <FiFolder className="text-blue-600" /> Jurnal Boblari (Issues)
+            <FiFolder className="text-blue-600" /> Jurnal sonlari (Issues)
           </h1>
           <p className="text-sm text-gray-500">Jurnalingizning yillik nashrlari (sonlari) ro'yxati va boshqaruvi</p>
         </div>
@@ -207,7 +183,7 @@ const JournalBobs = () => {
             disabled={!selectedJournalId}
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 disabled:opacity-50"
           >
-            <FiPlus /> Yangi Bob Qo'shish
+            <FiPlus /> Yangi son qo'shish
           </button>
         </div>
       </div>
@@ -227,14 +203,14 @@ const JournalBobs = () => {
         ) : bobs.length === 0 ? (
           <div className="p-20 text-center">
             <FiFolder className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-            <p className="text-gray-400 font-medium">Ushbu jurnalda hozircha hech qanday bob yaratilmagan</p>
+            <p className="text-gray-400 font-medium">Ushbu jurnalda hozircha hech qanday son yaratilmagan</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-[#F8FAFC] border-b border-gray-100 text-[11px] uppercase font-bold text-gray-400 tracking-widest">
                 <tr>
-                  <th className="py-5 px-8">Bob nomi / Son</th>
+                  <th className="py-5 px-8">Son nomi</th>
                   <th className="py-5 px-8">Nashr yili</th>
                   <th className="py-5 px-8">Fayl manzili (PDF)</th>
                   <th className="py-5 px-8">Holati</th>
@@ -316,7 +292,7 @@ const JournalBobs = () => {
           <div className="relative w-full max-w-lg bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
             <div className="flex items-center justify-between p-8 border-b border-gray-100 shrink-0">
                 <h2 className="text-2xl font-bold text-gray-800">
-                  {isAddOpen ? "Yangi Bob Qo'shish" : "Bob Tahrirlash"}
+                  {isAddOpen ? "Yangi son qo'shish" : "Sonni tahrirlash"}
                 </h2>
                 <button onClick={() => { setIsAddOpen(false); setEditingBob(null); setFileObj(null); }} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><FiX size={24} /></button>
               </div>
@@ -338,7 +314,7 @@ const JournalBobs = () => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Bob nomi (Son) *</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Son nomi *</label>
                   <div className="relative">
                     <FiBookOpen className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input 
@@ -413,8 +389,8 @@ const JournalBobs = () => {
         onClose={() => setDeletingBob(null)}
         onConfirm={handleDelete}
         loading={isSubmitting}
-        title="Bobni o'chirish"
-        message={`Haqiqatan ham "${deletingBob?.name}"ni o'chirib tashlamoqchimisiz? Bu bobga tegishli maqolalar uchun bob biriktirilishi bekor bo'ladi.`}
+        title="Sonni o'chirish"
+        message={`Haqiqatan ham "${deletingBob?.name}"ni o'chirib tashlamoqchimisiz? Bu songa tegishli maqolalarning son biriktirilishi bekor bo'ladi.`}
       />
     </div>
   );

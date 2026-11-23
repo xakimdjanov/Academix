@@ -33,11 +33,11 @@ const Sidebar = () => {
     ];
 
     if (user?.allow_bob_creation) {
-      items.push({ path: "/journal-bobs", label: "Boblar", icon: FiFileText });
+      items.push({ path: "/journal-bobs", label: "Sonlar", icon: FiFileText });
     }
 
     items.push(
-      { path: "/journal-send-old-article", label: "Eski maqola qo'shish", icon: FiPlusCircle },
+      { path: "/journal-send-old-article", label: "Maqola yuborish", icon: FiPlusCircle },
       { path: "/journal-editors", label: "Muharrirlarni biriktirish", icon: FiUsers },
       { path: "/editor-requests", label: "Muharrirlar Boshqaruvi", icon: FiPlusCircle },
       { path: "/journal-reports", label: "Hisobotlar", icon: FiBarChart2 },

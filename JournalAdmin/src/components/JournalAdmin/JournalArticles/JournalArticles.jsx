@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { articleService, journalService, bobService, journalAdminService } from "../../../services/api";
+import ConfirmModal from "../../ConfirmModal/ConfirmModal";
 import {
   FiEye,
   FiEdit2,
@@ -14,6 +15,9 @@ import {
   FiGlobe,
   FiCheckCircle,
   FiExternalLink,
+  FiSearch,
+  FiTrash2,
+  FiX,
 } from "react-icons/fi";
 
 const getDefaultAvatarFile = async () => {
@@ -30,7 +34,10 @@ const getDefaultAvatarFile = async () => {
   }
 };
 
+const ALL = "Hammasi";
+
 const STATUSES = [
+  ALL,
   "Submitted",
   "Under Review",
   "Revision Required",
@@ -45,7 +52,12 @@ const JournalArticles = () => {
   const [loading, setLoading] = useState(true);
   const [journals, setJournals] = useState([]);
   const [articles, setArticles] = useState([]);
-  const [filter, setFilter] = useState("Submitted");
+  const [filter, setFilter] = useState(ALL);
+  const [search, setSearch] = useState("");
+
+  // Delete confirmation
+  const [deletingArticle, setDeletingArticle] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // User Profile & Bobs States
   const [user, setUser] = useState(null);
@@ -97,9 +109,25 @@ const JournalArticles = () => {
     );
   }, [articles, myJournalIds]);
 
+  // Qidiruv: sarlavha, muallif, kalit so'z, toifa, ID bo'yicha
+  const searched = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return myArticles;
+    return myArticles.filter((a) => {
+      const authors = Array.isArray(a?.authors) ? a.authors.map((x) => x?.fullName || "").join(" ") : "";
+      const keywords = Array.isArray(a?.keywords) ? a.keywords.join(" ") : "";
+      return [a?.title, authors, keywords, a?.category, String(getId(a) ?? "")]
+        .join(" ")
+        .toLowerCase()
+        .includes(term);
+    });
+  }, [myArticles, search]);
+
+  const countByStatus = (s) => (s === ALL ? searched.length : searched.filter((a) => getStatus(a) === s).length);
+
   const filtered = useMemo(() => {
-    return myArticles.filter((a) => getStatus(a) === filter);
-  }, [myArticles, filter]);
+    return filter === ALL ? searched : searched.filter((a) => getStatus(a) === filter);
+  }, [searched, filter]);
 
   const editJournalCategories = useMemo(() => {
     const journalId = editArticle?.journal_id;
@@ -347,7 +375,7 @@ const JournalArticles = () => {
           setSelectedBobId(String(list[0].id));
         }
       } catch (err) {
-        toast.error("Boblar ro'yxatini yuklashda xatolik yuz berdi");
+        toast.error("Sonlar ro'yxatini yuklashda xatolik yuz berdi");
       } finally {
         setBobsLoading(false);
       }
@@ -358,7 +386,7 @@ const JournalArticles = () => {
 
   const handleConfirmPublish = async () => {
     if (!selectedBobId) {
-      return toast.error("Iltimos, maqola biriktirilishi kerak bo'lgan Bobni tanlang.");
+      return toast.error("Iltimos, maqola biriktirilishi kerak bo'lgan sonni tanlang.");
     }
     try {
       setEditSaving(true);
@@ -369,7 +397,7 @@ const JournalArticles = () => {
       setArticles((prev) =>
         prev.map((a) => (getId(a) === publishingArticleId ? { ...a, status: "Published", bob_id: parseInt(selectedBobId) } : a))
       );
-      toast.success("Maqola bobga biriktirilib, muvaffaqiyatli nashr etildi!");
+      toast.success("Maqola songa biriktirilib, muvaffaqiyatli nashr etildi!");
       setPublishModalOpen(false);
       setPublishingArticleId(null);
       setSelectedBobId("");
@@ -377,6 +405,22 @@ const JournalArticles = () => {
       toast.error("Nashr etishda xatolik yuz berdi");
     } finally {
       setEditSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    const id = getId(deletingArticle);
+    if (!id) return;
+    try {
+      setDeleteLoading(true);
+      await articleService.delete(id);
+      setArticles((prev) => prev.filter((a) => getId(a) !== id));
+      toast.success("Maqola o'chirildi");
+      setDeletingArticle(null);
+    } catch {
+      toast.error("Maqolani o'chirishda xatolik yuz berdi");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -417,6 +461,28 @@ const JournalArticles = () => {
         </div>
       )}
 
+      {/* Search */}
+      <div className="relative">
+        <FiSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Sarlavha, muallif, kalit so'z yoki ID bo'yicha qidirish..."
+          className="w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-12 py-3.5 text-sm font-medium text-slate-700 shadow-sm outline-none transition-all placeholder:text-slate-400 focus:ring-4 focus:ring-blue-50"
+        />
+        {search && (
+          <button
+            type="button"
+            onClick={() => setSearch("")}
+            className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            title="Tozalash"
+          >
+            <FiX size={16} />
+          </button>
+        )}
+      </div>
+
       {/* Filter Tabs */}
       <div className="bg-white p-2 rounded-3xl shadow-sm border border-slate-100 overflow-x-auto">
         <div className="flex min-w-max gap-2">
@@ -439,7 +505,7 @@ const JournalArticles = () => {
                   filter === s ? "text-blue-100" : "text-slate-400",
                 ].join(" ")}
               >
-                {myArticles.filter((a) => getStatus(a) === s).length} Maqolalar
+                {countByStatus(s)} Maqolalar
               </div>
             </button>
           ))}
@@ -497,6 +563,13 @@ const JournalArticles = () => {
                       <FiGlobe size={18} />
                     </button>
                   )}
+                  <button
+                    onClick={() => setDeletingArticle(a)}
+                    className="p-2.5 rounded-2xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
+                    title="O'chirish"
+                  >
+                    <FiTrash2 size={18} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -509,7 +582,7 @@ const JournalArticles = () => {
               <FiFileText size={56} className="mx-auto" />
             </div>
             <p className="text-slate-400 font-medium">
-              No articles found in this category.
+              Bu bo'limda maqola topilmadi.
             </p>
           </div>
         )}
@@ -519,7 +592,7 @@ const JournalArticles = () => {
       <div className="hidden sm:block bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden">
         <div className="px-5 sm:px-8 py-5 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
           <h2 className="font-bold text-slate-800 flex items-center gap-2 text-lg">
-            <FiLayers className="text-blue-600" /> {filter} navbati
+            <FiLayers className="text-blue-600" /> {filter === ALL ? "Barcha maqolalar" : `${filter} navbati`}
           </h2>
           <span className="bg-white px-4 py-1.5 rounded-full border text-xs font-bold text-slate-500 shadow-sm">
             Jami: {filtered.length}
@@ -602,6 +675,13 @@ const JournalArticles = () => {
                             <FiGlobe size={18} />
                           </button>
                         )}
+                        <button
+                          onClick={() => setDeletingArticle(a)}
+                          className="p-2.5 rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+                          title="O'chirish"
+                        >
+                          <FiTrash2 size={18} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -616,7 +696,7 @@ const JournalArticles = () => {
                 <FiFileText size={56} className="mx-auto" />
               </div>
               <p className="text-slate-400 font-medium">
-                No articles found in this category.
+                Bu bo'limda maqola topilmadi.
               </p>
             </div>
           )}
@@ -728,7 +808,7 @@ const JournalArticles = () => {
           {user?.allow_bob_creation && (
             <div className="md:col-span-2">
               <label className="text-[11px] font-black text-slate-500 mb-2 block ml-1 uppercase">
-                Biriktirilgan Bob (Son)
+                Biriktirilgan son
               </label>
               <select
                 value={editForm.bob_id}
@@ -768,6 +848,16 @@ const JournalArticles = () => {
         </div>
       </Modal>
 
+      {/* DELETE CONFIRMATION MODAL */}
+      <ConfirmModal
+        isOpen={!!deletingArticle}
+        onClose={() => !deleteLoading && setDeletingArticle(null)}
+        onConfirm={handleDelete}
+        loading={deleteLoading}
+        title="Maqolani o'chirish"
+        message={`Haqiqatan ham "${deletingArticle?.title || "Nomsiz maqola"}" maqolasini o'chirmoqchimisiz? Maqola va uning PDF fayli butunlay o'chiriladi, bu amalni qaytarib bo'lmaydi.`}
+      />
+
       {/* PUBLISH CONFIRMATION MODAL */}
       <Modal
         open={publishModalOpen}
@@ -776,18 +866,18 @@ const JournalArticles = () => {
       >
         <div className="space-y-6">
           <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl text-blue-800 text-sm font-medium">
-            Sizda Boblar (Issues) tizimi faollashtirilgan. Iltimos, maqolani nashr qilishdan oldin uni qaysi Bobga biriktirish kerakligini tanlang.
+            Sizda Sonlar (Issues) tizimi faollashtirilgan. Iltimos, maqolani nashr qilishdan oldin uni qaysi songa biriktirish kerakligini tanlang.
           </div>
 
           <div>
             <label className="text-[11px] font-black text-slate-500 mb-2 block ml-1 uppercase">
-              Bob (Volume/Issue)ni tanlang
+              Sonni tanlang (Volume/Issue)
             </label>
             {bobsLoading ? (
-              <div className="py-4 text-center text-slate-400 text-sm font-medium">Boblar yuklanmoqda...</div>
+              <div className="py-4 text-center text-slate-400 text-sm font-medium">Sonlar yuklanmoqda...</div>
             ) : bobs.length === 0 ? (
               <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl text-amber-800 text-sm">
-                Ushbu jurnalda hali hech qanday Bob (Issue) yaratilmagan. Nashr qilishdan oldin avval sidebar-dagi <b>"Boblar"</b> sahifasiga o'tib, yangi Bob qo'shing.
+                Ushbu jurnalda hali hech qanday son (Issue) yaratilmagan. Nashr qilishdan oldin avval sidebar-dagi <b>"Sonlar"</b> sahifasiga o'tib, yangi son qo'shing.
               </div>
             ) : (
               <select

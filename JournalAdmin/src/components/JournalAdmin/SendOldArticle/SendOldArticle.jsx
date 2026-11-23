@@ -17,23 +17,9 @@ import {
   FiLoader,
   FiBookOpen
 } from "react-icons/fi";
-import { articleService, journalService, userService } from "../../../services/api";
+import { articleService, journalService, userService, journalAdminService, bobService } from "../../../services/api";
 
 const MAX_FILE_MB = 20;
-
-const getDefaultAvatarFile = async () => {
-  try {
-    const res = await fetch("https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png");
-    const blob = await res.blob();
-    return new File([blob], "default-author.png", { type: "image/png" });
-  } catch (err) {
-    console.error("Default avatar fetch error, using fallback", err);
-    const base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
-    const res = await fetch(`data:image/png;base64,${base64}`);
-    const blob = await res.blob();
-    return new File([blob], "default-author.png", { type: "image/png" });
-  }
-};
 
 const emptyAuthor = {
   fullName: "",
@@ -79,16 +65,24 @@ const SendOldArticle = () => {
   // Authors State
   const [authors, setAuthors] = useState([{ fullName: "", phone: "+998 ", orcidId: "", doi: "", photoFile: null, photoPreview: null }]);
 
+  // Admin profili (yuboruvchi tanlanmasa — maqola admin nomidan ketadi) va sonlar
+  const [admin, setAdmin] = useState(null);
+  const [bobs, setBobs] = useState([]);
+  const [selectedBobId, setSelectedBobId] = useState("");
+
   const myAdminId = useMemo(() => localStorage.getItem("journal_admin_id"), []);
+  const adminName = admin?.full_name || admin?.fullName || "Jurnal admini";
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [jrRes, usRes] = await Promise.all([
+        const [jrRes, usRes, adRes] = await Promise.all([
           journalService.getAll(),
-          userService.getAll()
+          userService.getAll(),
+          journalAdminService.getById(myAdminId).catch(() => null)
         ]);
+        setAdmin(adRes?.data?.data || adRes?.data?.user || adRes?.data || null);
 
         // Parse journals
         const jList = jrRes?.data?.data || jrRes?.data?.journals || jrRes?.data || [];
@@ -118,6 +112,16 @@ const SendOldArticle = () => {
       setLoading(false);
     }
   }, [myAdminId]);
+
+  // Sonlar (faqat son yaratish ruxsati bo'lsa)
+  useEffect(() => {
+    setSelectedBobId("");
+    setBobs([]);
+    if (!admin?.allow_bob_creation || !selectedJournalId) return;
+    bobService.getByJournal(selectedJournalId)
+      .then((res) => setBobs(Array.isArray(res?.data) ? res.data : []))
+      .catch(() => setBobs([]));
+  }, [admin, selectedJournalId]);
 
   const selectedJournal = useMemo(
     () => journals.find((j) => String(j.id || j._id) === String(selectedJournalId)),
@@ -244,88 +248,59 @@ const SendOldArticle = () => {
     }
   };
 
-  // Navigation validation
-  const validateStep = (s) => {
-    if (s === 2) {
-      if (!selectedJournalId) return "Iltimos, jurnalni tanlang";
-      if (!selectedUserId) return "Yuboruvchi foydalanuvchini tanlang";
-      if (!title.trim()) return "Maqola sarlavhasi majburiy";
-      if (!abstract.trim()) return "Annotatsiya majburiy";
-      if (!keywords.length) return "Kamida bitta kalit so'z bo'lishi shart";
-      if (!category.trim()) return "Toifa majburiy";
-      if (category === "Other" && !customCategory.trim()) return "Boshqa toifa nomini kiriting";
-      if (!language.trim()) return "Til majburiy";
-    }
-    if (s === 3) {
-      for (let i = 0; i < authors.length; i++) {
-        const a = authors[i];
-        if (!a.fullName.trim()) return `${i + 1}-muallif: To'liq ism majburiy`;
-        if ((a.phone.replace(/\D/g, "") || "").length < 9) return `${i + 1}-muallif: Telefon raqami noto'g'ri`;
-        if (!a.orcidId.trim()) return `${i + 1}-muallif: ORCID ID majburiy`;
-        if (!a.doi.trim()) return `${i + 1}-muallif: DOI majburiy`;
-      }
-    }
-    return null;
-  };
-
-  const nextStep = () => {
-    const err = validateStep(step);
-    if (err) return toast.error(err);
-    setStep((p) => p + 1);
-  };
+  // Barcha maydonlar ixtiyoriy — kiritilmaganlari submit() da standart qiymat bilan to'ldiriladi
+  const nextStep = () => setStep((p) => p + 1);
   const prevStep = () => setStep((p) => p - 1);
 
-  // Form submission logic
+  // Form submission logic — kiritilmagan maydonlar uchun standart qiymatlar:
+  //   yuboruvchi -> admin o'zi (backend token orqali aniqlaydi), sarlavha -> PDF nomi,
+  //   toifa -> jurnalning 1-toifasi, til -> O'zbekcha, muallif -> yuboruvchi ismi
   const submit = async () => {
-    if (!pdfFile) {
-      toast.error("Maqola PDF faylini yuklang");
+    if (!selectedJournalId) {
+      toast.error("Jurnal topilmadi");
       return;
     }
 
     try {
       setSubmitting(true);
-      
+
+      const finalCategory = (category === "Other" ? customCategory.trim() : category.trim()) || journalCategories[0] || "";
+      const filledAuthors = authors.filter((a) => a.fullName.trim());
+
       const formData = new FormData();
       formData.append("journal_id", selectedJournalId);
-      formData.append("user_id", selectedUserId);
-      formData.append("title", title.trim());
+      if (selectedUserId) formData.append("user_id", selectedUserId);
+      if (title.trim()) formData.append("title", title.trim());
       formData.append("abstract", abstract.trim());
-      formData.append("category", category === "Other" ? customCategory.trim() : category.trim());
-      formData.append("language", language.trim());
-      formData.append("apc_paid", "true"); // Archived old articles are marked as APC paid
+      formData.append("category", finalCategory);
+      formData.append("language", language.trim() || "Uzbek");
+      formData.append("apc_paid", "true");
       formData.append("status", "Published"); // Directly create with 'Published' status
+      if (selectedBobId) formData.append("bob_id", selectedBobId);
 
       formData.append("keywords", JSON.stringify(keywords));
 
-      // Prepare authors standard metadata array
-      const authorsMetadata = authors.map((a) => ({
-        fullName: a.fullName.trim(),
-        phone: a.phone.replace(/\D/g, ""),
-        orcidId: a.orcidId.trim(),
-        doi: a.doi.trim()
-      }));
+      const authorsMetadata = filledAuthors.map((a) => {
+        const digits = a.phone.replace(/\D/g, "");
+        return {
+          fullName: a.fullName.trim(),
+          phone: digits.length > 3 ? digits : "",
+          orcidId: a.orcidId.trim(),
+          doi: a.doi.trim()
+        };
+      });
       formData.append("authors", JSON.stringify(authorsMetadata));
 
-      // Append Article PDF
-      formData.append("file_url", pdfFile);
+      if (pdfFile) formData.append("file_url", pdfFile);
 
-      // Append Author Photos in order
-      let defaultFile = null;
-      for (let i = 0; i < authors.length; i++) {
-        const a = authors[i];
-        if (a.photoFile) {
-          formData.append(`author_image_${i}`, a.photoFile);
-        } else {
-          if (!defaultFile) {
-            defaultFile = await getDefaultAvatarFile();
-          }
-          formData.append(`author_image_${i}`, defaultFile);
-        }
-      }
+      // Rasmi yo'q mualliflarga backend standart avatar qo'yadi
+      filledAuthors.forEach((a, i) => {
+        if (a.photoFile) formData.append(`author_image_${i}`, a.photoFile);
+      });
 
       await articleService.create(formData);
 
-      toast.success("Eski maqola muvaffaqiyatli arxivga qo'shildi va nashr etildi!");
+      toast.success("Maqola muvaffaqiyatli yuborildi va nashr etildi!");
       
       setTimeout(() => {
         navigate("/journal-articles");
@@ -361,10 +336,10 @@ const SendOldArticle = () => {
           <div className="bg-[#002147] px-6 py-10 text-white text-center relative overflow-hidden">
             <div className="relative z-10">
               <h1 className="text-2xl sm:text-3xl font-extrabold flex items-center justify-center gap-2">
-                <FiAward className="text-blue-400" /> Eski maqolalarni jo'natish (Arxiv)
+                <FiAward className="text-blue-400" /> Maqola yuborish
               </h1>
               <p className="mt-2 text-blue-100 opacity-90 max-w-2xl mx-auto text-sm">
-                Avval chop etilgan maqolalarni qadam-baqadam tizim arxiviga qo'shish va nashr qilish formasi.
+                Jurnalingizga maqolani qadam-baqadam qo'shish va nashr qilish. Barcha maydonlar ixtiyoriy.
               </p>
             </div>
             <div className="absolute inset-0 bg-blue-900/10 -skew-y-3 scale-110 pointer-events-none" />
@@ -395,29 +370,29 @@ const SendOldArticle = () => {
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
                 <div className="bg-blue-50/50 border border-blue-100 rounded-3xl p-6 sm:p-8 shadow-sm">
                   <h3 className="text-xl font-bold text-[#002147] flex items-center gap-3 mb-6">
-                    <FiInfo className="text-blue-600" size={28} /> Arxiv maqolalarini kiritish bo'yicha yo'riqnoma
+                    <FiInfo className="text-blue-600" size={28} /> Maqola yuborish bo'yicha yo'riqnoma
                   </h3>
                   
                   <div className="space-y-6 text-slate-700 leading-relaxed text-sm">
                     <div className="flex gap-4 p-4 bg-amber-50 border border-amber-200 rounded-2xl">
                       <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black shrink-0 shadow-sm">!</div>
                       <p className="font-semibold text-amber-900">
-                        DIQQAT: Tizimga yuklangan arxiv maqolalari tahririyat tomonidan tekshirilmaydi, balki to'g'ridan-to'g'ri chop etilgan statusi bilan tizim arxiviga joylashtiriladi.
+                        DIQQAT: Bu yerdan yuborilgan maqolalar tahririyat tomonidan tekshirilmaydi, balki to'g'ridan-to'g'ri chop etilgan statusi bilan joylashtiriladi. To'lov talab qilinmaydi.
                       </p>
                     </div>
 
                     <ul className="space-y-4 font-medium">
                       <li className="flex items-start gap-3">
                         <FiCheck className="text-emerald-500 mt-1 shrink-0" size={18} />
-                        <span><b>1-bosqich:</b> Maqola chop etiladigan jurnal, yuboruvchi foydalanuvchi, annotatsiya va kalit so'zlarni kiriting.</span>
+                        <span><b>1-bosqich:</b> Jurnal, yuboruvchi, sarlavha, annotatsiya va kalit so'zlar. Yuboruvchi tanlanmasa — maqola <b>o'z nomingizdan</b> yuboriladi.</span>
                       </li>
                       <li className="flex items-start gap-3">
                         <FiCheck className="text-emerald-500 mt-1 shrink-0" size={18} />
-                        <span><b>2-bosqich:</b> Maqolaning barcha mualliflarini (rasmi, orcid va telefoni bilan) to'liq kiriting.</span>
+                        <span><b>2-bosqich:</b> Mualliflar (rasmi, ORCID, telefon — ixtiyoriy). Muallif kiritilmasa — yuboruvchi ismi yoziladi.</span>
                       </li>
                       <li className="flex items-start gap-3">
                         <FiCheck className="text-emerald-500 mt-1 shrink-0" size={18} />
-                        <span><b>3-bosqich:</b> Maqola PDF faylini yuklang va tasdiqlang.</span>
+                        <span><b>3-bosqich:</b> Maqola PDF faylini yuklang va yuboring. Sarlavha kiritilmasa — PDF fayl nomi olinadi.</span>
                       </li>
                     </ul>
                   </div>
@@ -442,7 +417,7 @@ const SendOldArticle = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Journal Selection */}
                     <div className="space-y-2">
-                      <label className="block text-sm font-bold text-slate-700">Chop etiladigan jurnal *</label>
+                      <label className="block text-sm font-bold text-slate-700">Chop etiladigan jurnal</label>
                       <div className="relative">
                         <select
                           value={selectedJournalId}
@@ -466,11 +441,11 @@ const SendOldArticle = () => {
 
                     {/* Searchable Submitter Selection */}
                     <div className="space-y-2 relative">
-                      <label className="block text-sm font-bold text-slate-700">Yuboruvchi Foydalanuvchi *</label>
+                      <label className="block text-sm font-bold text-slate-700">Yuboruvchi (ixtiyoriy)</label>
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="Foydalanuvchi ism yoki email..."
+                          placeholder={`Tanlanmasa: ${adminName} (o'zingiz)`}
                           className="w-full rounded-xl border border-gray-300 pl-11 pr-4 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition bg-white text-sm font-semibold"
                           value={userSearch}
                           onChange={(e) => {
@@ -491,6 +466,12 @@ const SendOldArticle = () => {
                           </span>
                         )}
                       </div>
+
+                      <p className="text-[11px] text-slate-500 font-medium">
+                        {selectedUserId
+                          ? "Maqola tanlangan foydalanuvchi nomidan yuboriladi."
+                          : <>Tanlanmasa — maqola <b>o'z nomingizdan</b> ({adminName}) yuboriladi.</>}
+                      </p>
 
                       {isUserDropdownOpen && (
                         <div className="absolute left-0 right-0 mt-2 max-h-56 overflow-y-auto bg-white rounded-2xl border border-slate-100 shadow-2xl z-50 divide-y divide-slate-50 p-2">
@@ -523,6 +504,22 @@ const SendOldArticle = () => {
                     </div>
                   </div>
 
+                  {admin?.allow_bob_creation && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-bold text-slate-700">Son (ixtiyoriy)</label>
+                      <select
+                        value={selectedBobId}
+                        onChange={(e) => setSelectedBobId(e.target.value)}
+                        className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition bg-white cursor-pointer text-sm font-semibold"
+                      >
+                        <option value="">Songa biriktirilmasin</option>
+                        {bobs.map((b) => (
+                          <option key={b.id} value={b.id}>{b.name} ({b.year}-yil)</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   {selectedJournal && (
                     <div className="bg-[#e6f0ff] border border-blue-100 rounded-2xl p-5 space-y-2 animate-in zoom-in-95">
                       <h3 className="font-bold text-[#002147] text-md">{selectedJournal.title || selectedJournal.name}</h3>
@@ -545,17 +542,17 @@ const SendOldArticle = () => {
                   </h2>
 
                   <div className="space-y-2">
-                    <label className="block text-sm font-bold text-slate-700">Maqola sarlavhasi *</label>
+                    <label className="block text-sm font-bold text-slate-700">Maqola sarlavhasi</label>
                     <input
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                       className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition bg-white text-sm font-medium"
-                      placeholder="Maqola to'liq sarlavhasini kiriting..."
+                      placeholder="Kiritilmasa — PDF fayl nomi olinadi"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-sm font-bold text-slate-700">Annotatsiya (Abstract) *</label>
+                    <label className="block text-sm font-bold text-slate-700">Annotatsiya (Abstract)</label>
                     <textarea
                       value={abstract}
                       onChange={(e) => setAbstract(e.target.value)}
@@ -566,7 +563,7 @@ const SendOldArticle = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="block text-sm font-bold text-slate-700">Kalit so'zlar *</label>
+                    <label className="block text-sm font-bold text-slate-700">Kalit so'zlar</label>
                     <div className="flex flex-col sm:flex-row gap-3">
                       <input
                         value={keywordInput}
@@ -590,10 +587,10 @@ const SendOldArticle = () => {
 
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="block text-sm font-bold text-slate-700">Toifa *</label>
+                      <label className="block text-sm font-bold text-slate-700">Toifa</label>
                       <div className="relative">
                         <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full rounded-xl border border-gray-300 px-5 py-3 focus:border-[#002147] focus:ring-2 focus:ring-blue-200 outline-none transition bg-white appearance-none cursor-pointer text-sm font-semibold">
-                          <option value="">Toifani tanlang...</option>
+                          <option value="">Standart: {journalCategories[0]}</option>
                           {journalCategories.map((cat) => (
                             <option key={cat} value={cat}>{cat}</option>
                           ))}
@@ -610,9 +607,9 @@ const SendOldArticle = () => {
                       )}
                     </div>
                     <div className="space-y-2">
-                      <label className="block text-sm font-bold text-slate-700">Maqola tili *</label>
+                      <label className="block text-sm font-bold text-slate-700">Maqola tili</label>
                       <select value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full rounded-xl border border-gray-300 px-5 py-3 outline-none bg-white text-sm font-semibold">
-                        <option value="">Tilni tanlang...</option>
+                        <option value="">Standart: O'zbekcha</option>
                         <option value="English">English</option>
                         <option value="Uzbek">O'zbekcha</option>
                         <option value="Russian">Russian</option>
@@ -655,19 +652,19 @@ const SendOldArticle = () => {
 
                       <div className="grid sm:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">To'liq ismi *</label>
-                          <input value={author.fullName} onChange={(e) => updateAuthor(idx, "fullName", e.target.value)} className="w-full px-5 py-3 rounded-xl border border-gray-300 bg-white text-sm font-medium" placeholder="Masalan: Aliyev Vali" />
+                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">To'liq ismi</label>
+                          <input value={author.fullName} onChange={(e) => updateAuthor(idx, "fullName", e.target.value)} className="w-full px-5 py-3 rounded-xl border border-gray-300 bg-white text-sm font-medium" placeholder={idx === 0 ? `Kiritilmasa: ${selectedUserObject?.full_name || adminName}` : "Masalan: Aliyev Vali"} />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Telefon raqam *</label>
+                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Telefon raqam</label>
                           <input value={author.phone} onChange={(e) => updateAuthor(idx, "phone", formatPhone(e.target.value))} className="w-full px-5 py-3 rounded-xl border border-gray-300 bg-white text-sm font-semibold" placeholder="+998 90..." />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">ORCID ID *</label>
+                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">ORCID ID</label>
                           <input value={author.orcidId} onChange={(e) => updateAuthor(idx, "orcidId", e.target.value)} className="w-full px-5 py-3 rounded-xl border border-gray-300 bg-white text-sm font-semibold" placeholder="Masalan: 0000-0000-0000-0000" />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">DOI *</label>
+                          <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">DOI</label>
                           <input value={author.doi || ""} onChange={(e) => updateAuthor(idx, "doi", e.target.value)} className="w-full px-5 py-3 rounded-xl border border-gray-300 bg-white text-sm font-semibold" placeholder="Masalan: 10.1000/xyz123" />
                         </div>
                         <div className="space-y-2 sm:col-span-2">
@@ -726,7 +723,7 @@ const SendOldArticle = () => {
                   onClick={() => document.getElementById('pdf-file-upload').click()}
                 >
                   <FiUploadCloud className="mx-auto h-16 w-16 text-blue-400 group-hover:scale-110 transition-transform mb-4" />
-                  <p className="text-gray-500 text-sm font-semibold mb-6">PDF formati (Maksimum: 20MB)</p>
+                  <p className="text-gray-500 text-sm font-semibold mb-6">PDF formati (Maksimum: 20MB) — ixtiyoriy</p>
                   <span className="inline-block bg-[#002147] text-white px-10 py-3.5 rounded-2xl font-bold hover:scale-105 transition-transform shadow-lg shadow-blue-950/15 text-sm">PDF faylini tanlang</span>
                   <input id="pdf-file-upload" type="file" accept="application/pdf" onChange={handlePdfChange} className="hidden" />
                 </div>
@@ -753,7 +750,7 @@ const SendOldArticle = () => {
                       </>
                     ) : (
                       <>
-                        Yakunlash va Arxivlash <FiCheck />
+                        Maqolani yuborish <FiCheck />
                       </>
                     )}
                   </button>
